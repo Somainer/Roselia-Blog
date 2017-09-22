@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Getting Post...</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<nav class="blog-color" id="mobile-nav">
+    <div class="nav-wrapper">
+        <a href="#" data-activates="mobile-list" class="button-collapse"><i class="material-icons">menu</i> </a>
+        <div class="container">
+            <a href="/" class="brand-logo blog-title">Roselia-Blog</a>
+            <ul class="left hide-on-med-and-down">
+
+            </ul>
+            <ul id="nav-mobile" class="right hide-on-med-and-down">
+                <li><a href="./login.html" class="username">Login</a></li>
+            </ul>
+            <ul class="side-nav" id="mobile-list">
+                <li><a href="./">Roselia-Blog</a> </li>
+                <li><a href="./login.html" class="username">Login</a></li>
+                <li><div class="divider"></div> </li>
+                <li><a href="/">Main-Page</a> </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="parallax-container white-text">
+    <div class="section no-pad-bot">
+        <div class="container">
+            <br><br>
+            <h1 class="header center blog-text text-lighten-5 left titles" id="main-title">Roselia</h1>
+            <br>
+            <div class="row">
+                <p class="header col s12 light titles" id="sub-title">Loading post...</p>
+                <p class="header col s12 titles" id="date">Aug 15 2017</p>
+            </div>
+            <br><br>
+        </div>
+    </div>
+    <div class="parallax"><img id="main-pic" src=""> </div>
+</div>
+
+<div class="container" id="main">
+    <div class="fixed-action-btn gotop">
+        <a class="btn-floating btn-large blog-color waves-effect" href="#!" onclick="$('html,body').animate({scrollTop: 0})">
+          <i class="large material-icons">keyboard_arrow_up</i>
+        </a>
+    </div>
+    <div class="preloader-wrapper big active" v-if="app.loading">
+        <div class="spinner-layer spinner-blue-only">
+            <div class="circle-clipper left">
+                <div class="circle"></div>
+            </div>
+            <div class="gap-patch">
+                <div class="circle"></div>
+            </div>
+            <div class="circle-clipper right">
+                <div class="circle"></div>
+            </div>
+        </div>
+    </div>
+    <div v-else class="section">
+        <div class="row" id="post">
+            <div v-if="userData && userData.role" class="card-action right-align">
+                <a href="./edit.html" id="edit-btn" onclick="app.setEditPage('#edit-btn')" class="btn waves-effect blog-color"><i class="material-icons">mode_edit</i></a>
+            </div>
+            <div class="col s12" id="tags">
+            </div>
+        </div>
+        <div class="col s12 m6" id="content">
+
+        </div>
+        <div class="row">
+            <a id="next-btn" v-bind:href="`./post.html?p=${app.getOffset(1)}`" onclick="app.shiftPost(1);return false;" class="btn waves-light waves-effect blog-color left"><i class="material-icons">chevron_left</i></a>
+            <a id="prev-btn" v-bind:href="`./post.html?p=${app.getOffset(-1)}`" onclick="app.shiftPost(-1);return false;" class="btn waves-light waves-effect blog-color right"><i class="material-icons">chevron_right</i></a>
+        </div>
+
+    </div>
+
+</div>
+
+
+<footer class="page-footer blog-color">
+    <div class="container">
+        <div class="row">
+            <div class="col l6 s12">
+                <h5 class="white-text blog-title">Roselia-Blog</h5>
+            </div>
+        </div>
+    </div>
+    <div class="footer-copyright">
+        <div class="container">
+            &copy;<script>document.write((new Date()).getFullYear());</script>
+            Designed by Somainer. All Rights Reserved.
+            Powered by Roselia-Blog.
+        </div>
+    </div>
+</footer>
+
+<script defer src="static/js/jquery-3.2.1.min.js"></script>
+<script defer src="static/js/materialize.min.js"></script>
+<script defer src="static/js/vue.min.js"></script>
+<link href="static/css/materialize.min.css" type="text/css" rel="stylesheet">
+<link href="static/css/material_icons.css" type="text/css" rel="stylesheet">
+<link href="static/css/roselia.css" rel="stylesheet" type="text/css">
+<script defer src="static/js/utils.js"></script>
+<script defer src="static/js/post.js"></script>
+<script defer src="static/js/adovec-prog.js"></script>
+<script defer src="https://cdn.bootcss.com/aplayer/1.6.0/APlayer.min.js"></script>
+</body>
+</html>

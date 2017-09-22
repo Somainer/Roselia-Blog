@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:v-bind="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title class="blog-title">Roselia-Blog</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<nav class="blog-color" id="mobile-nav">
+    <div class="nav-wrapper">
+        <a href="#" data-activates="mobile-list" class="button-collapse"><i class="material-icons">menu</i> </a>
+        <div class="container">
+            <a href="./" class="brand-logo blog-title">Roselia-Blog</a>
+            <ul class="left hide-on-med-and-down">
+
+            </ul>
+            <ul id="nav-mobile" class="right hide-on-med-and-down">
+                <li><a href="/">Index</a> </li>
+                {% if userData %}
+                <li><a href="./login.html" class="username">{{ userData.username }}</a> </li>
+                {% else %}
+                <li><a href="./login.html" class="username">Login</a> </li>
+                {% endif %}
+            </ul>
+            <ul class="side-nav" id="mobile-list">
+                <li><a href="/">Index</a> </li>
+                {% if userData %}
+                <li><a href="./login.html" class="username">{{ userData.username }}</a> </li>
+                {% else %}
+                <li><a href="./login.html" class="username">Login</a> </li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="parallax-container white-text">
+    <div class="section no-pad-bot">
+        <div class="container">
+            <br><br>
+            {% if tag %}
+            <h1 class="header center blog-text left blog-title" id="main-title">{{ tag }}</h1>
+            <br>
+            <div class="row">
+                <p class="header col s12 light blog-motto" id="sub-title">Posts for tag: {{ tag }}</p>
+            </div>
+            {% else %}
+            <h1 class="header center blog-text left blog-title" id="main-title">Roselia</h1>
+            <br>
+            <div class="row">
+                <p class="header col s12 light blog-motto" id="sub-title">Do what you want to do, be who you want to be.</p>
+            </div>
+            {% endif %}
+            <br><br>
+        </div>
+    </div>
+    <div class="parallax"><img id="main-pic" src="static/img/bg2.jpg"> </div>
+</div>
+
+<div class="container">
+    <div class="section">
+        <div id="content" class="row">
+            <div v-if="userData && userData.role" class="fixed-action-btn horizontal">
+                <a class="btn-floating btn-large blog-color waves-effect" href="edit.html">
+                  <i class="large material-icons">mode_edit</i>
+                </a>
+            </div>
+            <ul>
+                {% for post in posts %}
+                <li>
+                    {% set link = 'post/{}'.format(post.id) %}
+                    <div class="card" id="post-{{post.id}}">
+                        <div class="card-image waves-effect waves-block waves-light">
+                            <a href="{{ link }}">
+                                <img src="{{post.img if post.img else 'static/img/st.jpg'}}">
+                            </a>
+                            <div class="card-title col s12" id="tags">
+                                {% for tag in post.tags %}
+                                <a href="./?tag={{tag}}">
+                                    <div class="chip">{{ tag }}</div>
+                                </a>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <a href="{{ link }}">
+                        <div class="card-content grey-text text-darken-4">
+                            <p class="right">{{ post.date }}</p>
+                            <span class="card-title">{{ post.title }}</span>
+                            <p>{{ post.subtitle }}</p>
+                        </div>
+                        </a>
+                        {% if userData and userData.role %}}
+                        <div v-if="userData && userData.role" class="card-action right-align">
+                            <a href="#modal-{{post.id}}" class="btn waves-effect red modal-trigger">delete</a>
+                            <a href="./edit.html?post={{post.id}}" class="btn waves-effect blog-color">Edit</a>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% if userData and userData.role %}}
+                    <div v-if="userData && userData.role" id="modal-{{ post.id }}" class="modal">
+                        <div class="modal-content">
+                            <h4>Are you sure?</h4>
+                            <p>You are deleting: {{ post.title }}</p>
+                            <p>This post will be deleted, and can NOT be undone.</p>
+                        </div>
+                        <div class="modal-footer">
+                            <a href="#!" class=" modal-action modal-close waves-effect waves-purple btn-flat">No</a>
+                            <button onclick="app.deletePost({{post.id}})" class=" modal-action modal-close waves-effect waves-red btn-flat red-text">Yes</button>
+                        </div>
+                    </div>
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+</div>
+
+</div>
+
+<footer class="page-footer blog-color">
+    <div class="container">
+        <div class="row">
+            <div class="col l6 s12">
+                <h5 class="white-text blog-title">Roselia-Blog</h5>
+            </div>
+        </div>
+    </div>
+    <div class="footer-copyright">
+        <div class="container">
+            &copy;<script>document.write((new Date()).getFullYear());</script>
+            Designed by Somainer. All Rights Reserved.
+            Powered by Roselia-Blog.
+        </div>
+    </div>
+</footer>
+
+<script defer src="static/js/jquery-3.2.1.min.js"></script>
+<link rel="stylesheet" href="https://cdn.bootcss.com/materialize/0.100.1/css/materialize.min.css">
+<script defer src="https://cdn.bootcss.com/materialize/0.100.1/js/materialize.min.js"></script>
+<script defer src="static/js/vue.min.js"></script>
+<link href="static/css/material_icons.css" type="text/css" rel="stylesheet">
+<link href="static/css/roselia.css" rel="stylesheet" type="text/css">
+<script defer src="./static/js/blog.seo.js"></script>
+<script>
+    {% if userData %}
+    let userData = {
+        username: {{ userData.username }},
+        role: {{ userData.role }},
+        token: {{ userData.token }}
+    };
+    window.localStorage.loginData = JSON.stringify(userData);
+    {% endif %}
+</script>
+<!--
+<script defer src="static/js/utils.js"></script>
+<script defer src="static/js/blog.js"></script> -->
+</body>
+</html>

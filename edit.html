@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>New Post</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<nav class="blog-color" id="mobile-nav">
+    <div class="nav-wrapper">
+        <a href="#" data-activates="mobile-list" class="button-collapse"><i class="material-icons">menu</i> </a>
+        <div class="container">
+            <a href="./" class="brand-logo blog-title">Roselia-Blog</a>
+            <ul class="left hide-on-med-and-down">
+
+            </ul>
+            <ul id="nav-mobile" class="right hide-on-med-and-down">
+                <li><a href="#" class="username">Log-in</a></li>
+                <li><a href="/">Index</a> </li>
+            </ul>
+            <ul class="side-nav" id="mobile-list">
+                <li><a href="#" class="username">Log-in</a> </li>
+                <li><a href="/">Index</a> </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="container" id="content">
+    <div class="row">
+        <div class="col">
+            <h2 class="blog-text">{{ app.operationName() + " a Post" }}</h2>
+        </div>
+        <form class="col s12" id="post-form">
+            <div class="row">
+                <div class="input-field col s12">
+                    <input id="title" type="text" class="validate">
+                    <label for="title">Title</label>
+                </div>
+                <div class="input-field col s12">
+                    <input id="subtitle" type="text" class="validate">
+                    <label for="subtitle">Subtitle</label>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col">
+                    <label>Language</label>
+                    <div class="switch">
+                        <label>
+                            HTML
+                            <input type="checkbox" id="markdown" class="validate">
+                            <span class="lever"></span>
+                            Markdown
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <!--
+            <div class="row">
+                <div class="col">
+                    <label>Secret</label>
+                    <div class="switch">
+                        <label>
+                            Public
+                            <input type="checkbox" id="secret" class="validate">
+                            <span class="lever"></span>
+                            Secret
+                        </label>
+                    </div>
+                </div>
+            </div>-->
+            <div class="row">
+                <div class="col">
+                    <label for="secret">Secret Level</label>
+                    <div class="range-field">
+                        <label>0-Public 1-Logged in 2-Admin</label>
+                    <input type="range" id="secret" min="0" v-bind:max="app.userData.role+1" value="0">
+                    </div>
+
+                </div>
+            </div>
+            <div class="row">
+                <div class="input-field col s12">
+                    <div id="tags" class="chips chips-initial"></div>
+                    <label for="tags">Tags</label>
+                </div>
+            </div>
+            <div class="row">
+                <div class="input-field col s6">
+                    <input id="img" type="text" class="validate">
+                    <label for="img">Picture</label>
+                </div>
+            </div>
+            <div class="row">
+                <label for="post-content">Content</label>
+                <div class="input-field col s12">
+                    <textarea id="post-content" class="materialize-textarea"></textarea>
+                </div>
+            </div>
+        </form>
+        <div v-if="app.operationType()" class="modal" id="delete-post">
+            <div class="modal-content">
+                <h4>Are you sure?</h4>
+                <p>{{ "You are deleting: " + (app.postData.title) }}</p>
+                <p>This post will be deleted, and can NOT be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <a href="#!" class=" modal-action modal-close waves-effect waves-purple btn-flat">No</a>
+                <button v-bind:onclick="`app.deletePost()`" class=" modal-action modal-close waves-effect waves-red btn-flat red-text">Yes</button>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col right">
+                <div v-if="!app.loading">
+                    <button class="btn waves-effect blog-color" onclick="app.saveDraft()">Save Draft</button>
+                    <a v-if="app.operationType()" href="#delete-post" class="btn waves-effect red">Delete</a>
+                    <button class="btn waves-effect blog-color" onclick="app.doRequest()">{{ app.operationName() }}</button>
+                </div>
+                <div class="preloader-wrapper small active" v-if="app.loading">
+                    <div class="spinner-layer spinner-blue-only">
+                        <div class="circle-clipper left">
+                            <div class="circle"></div>
+                        </div>
+                        <div class="gap-patch">
+                            <div class="circle"></div>
+                        </div>
+                        <div class="circle-clipper right">
+                            <div class="circle"></div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<footer class="page-footer blog-color">
+    <div class="container">
+        <div class="row">
+            <div class="col l6 s12">
+                <h5 class="white-text blog-title">Roselia-Blog</h5>
+            </div>
+        </div>
+    </div>
+    <div class="footer-copyright">
+        <div class="container">
+            &copy;<script>document.write((new Date()).getFullYear());</script>
+            Designed by Somainer. All Rights Reserved.
+            Powered by Roselia-Blog.
+        </div>
+    </div>
+</footer>
+
+<script src="static/js/jquery-3.2.1.min.js"></script>
+<script src="static/js/materialize.min.js"></script>
+<script src="static/js/vue.min.js"></script>
+<link href="static/css/materialize.min.css" type="text/css" rel="stylesheet">
+<link href="static/css/material_icons.css" type="text/css" rel="stylesheet">
+<link href="static/css/roselia.css" rel="stylesheet" type="text/css">
+<script src="static/js/utils.js"></script>
+<script src="static/js/edit.js"></script>
+<script src="static/js/adovec-prog.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.css">
+<script src="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.js"></script>
+</body>
+</html>

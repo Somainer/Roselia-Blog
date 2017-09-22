@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login</title>
+</head>
+<body>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<nav class="blog-color" id="mobile-nav">
+    <div class="nav-wrapper">
+        <a href="#" data-activates="mobile-list" class="button-collapse"><i class="material-icons">menu</i> </a>
+        <div class="container">
+            <a href="./" class="brand-logo blog-title">Roselia-Blog</a>
+            <ul class="left hide-on-med-and-down">
+
+            </ul>
+            <ul id="nav-mobile" class="right hide-on-med-and-down">
+                <li><a href="/">Index</a> </li>
+                <li class="active"><a href="#">Login</a> </li>
+            </ul>
+            <ul class="side-nav" id="mobile-list">
+                <li><a href="/">Index</a> </li>
+                <li class="active"><a href="#">Log-in</a> </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="" id="content">
+        <div class="row">
+            <div class="col s12 m6 offset-m3">
+                <div class="card" id="login-form">
+                    <div v-if="app.loading" class="progress deep-purple accent-1">
+                        <div class="indeterminate blog-color"></div>
+                    </div>
+                    <div class="row card-content">
+                        <div class="col container">
+                            <span class="card-title blog-text">Log in</span>
+                            <p>Log in to manage posts</p>
+                        </div>
+                        <form class="col s12" id="login-data">
+                            <div class="container row">
+                                <div class="input-field col s12">
+                                    <input id="username" type="text" class="validate" required="required">
+                                    <label for="username">Username</label>
+                                </div>
+                            </div>
+                            <div class="container row">
+                                <div class="input-field col s12">
+                                    <input id="password" type="password" class="validate" required="required">
+                                    <label for="password">Password</label>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="card-action right-align">
+                        <button id="login-button" onclick="app.login()" class="btn waves-effect blog-color" v-if="!app.loading">Log in</button>
+                        <div class="preloader-wrapper small active" v-if="app.loading">
+                            <div class="spinner-layer spinner-blue-only">
+                                <div class="circle-clipper left">
+                                    <div class="circle"></div>
+                                </div>
+                                <div class="gap-patch">
+                                    <div class="circle"></div>
+                                </div>
+                                <div class="circle-clipper right">
+                                    <div class="circle"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+        </div>
+    </div>
+</div>
+
+
+<footer class="page-footer blog-color">
+    <div class="container">
+        <div class="row">
+            <div class="col l6 s12">
+                <h5 class="white-text blog-title">Roselia-Blog</h5>
+            </div>
+        </div>
+    </div>
+    <div class="footer-copyright">
+        <div class="container">
+            &copy;<script>document.write((new Date()).getFullYear());</script>
+            Designed by Somainer. All Rights Reserved.
+            Powered by Roselia-Blog.
+        </div>
+    </div>
+</footer>
+
+<script src="static/js/jquery-3.2.1.min.js"></script>
+<script src="static/js/materialize.min.js"></script>
+<script src="static/js/vue.min.js"></script>
+<link href="static/css/materialize.min.css" type="text/css" rel="stylesheet">
+<link href="static/css/material_icons.css" type="text/css" rel="stylesheet">
+<link href="static/css/roselia.css" rel="stylesheet" type="text/css">
+<script src="static/js/utils.js"></script>
+<script src="static/js/login.js"></script>
+</body>
+</html>

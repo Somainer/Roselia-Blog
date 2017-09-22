@@ -1,0 +1,19 @@
+.blog-color{
+    background-color: #7c4dff !important;
+    /*#7c4dff */
+}
+
+.blog-text{
+    color: #651fff !important;
+    /* #651fff*/
+}
+
+code{
+    font-family: Consolas, "Courier New", monospace;
+}
+
+span.heimu {background:black;color:black;}
+span.heimu a:link{background:black;color:black !important;}
+span.heimu a:visited{background:black;color:black !important;}
+span.heimu a:hover {background:black;color:black !important;}
+span.heimu a:active {background:black;color:black !important;}
