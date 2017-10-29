@@ -1,11 +1,16 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
     <meta charset="UTF-8">
     <title class="blog-title">Roselia-Blog</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta name="apple-mobile-web-app-title" content="Roselia Blog">
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="theme" content="#7c4dff">
 </head>
 <body>
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
 <nav class="blog-color" id="mobile-nav">
     <div class="nav-wrapper">
         <a href="#" data-activates="mobile-list" class="button-collapse"><i class="material-icons">menu</i> </a>
@@ -37,16 +42,19 @@
             <br><br>
         </div>
     </div>
-    <div class="parallax"><img id="main-pic" src="static/img/bg2.jpg"> </div>
+    <div class="parallax"><img id="main-pic" src="static/img/bg_n0.png"> </div>
 </div>
 
 <div class="container">
     <div class="section">
         <div id="content" class="row" style="display: none;">
-            <div v-if="userData && userData.role" class="fixed-action-btn horizontal">
+            <div v-if="userData && userData.role" class="fixed-action-btn">
                 <a class="btn-floating btn-large blog-color waves-effect" href="edit.html">
                   <i class="large material-icons">add</i>
                 </a>
+                <ul>
+                    <li><a class="btn-floating red" onclick="utils.deleteDraft();Materialize.toast('Draft cleaned.', 3000)"><i class="material-icons">delete</i></a></li>
+                </ul>
             </div>
             <div v-else class="fixed-action-btn gotop">
                 <a class="btn-floating btn-large blog-color waves-effect" href="#!" onclick="$('html,body').animate({scrollTop: 0})">
@@ -67,7 +75,7 @@
                             </div>
                         </div>
                         <a v-bind:href="('post.html?p='+post.id)">
-                        <div class="card-content grey-text text-darken-4">
+                        <div class="card-content" style="color:#212121">
                             <p class="right">{{ post.date }}</p>
                             <span class="card-title">{{ post.title }}</span>
                             <p>{{ post.subtitle }}</p>

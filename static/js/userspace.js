@@ -58,6 +58,7 @@ $(document).ready(function () {
 });
 
 function shock(obj) {
+    $(obj).stop(!0, !0);
     for (let i = 1; i < 6; i++) {
         $(obj).animate({
             'left': '-=15'
@@ -101,7 +102,7 @@ app.changePassword = function () {
     console.log($("#login-data").serialize());
     this.submitChange(utils.getLoginData().username, oldPassword, newPassword, '', function () {
         app.loading = !1;
-        Materialize.toast("Password Changed");
+        Materialize.toast("Password Changed",2000);
         $("#change-password").fadeOut();
     }, function (msg) {
         shock('#login-form');
@@ -165,6 +166,7 @@ app.getSUToken = function () {
     }, function(raw_data){
         if(!raw_data.success){
             Materialize.toast('Wrong Password.', 2000);
+            shock("#modal-su");
             bar.abort();
         }else{
             bar.stopAnimate();
@@ -182,7 +184,10 @@ app.openDelete = function (username) {
 
 app.commitDelete = function () {
     let username = $("#delete-username").val().toLowerCase();
-    if(!username || $("#delete-user").html().toLowerCase() !== username) return;
+    if(!username || $("#delete-user").html().toLowerCase() !== username) {
+        shock("#modal-delete");
+        return;
+    }
     let bar = new AdvBar();
     bar.createBar($("#modal-delete")[0]);
     bar.startAnimate();
@@ -208,7 +213,7 @@ app.commitDelete = function () {
                         $("#manage").fadeOut();
                     });
                 }else{
-                    Materialize.toast(data.msg);
+                    Materialize.toast(data.msg,2000);
                 }
             }
         },
@@ -240,6 +245,7 @@ app.addUser = function () {
                 $("#modal-add").modal('close');
                 app.loadUser();
             }else{
+                shock("#modal-add");
                 bar.abort();
                 if(data.msg === 'expired'){
                     Materialize.toast('Token Expired!', 2000, "", function () {
@@ -247,11 +253,12 @@ app.addUser = function () {
                         $("#manage").fadeOut();
                     });
                 }else{
-                    Materialize.toast(data.msg);
+                    Materialize.toast(data.msg,2000);
                 }
             }
         },
         error:function () {
+            shock("#modal-add");
             bar.abort();
             Materialize.toast("Network Error!", 2000);
         }
@@ -266,13 +273,14 @@ app.openSet = function (username) {
 app.commitSet = function () {
     let password = $("#set-password").val();
     let username = $("#change-user").html();
-    if(!(password && username)) return;
+    if(!(password && username)) {shock("#modal-set");return;}
     let bar = new AdvBar();
     bar.createBar($("#modal-set")[0]);
     bar.startAnimate();
     app.submitChange(username, '', password, window.sessionStorage.suToken, function () {
         bar.stopAnimate();$("#modal-set").modal('close');
     }, function () {
+        shock("#modal-set");
         bar.abort();
     });
 };
@@ -301,7 +309,7 @@ app.makeTranslation = function (locale) {
                 setPW: 'Set Password',
                 setPWInform: 'You are setting password of:',
                 enterNewPW: 'Enter new password',
-                manage: 'Manage Roselia-Blog',
+                manage: 'Manage ' + utils.BLOG_TITLE||"Roselia-Blog",
                 manageWelcome: 'Welcome, master. You can do ANY thing you want.',
                 delInform: 'You are deleting:',
                 delConfirm: 'To make sure what you are doing, please confirm the username.',
@@ -334,7 +342,7 @@ app.makeTranslation = function (locale) {
                 setPW: '设置密码',
                 setPWInform: '您正在设置密码，其用户名为：',
                 enterNewPW: '输入新的密码',
-                manage: '管理 Roselia-Blog',
+                manage: '管理 ' + utils.BLOG_TITLE||'Roselia-Blog',
                 manageWelcome: '欢迎，主人！在这里您可以为所欲为。',
                 delInform: '您正在删除：',
                 delConfirm: '为了确保您没有吃错药，请确认用户名。',
@@ -366,7 +374,7 @@ app.makeTranslation = function (locale) {
                 setPW: '设置密码',
                 setPWInform: '您正在设置密码，其用户名为：',
                 enterNewPW: '输入新的密码',
-                manage: '管理 Roselia-Blog',
+                manage: '管理 ' + utils.BLOG_TITLE||'Roselia-Blog',
                 manageWelcome: '欢迎，主人！在这里您可以为所欲为。',
                 delInform: '您正在删除：',
                 delConfirm: '为了确保您没有吃错药，请确认用户名。',

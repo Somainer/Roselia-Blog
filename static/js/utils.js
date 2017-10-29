@@ -4,7 +4,9 @@
 let BLOG_TITLE = 'Roselia-Blog';
 let BLOG_MOTTO = 'Do what you want to do, be who you want to be.';
 window.utils = {};
-
+utils.BLOG_TITLE = BLOG_TITLE;
+utils.BLOG_MOTTO = BLOG_MOTTO;
+window.onerror = ()=>true;
 utils.getArguments = function () {
     let argStr = window.location.search;
     if(!argStr.length) return {};
@@ -59,6 +61,8 @@ utils.getPosts = function (callback) {
 };
 
 utils.getPostsData = () => JSON.parse(window.localStorage.postData||"null");
+
+utils.deleteDraft = () => window.localStorage.removeItem("postDraft");
 
 utils.setPosts = function (data) {
     window.localStorage.postData = JSON.stringify(data);

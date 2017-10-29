@@ -209,8 +209,18 @@ app.setScrollFire = function () {
     }]);
 };
 
+app.checkTime = function(){
+    let hour = (new Date).getHours();
+    let morning = (hour>6 && hour<18);
+    const PICS = [['static/img/bg_n0.png','static/img/bg_n1.jpg','static/img/bg_n2.jpg'], ['static/img/bg_m0.jpg','static/img/bg_m1.jpg','static/img/bg_m2.jpg','static/img/bg_m3.jpg']];
+    let pics_arr = PICS[morning + 0];
+    $("#main-pic").attr('src', pics_arr[Math.floor(Math.random()*pics_arr.length)]);
+}
+
 $(document).ready(function () {
+    app.checkTime();
     let userData = utils.getLoginData();
+    $("meta[name=apple-mobile-web-app-title]").attr("content", utils.BLOG_TITLE);
     $(".button-collapse").sideNav();
     $('.parallax').parallax();
     resizer();
@@ -219,6 +229,7 @@ $(document).ready(function () {
         $(".username").html(userData.username).attr('href', './userspace.html');
     }
     $(".modal").modal();
+    utils.colorUtils.apply({selector: "#main-pic", target:"body,.card", text:"#content,#sub-title,#date,.card-content", changeText: true, textColors:{light:"#eeeeee", dark:"#212121"}});
     app.getPosts();
     $(".dropdown-button").dropdown();
     $(window).scroll(function(){
