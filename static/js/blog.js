@@ -70,8 +70,8 @@ app.getPosts = function (page) {
                         id: -1
                     }];bar.setColor("#ff80ab", "#c51162");
                 }
-                $("#main-title").html(tag);
-                $("#sub-title").html("Posts for tag: " + tag);
+                $("#main-title").text(tag);
+                $("#sub-title").text("Posts for tag: " + tag);
                 document.title = "Tag: " + tag;
             }
             if(!raw_data.valid){
