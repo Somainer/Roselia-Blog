@@ -13,9 +13,13 @@ $(document).ready(function () {
     $(window).resize(resizer);
 
     app.loading = false;
+    app.message = window.sessionStorage.message;
+    app.metaInfo = utils.getBlogMeta();
     new Vue({
         el: '#content',
-        data: app
+        data: {
+            app
+        }
     });
     if(window.localStorage.loginData){
         Materialize.toast("Logged out!", 3000);
@@ -39,7 +43,9 @@ $(document).ready(function () {
             $("#login-button").click();
         }
     });
-
+    window.onbeforeunload = app.cleanUp;
+    let token = utils.getArguments().token;
+    token&&app.tokenLogin(token);
 });
 
 function shock(obj) {
@@ -71,7 +77,7 @@ app.login = function () {
         return false;
     }
     console.log($("#login-data").serialize());
-    $.post('./api/login',{
+    $.post(utils.apiFor('login'),{
         username: username, password: password
     } , function (data, stat) {
         data = $.parseJSON(data);
@@ -85,8 +91,32 @@ app.login = function () {
             username: username, token: data.token, role: data.role
         });
         let redirectURL = utils.getRedirect();
-        utils.cleanRedirect();
         utils.redirectTo(redirectURL);
+        app.cleanUp();
     });
 
 };
+app.cleanUp = function () {
+    utils.cleanRedirect();
+    window.sessionStorage.removeItem("message");
+};
+
+app.tokenLogin = function(token){
+    this.loading = true;
+    $.post(utils.apiFor('login','token'),{
+        token
+    } , function (data, stat) {
+        if(!(data.success)){
+            shock('#login-form');
+            Materialize.toast(data.msg, 2000);
+            app.loading = false;
+            return;
+        }
+        utils.setLoginData({
+            username: data.payload.username, token: token, role: data.payload.role
+        });
+        let redirectURL = utils.getRedirect();
+        utils.redirectTo(redirectURL);
+        app.cleanUp();
+    });
+}

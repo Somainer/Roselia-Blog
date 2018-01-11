@@ -1,4 +1,4 @@
-from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
+from itsdangerous import TimedJSONWebSignatureSerializer as Serializer, JSONWebSignatureSerializer as UnlimitedSerializer
 from itsdangerous import SignatureExpired, BadSignature, BadData
 import time
 
@@ -10,6 +10,7 @@ class TokenProcessor:
         self.token_exp = 3600
         self.rftoken_exp = self.token_exp * 24
         self.serializer = Serializer(secret_key=self.secret_key, salt=self.salt, expires_in=self.token_exp)
+        self.un_serializer = UnlimitedSerializer(secret_key=self.secret_key, salt=self.salt)
 
     def iss_token(self, username, role):
         iss_time = time.time()
@@ -61,3 +62,35 @@ class TokenProcessor:
             'username': username,
             'role': role
         }
+
+    def app_token_decode(self, token):
+        serializer = self.un_serializer
+        try:
+            data = serializer.loads(token)
+        except SignatureExpired:
+            return False, 'expired'
+        except BadSignature:
+            return False, 'bad token'
+        except:
+            return False, 'unknown error'
+        return True, data
+
+    def iss_app_token(self, app_name, require_role):
+        return self.un_serializer.dumps({
+            'app_name': app_name,
+            'require_role': require_role
+        }).decode()
+
+    def iss_oauth_token(self, username, user_role, app_token):
+        stat, payload = self.app_token_decode(app_token)
+        serializer = Serializer(secret_key=self.secret_key)
+        if not stat:
+            return False, payload
+        if not user_role >= payload.get('require_role', 0):
+            return False, 'Wrong role'
+        return True, serializer.dumps({
+            'username': username,
+            'for_app': payload.get('app_name', ""),
+            'role': user_role
+        }).decode()
+

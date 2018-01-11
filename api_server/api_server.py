@@ -11,6 +11,7 @@ app = Flask(__name__, static_folder='../', static_url_path='')
 ppl = PipeLine.PostManager()
 acm = PipeLine.ManagerAccount()
 token_processor = TokenProcessor()
+BLOG_LINK = "https://roselia.moe/blog/"
 
 
 def to_json(func):
@@ -82,16 +83,18 @@ def seo_post(p):
         data = {'role': 0}
     post = ppl.find_post(p)
     level = logged_in + data['role']
-    if post:
-        post_data = dict(post, prev=ppl.get_prev(p, level), next=ppl.get_next(p, level)) if level >= post['secret'] else None
+    if post and level >= post['secret']:
+        post_data = dict(post, prev=ppl.get_prev(p, level), next=ppl.get_next(p, level))
     else:
         post_data = {
             'title': 'Page Not Found',
             'subtitle': "Please check your post-id. Or try to <a href='../login.html' onclick='utils.setRedirect(utils.getAbsPath())'" +">Login</a>",
             'date': datetime.datetime.now().strftime('%B %d, %Y'),
             'tags': ['404'],
-            'content': 'There might be some problem here. Please check your input',
-            'id': -1
+            'content': '<p>There might be some problem here. Please check your input.</p>',
+            'id': -1,
+            'prev': -1,
+            'next': -1
         }
     user_data = {'username': data['username'], 'role': data['role'], 'token': token} if logged_in else None
     return render_template('post.html', post=post_data, userData=user_data)
@@ -306,6 +309,18 @@ def login():
         'role': code
     })
 
+@app.route('/api/login/token', methods=['POST'])
+@to_json
+def login_token():
+    token = request.form.get('token')
+    if not token: return {
+        'success': False, 'msg': 'Bad Params'
+    }
+    stat, payload = token_processor.get_username(token)
+    return {
+        'success': stat, 'payload': payload, 'msg': 'Bad token'
+    }
+
 
 @app.route('/api/remove', methods=['DELETE'])
 @to_json
@@ -333,11 +348,12 @@ def delete_post():
 @to_json
 def add_edit_post():
     form = request.get_json()
+    if not form:
+        form = request.form
     pid = form.get('postID')
     data = form.get('data')
     token = form.get('token')
     markdown = form.get('markdown', 0)
-    print(pid)
     if not all([data, token]):
         return {
             'success': False, 'msg': 'bad request'
@@ -359,6 +375,37 @@ def add_edit_post():
         'success': state
     }
 
+@app.route('/api/oauth/authorize', methods=['POST'])
+@to_json
+def authorize():
+    form = request.get_json()
+    if not form:
+        form = request.form
+    app_token = form.get('app_token', '')
+    user_token = form.get('user_token', '')
+    if not all([app_token, user_token]):
+        return {
+            'success': False, 'msg': 'bad request'
+        }
+    valid, info = token_processor.get_username(user_token)
+
+    if not valid:
+        return {
+            'success': False, 'msg': info
+        }
+    stat, token = token_processor.iss_oauth_token(info.get('username'), info.get('role'), app_token)
+    return {
+        'success': stat, 'token': token, 'msg': token, 'username': info.get("username")
+    }
+
+@app.route('/api/oauth/get')
+@to_json
+def get_infos():
+    token = request.args.get('token', '')
+    stat, info = token_processor.app_token_decode(token)
+    return {
+        'success': stat, 'info': info
+    }
 
 @app.route('/api/rss')
 def rss_feed():
@@ -377,7 +424,7 @@ def rss_feed():
                   key=lambda x: x['id'])
     rss = PyRSS2Gen.RSS2(
         title="Roselia-Blog",
-        link='https://roselia.moe/blog',
+        link=BLOG_LINK,
         description="Do what you want to do, be who you want to be",
         lastBuildDate=datetime.datetime.now() if not len(data) else datetime.datetime.fromtimestamp(data[-1]['time']),
         pubDate=datetime.datetime.now(),
@@ -385,8 +432,8 @@ def rss_feed():
             title=post['title'],
             description=post['subtitle'],
             author='Somainer',
-            link="https://roselia.moe/blog/post.html?p={}".format(post['id']),
-            guid=PyRSS2Gen.Guid("https://roselia.moe/blog/post.html?p={}".format(post['id'])),
+            link="{}post.html?p={}".format(BLOG_LINK, post['id']),
+            guid=PyRSS2Gen.Guid("{}post.html?p={}".format(BLOG_LINK, post['id'])),
             categories=post['tags'],
             pubDate=datetime.datetime.fromtimestamp(post['time'])
         ) for post in data]

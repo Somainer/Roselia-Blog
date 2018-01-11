@@ -5,7 +5,7 @@ var resizer = function () {
     //document.getElementsByClassName('parallax-container')[0].style.minHeight = window.innerHeight - document.getElementById('mobile-nav').style.height + "px";
     //$('.parallax-container').animate({height: (window.innerHeight*0.618 - $('#mobile-nav').height()) + "px"});
     $('.parallax-container').css({minHeight: "100%"});
-    $('#main-pic').animate({width: (window.innerWidth)});
+    $('#main-pic').css({width: (window.innerWidth)});
     //document.getElementById("homura").width = window.innerWidth;
 };
 
@@ -33,7 +33,8 @@ app.shiftPage = function (offset) {
     let page = this.getPageOffset(offset);
     if(page === -1) return;
     $("body,html").animate({scrollTop: 0}, 'fast', 'swing');
-    history.pushState({}, "", './?page='+page);
+    history.pushState({id: page}, `${utils.BLOG_TITLE} - Page#${page}`, './?page='+page);
+    document.title = `${utils.BLOG_TITLE} - Page#${page}`
     this.getPosts(page);
 };
 
@@ -49,11 +50,13 @@ app.getPosts = function (page) {
     if(tag) get_data.tag = tag;
     page = page || utils.getArguments().page || 1;
     get_data.page = page;
-
-    get_data.limit = 2;
+    app.current = parseInt(page);
+    app.nextPage = app.getPageOffset(1)
+    app.prevPage = app.getPageOffset(-1)
+    get_data.limit = 6;
     $.ajax({
         type: "GET",
-        url: "./api/posts",
+        url: utils.apiFor("posts"), //"./api/posts",
         contentType: "application/json",
         dataType: "json",
         data: get_data,
@@ -83,7 +86,11 @@ app.getPosts = function (page) {
             app.total = parseInt(raw_data.total);
             app.pages = parseInt(raw_data.pages);
             app.current = parseInt(page);
+            app.nextPage = app.getPageOffset(1)
+            app.prevPage = app.getPageOffset(-1)
+            app.onLoaded();
             //console.log(data.reverse());
+            /*
             new Vue({
                 el: '#content',
                 data: {
@@ -93,7 +100,7 @@ app.getPosts = function (page) {
                     next: app.getPageOffset(1),
                     app: app
                 }
-            });
+            });*/
             $("#content").fadeIn();
             bar.stopAnimate();
 
@@ -165,7 +172,7 @@ app.deletePost = function (pid) {
     bar.startAnimate();
     $.ajax({
         type: "DELETE",
-        url: "./api/remove",
+        url: utils.apiFor("remove"), //"./api/remove",
         contentType: "application/json",
         dataType: "json",
         data: JSON.stringify({postID: pid, token:userData.token}),
@@ -212,9 +219,30 @@ app.setScrollFire = function () {
 app.checkTime = function(){
     let hour = (new Date).getHours();
     let morning = (hour>6 && hour<18);
-    const PICS = [['static/img/bg_n0.png','static/img/bg_n1.jpg','static/img/bg_n2.jpg'], ['static/img/bg_m0.jpg','static/img/bg_m1.jpg','static/img/bg_m2.jpg','static/img/bg_m3.jpg']];
+    const PICS = [['static/img/bg_n0.png','static/img/bg_n1.jpg','static/img/bg_n2.jpg','static/img/bg_n3.jpg'], ['static/img/bg_m0.jpg','static/img/bg_m1.jpg','static/img/bg_m2.jpg']];
     let pics_arr = PICS[morning + 0];
     $("#main-pic").attr('src', pics_arr[Math.floor(Math.random()*pics_arr.length)]);
+}
+
+app.initVue = function(){
+    this.postData = []
+    this.userData = utils.getLoginData()
+    this.nextPage = this.getPageOffset(1)
+    this.prevPage = this.getPageOffset(-1)
+    this.mainVue = new Vue({
+        el: '#content',
+        data: {
+            posts: this.postData,
+            userData: this.userData,
+            prev: this.prevPage,
+            next: this.nextPage,
+            app: this
+        }
+    });
+}
+
+app.onLoaded = function(){
+    utils.colorUtils.apply({selector: "#main-pic", target:"body,.card,.modal,.modal-footer", text:"#content,#sub-title,#date,.card-content,.no-delete", changeText: true, textColors:{light:"#eeeeee", dark:"#212121"}});
 }
 
 $(document).ready(function () {
@@ -229,16 +257,19 @@ $(document).ready(function () {
         $(".username").html(userData.username).attr('href', './userspace.html');
     }
     $(".modal").modal();
-    utils.colorUtils.apply({selector: "#main-pic", target:"body,.card", text:"#content,#sub-title,#date,.card-content", changeText: true, textColors:{light:"#eeeeee", dark:"#212121"}});
+    app.initVue();
     app.getPosts();
+    history.replaceState({id: app.current}, "", window.location.href)
+    window.addEventListener('popstate', e => e.state.id && app.getPosts(e.state.id))
     $(".dropdown-button").dropdown();
     $(window).scroll(function(){
+        $(".gotop")["fade"+["In", "Out"][($(window).height()>$(document).scrollTop())+0]](500);/*
       let w_height = $(window).height();
       let scroll_top = $(document).scrollTop();
       if(scroll_top > w_height){
           $(".gotop").fadeIn(500);
         }else{
           $(".gotop").fadeOut(500);
-      }
+      }*/
     });
 });

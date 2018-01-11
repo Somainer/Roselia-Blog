@@ -7,7 +7,8 @@
     <meta name="apple-mobile-web-app-title" content="Roselia Blog">
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="theme" content="#7c4dff">
+    <link rel="apple-touch-icon" href="favicon.ico"/>
+    <meta name="theme-color" content="#7c4dff">
 </head>
 <body>
 
@@ -48,7 +49,7 @@
 <div class="container">
     <div class="section">
         <div id="content" class="row" style="display: none;">
-            <div v-if="userData && userData.role" class="fixed-action-btn">
+            <div v-if="app.userData && app.userData.role" class="fixed-action-btn">
                 <a class="btn-floating btn-large blog-color waves-effect" href="edit.html">
                   <i class="large material-icons">add</i>
                 </a>
@@ -62,9 +63,9 @@
                 </a>
             </div>
             <ul>
-                <li v-for="post in posts">
+                <li v-for="post in app.postData">
                     <div class="card" v-bind:id="'post-' + post.id">
-                        <div class="card-image waves-effect waves-block waves-light">
+                        <div v-if="post.img" class="card-image waves-effect waves-block waves-light">
                             <a v-bind:href="('post.html?p='+post.id)">
                                 <img v-bind:src="post.img || 'static/img/st.jpg'">
                             </a>
@@ -94,7 +95,7 @@
                             <p>This post will be deleted, and can NOT be undone.</p>
                         </div>
                         <div class="modal-footer">
-                            <a href="#!" class=" modal-action modal-close waves-effect waves-purple btn-flat">No</a>
+                            <a href="#!" class=" modal-action modal-close waves-effect waves-purple btn-flat no-delete">No</a>
                             <button v-bind:onclick="`app.deletePost(${post.id})`" class=" modal-action modal-close waves-effect waves-red btn-flat red-text">Yes</button>
                         </div>
                     </div>
@@ -103,14 +104,14 @@
             </ul>
             <!--
             <ul class="pagination">
-                <li v-bind:class="prev===-1?'disabled':''"><a v-bind:href="prev===-1?'#!':`./?page=${prev}`"></a></li>
+                <li v-bind:class="app.prevPage===-1?'disabled':''"><a v-bind:href="app.prevPage===-1?'#!':`./?page=${app.prevPage}`"></a></li>
                 <li v-for="idx in app.pages" v-bind:class="idx === app.current?'active blog-color':'waves-effect'"><a v-bind:href="idx===app.current?'#!':`./?page=${idx}`">{{ idx }}</a></li>
-                <li v-bind:class="next===-1?'disabled':''"><a v-bind:href="next===-1?'#!':`./?page=${next}`"><i class="material-icons">chevron_right</i></a></li>
+                <li v-bind:class="app.nextPage===-1?'disabled':''"><a v-bind:href="app.nextPage===-1?'#!':`./?page=${app.nextPage}`"><i class="material-icons">chevron_right</i></a></li>
             </ul>-->
-            <div v-if="posts.length" id="load-new" class="center">
-                <a id="next-btn" v-if="prev!==-1" v-bind:href="`./?page=${prev}`" class="btn waves-light waves-effect blog-color left"><i class="material-icons">chevron_left</i></a>
+            <div v-if="app.pages" id="load-new" class="center">
+                <a id="next-btn" v-if="app.prevPage!==-1" v-bind:href="`./?page=${app.prevPage}`" onclick="app.shiftPage(-1);return false" class="btn waves-light waves-effect blog-color left"><i class="material-icons">chevron_left</i></a>
                 <span>Page: {{ app.current }} of {{ app.pages }}</span>
-                <a id="prev-btn" v-if="next!==-1" v-bind:href="`./?page=${next}`" class="btn waves-light waves-effect blog-color right"><i class="material-icons">chevron_right</i></a>
+                <a id="prev-btn" v-if="app.nextPage!==-1" v-bind:href="`./?page=${app.nextPage}`" onclick="app.shiftPage(1);return false" class="btn waves-light waves-effect blog-color right"><i class="material-icons">chevron_right</i></a>
             </div>
         </div>
 </div>
@@ -134,12 +135,12 @@
     </div>
 </footer>
 
-<script defer src="static/js/jquery-3.2.1.min.js"></script>
+<link href="static/css/roselia.css" rel="stylesheet" type="text/css">
 <link rel="stylesheet" href="static/css/materialize.min.css">
+<link href="static/css/material_icons.css" type="text/css" rel="stylesheet">
+<script defer src="static/js/jquery-3.2.1.min.js"></script>
 <script defer src="static/js/materialize.min.js"></script>
 <script defer src="static/js/vue.min.js"></script>
-<link href="static/css/material_icons.css" type="text/css" rel="stylesheet">
-<link href="static/css/roselia.css" rel="stylesheet" type="text/css">
 <script defer src="static/js/utils.js"></script>
 <script defer src="static/js/adovec-prog.js"></script>
 <script defer src="static/js/blog.js"></script>
