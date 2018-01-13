@@ -58,7 +58,8 @@ app.loadContent = function (p) {
             subtitle: "Please check your post-id. Or try to <a href='login.html' onclick='utils.setRedirect(utils.getAbsPath())'" +">Login</a>",
             date: (new Date()).toDateString(),
             tags: ['404'],
-            content: '<p>There might be some problem here. Please check your input</p>'
+            content: '<p>There might be some problem here. Please check your input</p>',
+            notFound: true
         };
     let userData = utils.getLoginData();
     let getData = {};
