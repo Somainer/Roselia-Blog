@@ -87,7 +87,7 @@
                         </div>
                         </a>
                         <div v-if="app.userData && app.userData.role" class="card-action right-align">
-                            <button v-bind:onclick="'app.openModal('+post.id+')'" v-if="userData.role" class="btn waves-effect red"><i class="material-icons">delete</i></button>
+                            <button v-bind:onclick="'app.openModal('+post.id+')'" v-if="app.userData.role" class="btn waves-effect red"><i class="material-icons">delete</i></button>
                             <a v-bind:href="('edit.html?post='+post.id)" class="btn waves-effect blog-color"><i class="material-icons">mode_edit</i></a>
                         </div>
                     </div>
