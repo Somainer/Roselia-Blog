@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <title>Getting Post...</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <link href="static/css/roselia.css" rel="stylesheet" type="text/css">
+    <link href="static/css/materialize.min.css" type="text/css" rel="stylesheet">
+    <link href="static/css/material_icons.css" type="text/css" rel="stylesheet">
 </head>
 <body>
 <nav class="blog-color" id="mobile-nav">
@@ -63,7 +66,7 @@
     </div>
     <div v-else class="section">
         <div class="row" id="post">
-            <div v-if="userData && userData.role" class="card-action right-align">
+            <div v-if="app.userData && app.userData.role" class="card-action right-align">
                 <a href="./edit.html" id="edit-btn" onclick="app.setEditPage('#edit-btn')" class="btn waves-effect blog-color"><i class="material-icons">mode_edit</i></a>
             </div>
             <div class="col s12" id="tags">
@@ -99,9 +102,6 @@
     </div>
 </footer>
 
-<link href="static/css/roselia.css" rel="stylesheet" type="text/css">
-<link href="static/css/materialize.min.css" type="text/css" rel="stylesheet">
-<link href="static/css/material_icons.css" type="text/css" rel="stylesheet">
 <script defer src="static/js/jquery-3.2.1.min.js"></script>
 <script defer src="static/js/materialize.min.js"></script>
 <script defer src="static/js/vue.min.js"></script>

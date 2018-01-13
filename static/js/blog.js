@@ -253,9 +253,9 @@ $(document).ready(function () {
     $('.parallax').parallax();
     resizer();
     $(window).resize(resizer);
-    if(userData){
-        $(".username").html(userData.username).attr('href', './userspace.html');
-    }
+    app.userData = userData;
+    utils.setLoginUI(userData);
+    addEventListener("storage", e => (e.key === 'loginData') && (utils.setLoginUI(), app.getPosts(), app.userData = utils.getLoginData()));
     $(".modal").modal();
     app.initVue();
     app.getPosts();

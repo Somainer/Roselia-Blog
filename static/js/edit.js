@@ -31,6 +31,9 @@ $(document).ready(function () {
             window.location.href = './';
         }, 2000);
     }
+    addEventListener("storage", e => {
+        e.key === "loginData" && (e.newValue || app.makeRedirect("login.html"));
+    });
     $(".username").html(userData.username);
     $(".chips").material_chip();
 

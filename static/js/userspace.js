@@ -10,7 +10,9 @@ $(document).ready(function () {
     $(".button-collapse").sideNav();
     resizer();
     $(window).resize(resizer);
-
+    addEventListener("storage", e => {
+        e.key === "loginData" && (e.newValue || (utils.setRedirect(utils.getAbsPath()), utils.redirectTo("./login.html")));
+    });
     app.loading = false;
     let lang = navigator.language || navigator.browserLanguage;
     let i18n;

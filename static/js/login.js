@@ -25,6 +25,9 @@ $(document).ready(function () {
         Materialize.toast("Logged out!", 3000);
         window.localStorage.removeItem("loginData");
     }
+    addEventListener("storage", e => {
+        e.key === "loginData" && e.newValue && utils.redirectTo(utils.getRedirect());
+    });
     $.ajaxSetup({
         error: function () {
             app.loading = false;
