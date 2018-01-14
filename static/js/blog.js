@@ -32,6 +32,7 @@ app.getPageOffset = function (offset) {
 app.shiftPage = function (offset) {
     let page = this.getPageOffset(offset);
     if(page === -1) return;
+    app.preloaded = false;
     $("body,html").animate({scrollTop: 0}, 'fast', 'swing');
     history.pushState({id: page}, `${utils.BLOG_TITLE} - Page#${page}`, './?page='+page);
     document.title = `${utils.BLOG_TITLE} - Page#${page}`
@@ -226,6 +227,7 @@ app.checkTime = function(){
 }
 
 app.initVue = function(){
+    this.preloaded = (window.ROSELIA_CONFIG && ROSELIA_CONFIG.preloaded) || false;
     this.postData = []
     this.userData = utils.getLoginData()
     this.nextPage = this.getPageOffset(1)
@@ -259,7 +261,17 @@ $(document).ready(function () {
     addEventListener("storage", e => (e.key === 'loginData') && (utils.setLoginUI(), app.getPosts(), app.userData = utils.getLoginData()));
     $(".modal").modal();
     app.initVue();
-    app.getPosts();
+    if(window.ROSELIA_CONFIG && (!userData)){
+        let conf = window.ROSELIA_CONFIG;
+        ["total", "pages", "current"].forEach(attr => app[attr] = conf[attr]);
+        app.nextPage = app.getPageOffset(1);
+        app.prevPage = app.getPageOffset(-1);
+        app.onLoaded();
+    }
+    else {
+        app.preloaded = false;
+        app.getPosts();
+    }
     history.replaceState({id: app.current}, "", window.location.href)
     window.addEventListener('popstate', e => e.state.id && app.getPosts(e.state.id))
     $(".dropdown-button").dropdown();

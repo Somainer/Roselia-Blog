@@ -12,6 +12,10 @@ ppl = PipeLine.PostManager()
 acm = PipeLine.ManagerAccount()
 token_processor = TokenProcessor()
 BLOG_LINK = "https://roselia.moe/blog/"
+BLOG_INFO = {
+    "title": "Roselia-Blog",
+    "motto": "Do what you want to do, be who you want to be."
+}
 
 
 def to_json(func):
@@ -24,11 +28,11 @@ def to_json(func):
 
 
 @app.route('/')
-def mainpage():
-    return app.send_static_file('index.html')
+#def mainpage():
+#    return app.send_static_file('index.html')
 
 
-@app.route('/seo')
+#@app.route('/seo')
 def seo_main():
     logged_in = True
     token = request.args.get('token')
@@ -42,18 +46,59 @@ def seo_main():
     if not logged_in:
         data = {'role': 0}
     tag = request.args.get('tag')
-    posts = sorted([i for i in ppl.get_all_brief() if logged_in + data['role'] >= i['secret']],
-                   key=lambda x: x['id'], reverse=True)
+    page = request.args.get('page', 1, int)
+    limit = request.args.get('limit', 6, int)
+    offset = (page - 1) * limit
+    level = logged_in + data['role']
     if tag:
-        posts = [i for i in posts if tag.lower() in map(str.lower, i['tags'])]
+        posts = [i for i in ppl.get_all_brief() if tag.lower() in map(str.lower, i['tags'])]
+        total = len(posts)
+        pages = 1
+    else:
+        posts = ppl.get_posts(offset, limit, level)
+        total = ppl.get_count(level)
+        pages = total // limit + (total % limit > 0)
     user_data = {'username': data['username'], 'role': data['role'], 'token': token} if logged_in else None
     tag = tag.capitalize() if tag else None
-    return render_template('index.html', posts=posts, userData=user_data, tag=tag)
+    return render_template('index.html', posts=posts, userData=user_data, tag=tag, info=BLOG_INFO, 
+        pages={'total': total, "current": page, "pages": pages})
 
+@app.route('/edit')
+def edit_page():
+    return app.send_static_file("edit.html")
 
 @app.route('/post')
 def getpostpage():
-    return app.send_static_file('post.html')
+    p = request.args.get("p", -1, int)
+    logged_in = True
+    data = None
+    token = request.args.get('token')
+    if not token:
+        logged_in = False
+    else:
+        state, data = token_processor.get_username(token)
+        print(data)
+        logged_in = state
+    if not logged_in:
+        data = {'role': 0}
+    post = ppl.find_post(p) if p >= 0 else None
+    level = logged_in + data['role']
+    if post and level >= post['secret']:
+        post_data = dict(post, prev=ppl.get_prev(p, level), next=ppl.get_next(p, level))
+    else:
+        post_data = {
+            'title': 'Page Not Found',
+            'subtitle': "Please check your post-id. Or try to <a href='../login.html' onclick='utils.setRedirect(utils.getAbsPath())'" +">Login</a>",
+            'date': datetime.datetime.now().strftime('%B %d, %Y'),
+            'tags': ['404'],
+            'content': '<p>There might be some problem here. Please check your input.</p>',
+            'id': -1,
+            'prev': -1,
+            'next': -1,
+            'secret': 0 if not post else post.get('secret', 0)
+        }
+    user_data = {'username': data['username'], 'role': data['role'], 'token': token} if logged_in else None
+    return render_template('post.html', post=post_data, userData=user_data, info=BLOG_INFO)
 
 
 @app.errorhandler(404)
@@ -94,10 +139,11 @@ def seo_post(p):
             'content': '<p>There might be some problem here. Please check your input.</p>',
             'id': -1,
             'prev': -1,
-            'next': -1
+            'next': -1,
+            'secret': 0 if not post else post.get('secret', 0)
         }
     user_data = {'username': data['username'], 'role': data['role'], 'token': token} if logged_in else None
-    return render_template('post.html', post=post_data, userData=user_data)
+    return render_template('post.html', post=post_data, userData=user_data, info=BLOG_INFO)
 
 @app.route('/api/user/change', methods=['POST'])
 @to_json
@@ -228,7 +274,7 @@ def tag_post(t):
                     t.lower() in map(str.lower, i['tags'])],
                    key=lambda x: x['id'])
     user_data = {'username': data['username'], 'role': data['role'], 'token': token} if logged_in else None
-    return render_template('index.html', posts=posts, userData=user_data, tag=t.capitalize())
+    return render_template('index.html', posts=posts, userData=user_data, tag=t.capitalize(), info=BLOG_INFO)
 
 @app.route('/api/post/<int:p>')
 @to_json

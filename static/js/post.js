@@ -39,7 +39,7 @@ app.showContent = function (data) {
     content.find('p').each(function (i, item) {
         $(item).addClass('flow-text');
     });
-    data.id && (data.id == app.getPostNum()?history.replaceState({id: data.id}, "", './post.html?p='+data.id):history.pushState({id: data.id}, "", './post.html?p='+data.id));
+    data.id && (data.id == app.getPostNum()?history.replaceState({id: data.id}, "", './post?p='+data.id):history.pushState({id: data.id}, "", './post?p='+data.id));
     app.setBtns();
     utils.colorUtils.apply({selector: "#main-pic", text:"#content,#sub-title,#date", changeText: true});
     //$.adaptiveBackground.run({selector:"#main-pic", parent: $("#content"), normalizeTextColor: true});
@@ -47,12 +47,13 @@ app.showContent = function (data) {
 };
 app.setBtns = function () {
     let next = app.getOffset(1), prev = app.getOffset(-1);
-    $("#next-btn").attr('href', './post.html?p=' + next).css('display', next>=0?"":"none");
-    $("#prev-btn").attr('href', './post.html?p=' + prev).css('display', prev>=0?"":"none");
+    $("#next-btn").attr('href', './post?p=' + next).css('display', next>=0?"":"none");
+    $("#prev-btn").attr('href', './post?p=' + prev).css('display', prev>=0?"":"none");
 };
 app.loadContent = function (p) {
     if(p === undefined) p = app.getPostNum();
     else app.triggerUnload();
+    app.preloaded = false;
     let notFound = {
             title: 'Page Not Found',
             subtitle: "Please check your post-id. Or try to <a href='login.html' onclick='utils.setRedirect(utils.getAbsPath())'" +">Login</a>",
@@ -121,7 +122,7 @@ app.shiftPost = function (offset) {
     let idx = app.getOffset(offset);
     if(idx === -1) return;
     //$("#content").fadeOut();
-
+    app.preloaded = false;
     app.loading = true;
     $("html,body").animate({scrollTop: 0});
     app.loadContent(idx);
@@ -157,6 +158,30 @@ $(document).ready(function () {
             notFound: true
         });
     });
+    app.loading = true;
+    app.onLoad(utils.setHeimu);
+    if(window.ROSELIA_CONFIG){
+        let conf = ROSELIA_CONFIG;
+        app.preloaded = true;
+        app.postData = {
+            prev: conf.prev,
+            next: conf.next
+        };
+        let content = $("#content");
+        content.find('img').each(function (i, item) {
+            $(item).addClass('responsive-img');
+        });
+        content.find('p').each(function (i, item) {
+            $(item).addClass('flow-text');
+        });
+        app.setBtns();
+        app.triggerLoad();
+        utils.colorUtils.apply({selector: "#main-pic", text:"#content,#sub-title,#date", changeText: true});
+        conf.notFound && userData && (app.preloaded = false, app.loadContent());
+    } else {
+        app.preloaded = false;
+        app.loadContent();
+    }
     /*new Vue({
         el: "#post",
         data: {
@@ -169,8 +194,6 @@ $(document).ready(function () {
             utils, app, userData
         }
     });
-    app.loading = true;
-    app.onLoad(utils.setHeimu);
-    app.loadContent();
+    
     window.addEventListener('popstate', e => e.state.id && app.loadContent(e.state.id))
 });
