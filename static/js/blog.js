@@ -80,6 +80,7 @@ app.getPosts = function (page) {
             if(!raw_data.valid){
                 if(user_data) Materialize.toast("Token expired.");
                 utils.removeLoginData();
+                utils.setLoginUI(), app.userData = null;
             }
             //data.reverse();
             app.postData = data;
