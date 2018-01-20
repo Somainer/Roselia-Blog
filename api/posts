@@ -3,7 +3,7 @@
     {
       "date": "Aug 15, 2017", 
       "id": 1, 
-      "img": "", 
+      "img": "static/img/st.jpg", 
       "secret": 0, 
       "subtitle": "This is an example article.", 
       "tags": [
