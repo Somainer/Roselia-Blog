@@ -64,6 +64,8 @@ app.getPosts = function (page) {
             let data = raw_data.data;
             console.log(tag);
             if(tag){
+                let lowerTag = tag.toLowerCase();
+                data = data.filter(post => post.tags.map(s => s.toLowerCase()).indexOf(lowerTag) > -1);
                 if(!data.length) {
                     data = [{
                         title: 'Tag Not Found',
