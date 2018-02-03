@@ -133,6 +133,104 @@
     !function(n){"use strict";var t=function(){return document.createElement("canvas").getContext("2d")},e=function(n,e){var a=new Image,o=n.src||n;"data:"!==o.substring(0,5)&&(a.crossOrigin="Anonymous"),a.onload=function(){var n=t("2d");n.drawImage(a,0,0);var o=n.getImageData(0,0,a.width,a.height);e&&e(o.data)},a.src=o},a=function(n){return["rgb(",n,")"].join("")},o=function(n){return n.map(function(n){return a(n.name)})},r=5,i=10,c={};c.colors=function(n,t){t=t||{};var c=t.exclude||[],u=t.paletteSize||i;e(n,function(e){for(var i=n.width*n.height||e.length,m={},s="",d=[],f={dominant:{name:"",count:0},palette:Array.apply(null,new Array(u)).map(Boolean).map(function(){return{name:"0,0,0",count:0}})},l=0;i>l;){if(d[0]=e[l],d[1]=e[l+1],d[2]=e[l+2],s=d.join(","),m[s]=s in m?m[s]+1:1,-1===c.indexOf(a(s))){var g=m[s];g>f.dominant.count?(f.dominant.name=s,f.dominant.count=g):f.palette.some(function(n){return g>n.count?(n.name=s,n.count=g,!0):void 0})}l+=4*r}if(t.success){var p=o(f.palette);t.success({dominant:a(f.dominant.name),secondary:p[0],palette:p})}})},n.RGBaster=n.RGBaster||c}(utils.colorUtils);
     //End Import
     
+    utils.debounce = function(func, delay){
+        let tmr;
+        return (...args) => {
+            clearTimeout(tmr);
+            tmr = setTimeout(() => func(...args), delay);
+        }
+    };
+    
+    utils.throttle = function(func, threshold){
+        let last=0, tmr;
+        return (...args) => {
+            let now = new Date;
+            clearTimeout(tmr);
+            if(now - last < threshold){
+                tmr = setTimeout(() => func(...args), threshold);
+            } else {
+                last = now;
+                func(...args);
+            }
+        }
+    };
+    
+    utils.render = function render(template, context, delim){
+        const funcTemplate = expr => `with(data || {}) {return (${expr});}`;
+        return template.replace(new RegExp((delim || ["{{", "}}"]).join("\\s*?(.*?)\\s*?"), "gm"), (_, expr) => (new Function("data", funcTemplate(expr)))(context));
+    };
+    
+    utils.LazyLoad = function($){
+        let _ = {
+            extend: $.extend,
+            deepExtend(...args){
+                return this.extend(true, ...args);
+            },
+            render: utils.render,
+            partition(arr, cond){
+                let res=[[],[]];
+                arr.forEach(v => res[cond(v)^1].push(v));
+                return res;
+            },
+            debounce: utils.debounce,
+            throttle: utils.throttle
+        };
+        let AdovecLazyLoad = function(opts){
+            let defaults = {
+                load: true,
+                placeHolder: "",
+                renderPlaceHolder: false,
+                selector: "#content img",
+                changePlaceHolder: true,
+                prefix: "roselia",
+                onscrolledimg: null,
+                delim: ["{{", "}}"],
+                backupSrc: true,
+                throttleRate: 500
+            };
+            this.alive = false;
+            let options = this.options = _.deepExtend({}, defaults, opts);
+            this.setOption = function(o){
+                this.options = _.deepExtend({}, defaults, opts);
+                return this;
+            }
+            this.load = function(){
+                this.alive && this.destroy();
+                this.alive = true;
+                this.pics = document.querySelectorAll(options.selector);
+                if(this.options.changePlaceHolder){
+                    this.pics.forEach(e => {
+                        let attr = options.prefix+"-src";
+                        options.backupSrc && e.setAttribute(attr, e.src);
+                        e.src = options.changePlaceHolder?_.render(options.placeHolder, e, options.delim):options.placeHolder;
+                    });
+                }
+                this.handler();
+                addEventListener("scroll", this.handler);
+            }
+            this.handler = _.throttle(function(e){
+                let curY = document.documentElement.scrollTop + window.innerHeight;
+                return (new Promise(resolve => {
+                    resolve(_.partition(this.pics, e => curY >= e.y));
+                })).then(([scrolled, remain]) => {
+                    scrolled.forEach(e => e.src = e.getAttribute(this.options.prefix+"-src") || e.src);
+                    return this.pics = remain;
+                }).then(e => (e.length||this.destroy(), e)).then(imgs => this.options.onscrolledimg && this.options.onscrolledimg(imgs));
+            }.bind(this), options.throttleRate);
+            this.destroy = function(){
+                this.alive = false;
+                removeEventListener("scroll", this.handler);
+            }
+            this.options.load && this.load();
+            
+        };
+        AdovecLazyLoad.of = function(o){
+            return new AdovecLazyLoad(o);
+        }
+        AdovecLazyLoad.utils = _;
+        return AdovecLazyLoad;
+    }(jQuery);
+
     utils.setUpEvents = function(app, events){
         app = app || this;
         app.hooks = app.hooks || {};

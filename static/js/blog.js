@@ -90,7 +90,7 @@ app.getPosts = function (page) {
             app.current = parseInt(page);
             app.nextPage = app.getPageOffset(1)
             app.prevPage = app.getPageOffset(-1)
-            app.onLoaded();
+            app.mainVue.$nextTick(() => app.onLoaded());
             //console.log(data.reverse());
             /*
             new Vue({
@@ -206,18 +206,6 @@ app.deletePost = function (pid) {
     })
 };
 
-app.setScrollFire = function () {
-    Materialize.scrollFire([{
-        selector: "#load-new",
-        offset: 0,
-        callback: e => {
-            Materialize.toast("Loading...");
-            window.location.href = '#';
-            app.setScrollFire();
-        }
-    }]);
-};
-
 app.checkTime = function(){
     let hour = (new Date).getHours();
     let morning = (hour>6 && hour<18);
@@ -246,6 +234,8 @@ app.initVue = function(){
 
 app.onLoaded = function(){
     utils.colorUtils.apply({selector: "#main-pic", target:"body,.card,.modal,.modal-footer", text:"#content,#sub-title,#date,.card-content,.no-delete", changeText: true, textColors:{light:"#eeeeee", dark:"#212121"}});
+    if(app.lazyLoad) app.lazyLoad.load();
+    else app.lazyLoad = utils.LazyLoad.of({placeHolder: "static/img/st.jpg"});
 }
 
 $(document).ready(function () {
@@ -255,7 +245,7 @@ $(document).ready(function () {
     $(".button-collapse").sideNav();
     $('.parallax').parallax();
     resizer();
-    $(window).resize(resizer);
+    $(window).resize(utils.throttle(resizer, 500));
     app.userData = userData;
     utils.setLoginUI(userData);
     addEventListener("storage", e => (e.key === 'loginData') && (utils.setLoginUI(), app.getPosts(), app.userData = utils.getLoginData()));
@@ -275,7 +265,7 @@ $(document).ready(function () {
     history.replaceState({id: app.current}, "", window.location.href)
     window.addEventListener('popstate', e => e.state.id && app.getPosts(e.state.id))
     $(".dropdown-button").dropdown();
-    $(window).scroll(function(){
+    $(window).scroll(utils.throttle(function(){
         $(".gotop")["fade"+["In", "Out"][($(window).height()>$(document).scrollTop())+0]](500);/*
       let w_height = $(window).height();
       let scroll_top = $(document).scrollTop();
@@ -284,5 +274,5 @@ $(document).ready(function () {
         }else{
           $(".gotop").fadeOut(500);
       }*/
-    });
+    }, 500));
 });
