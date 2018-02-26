@@ -2,8 +2,23 @@
 const fs = require("fs");
 const UglifyJS = require("uglify-es");
 const path = require("path");
-let jsPath = process.argv[2] || path.join("..", "static_assets");
-let digestPath = process.argv[3] || jsPath.replace("static_assets", "static");
+const argv = require("argv");
+let args = argv.option([
+    {
+        name: "source",
+        short: "s",
+        type: "string",
+        description: "Source js path"
+    },
+    {
+        name: "destination",
+        short: "d",
+        type: "string",
+        description: "Path of compressed js files."
+    }
+]).run().options;
+let jsPath = args.source || path.join("..", "static_assets");
+let digestPath = args.destination || jsPath.replace("static_assets", "static");
 const options = undefined;
 function crawlFile(dir, callback){
     return (new Promise(function(resolve, reject){

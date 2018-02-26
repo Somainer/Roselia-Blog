@@ -30,5 +30,5 @@ for p, d, f in os.walk(digestPath):
             im = im.resize((w, h), Image.ANTIALIAS)
             im.save(path)
 print("Step#3 compressing javascripts...")
-os.system("node build-assets.js {} {}".format(staticPath, digestPath))
+os.system("node build-assets.js -s {} -d {}".format(staticPath, digestPath))
 print("Finished!")
