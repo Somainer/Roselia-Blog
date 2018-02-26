@@ -23,3 +23,14 @@
     
     将api_server文件夹剪切到整个项目之外运行，不然别人可以直接把服务脚本都下过来……
     外层的服务器可以为/static文件夹建立特殊规则，使其可以不通过api_server.
+
+### Update:
+
+将 `static` 重命名为 `static_assets`
+
+增加了生成压缩图片/js的脚本，在scripts里面。使用方法：
+    
+    > cd scripts
+    > npm install #(初次运行时安装依赖)
+    > ./bootstrap.py
+    之后就会生成 static 文件夹，这样才能正常运行
