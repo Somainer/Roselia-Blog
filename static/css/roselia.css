@@ -1,15 +1,41 @@
-.blog-color{
+.blog-color {
     background-color: #7c4dff !important;
     /*#7c4dff */
 }
-
-.blog-text{
+.blog-color.btn:hover,.btn-floating:hover{
+    background: #b388ff !important;
+}
+.btn:not([disabled]):active, .btn-floating:not([disabled]):active{
+    box-shadow: 0 4px 8px 0 rgba(0,0,0,.4);
+}
+.scale-to-zero {
+    -webkit-transform: scale(0);
+    -moz-transform: scale(0);
+    -ms-transform: scale(0);
+    -o-transform: scale(0);
+    transform: scale(0);
+}
+.blog-text {
     color: #651fff !important;
     /* #651fff*/
 }
 
 code{
     font-family: Consolas, "Courier New", monospace;
+}
+
+::selection{
+    background: #7c4dff;
+    color: #fff;
+}
+.table-of-contents a.active{
+    border-left: 2px solid #7c4dff;
+}
+.table-of-contents a:hover{
+    border-left: 1px solid #7c4dff;
+}
+blockquote{
+	border-left: 5px solid #7c4dff;
 }
 
 span.heimu {background:black;color:black;}

@@ -32,7 +32,6 @@ app.getPageOffset = function (offset) {
 app.shiftPage = function (offset) {
     let page = this.getPageOffset(offset);
     if(page === -1) return;
-    app.preloaded = false;
     $("body,html").animate({scrollTop: 0}, 'fast', 'swing');
     history.pushState({id: page}, `${utils.BLOG_TITLE} - Page#${page}`, './?page='+page);
     document.title = `${utils.BLOG_TITLE} - Page#${page}`
@@ -85,6 +84,7 @@ app.getPosts = function (page) {
             }
             //data.reverse();
             app.postData = data;
+            app.preloaded = false;
             app.total = parseInt(raw_data.total);
             app.pages = parseInt(raw_data.pages);
             app.current = parseInt(page);
@@ -233,9 +233,9 @@ app.initVue = function(){
 }
 
 app.onLoaded = function(){
-    utils.colorUtils.apply({selector: "#main-pic", target:"body,.card,.modal,.modal-footer", text:"#content,#sub-title,#date,.card-content,.no-delete", changeText: true, textColors:{light:"#eeeeee", dark:"#212121"}});
+    utils.colorUtils.apply({selector: "#main-pic", target:"body,.card,.modal,.modal-footer,.modal-content", text:"#content,#sub-title,#date,.card-content,.no-delete", changeText: true, textColors:{light:"#eeeeee", dark:"#212121"}});
     if(app.lazyLoad) app.lazyLoad.load();
-    else app.lazyLoad = utils.LazyLoad.of({placeHolder: "static/img/st.jpg"});
+    else app.lazyLoad = utils.LazyLoad.of({placeHolder: "static/img/observe.jpg"});
 }
 
 $(document).ready(function () {
@@ -248,7 +248,7 @@ $(document).ready(function () {
     $(window).resize(utils.throttle(resizer, 500));
     app.userData = userData;
     utils.setLoginUI(userData);
-    addEventListener("storage", e => (e.key === 'loginData') && (utils.setLoginUI(), app.getPosts(), app.userData = utils.getLoginData()));
+    addEventListener("storage", e => (e.key === 'loginData') && (utils.setLoginUI(), app.getPosts(), (app.userData = utils.getLoginData())));
     $(".modal").modal();
     app.initVue();
     if(window.ROSELIA_CONFIG && (!userData)){
@@ -266,13 +266,6 @@ $(document).ready(function () {
     window.addEventListener('popstate', e => e.state.id && app.getPosts(e.state.id))
     $(".dropdown-button").dropdown();
     $(window).scroll(utils.throttle(function(){
-        $(".gotop")["fade"+["In", "Out"][($(window).height()>$(document).scrollTop())+0]](500);/*
-      let w_height = $(window).height();
-      let scroll_top = $(document).scrollTop();
-      if(scroll_top > w_height){
-          $(".gotop").fadeIn(500);
-        }else{
-          $(".gotop").fadeOut(500);
-      }*/
+        $(".gotop .btn-floating, .gotop.btn-floating")[["remove", "add"][($(window).height()>$(document).scrollTop())+0]+"Class"]("scale-to-zero");
     }, 500));
 });

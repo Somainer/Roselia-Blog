@@ -115,7 +115,7 @@
             <div class="col right">
                 <div v-if="!app.loading">
                     <button class="btn waves-effect blog-color" onclick="app.saveDraft()">Save Draft</button>
-                    <a v-if="app.operationType()" href="#delete-post" class="btn waves-effect red">Delete</a>
+                    <a v-if="app.operationType()" href="#delete-post" class="btn waves-effect red modal-trigger">Delete</a>
                     <button class="btn waves-effect blog-color" onclick="app.doRequest()">{{ app.operationName() }}</button>
                 </div>
                 <div class="preloader-wrapper small active" v-if="app.loading">

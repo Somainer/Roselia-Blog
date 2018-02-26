@@ -67,7 +67,7 @@
     <div v-else class="section">
         <div class="row" id="post">
             <div v-if="app.userData && app.userData.role" class="card-action right-align">
-                <a href="./edit.html" id="edit-btn" onclick="app.setEditPage('#edit-btn')" class="btn waves-effect blog-color"><i class="material-icons">mode_edit</i></a>
+                <a href="./edit.html" id="edit-btn" onclick="app.setEditPage(this)" class="btn waves-effect blog-color"><i class="material-icons">mode_edit</i></a>
             </div>
             <div class="col s12" id="tags">
             </div>
@@ -80,6 +80,11 @@
             <a id="prev-btn" v-bind:href="`./post.html?p=${app.getOffset(-1)}`" onclick="app.shiftPost(-1);return false;" class="btn waves-light waves-effect blog-color right"><i class="material-icons">chevron_right</i></a>
         </div>
 
+    </div>
+    <div class="col hide-on-small-only m3 l2 right" v-if="app.postDigest">
+        <ul id="digest-nav" class="section table-of-contents">
+            <li v-for="[hash, title] in app.postDigest"><a :href="'#'+hash">{{ title }}</a></li>
+        </ul>
     </div>
 
 </div>

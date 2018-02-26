@@ -28,37 +28,56 @@ app.showContent = function (data) {
     $("#date").html(data.date);
     $("#tags").html("");
     data.tags.forEach(function (t) {
-        $("#tags").append(`<a href='./?tag=${t}'><div class='chip'>${t}</div></a>`);
+        $("#tags").append(`<a href='./?tag=${t}'><div class='chip waves-effect'>${t}</div></a>`);
     });
     let content = $("#content");
     content.html(data.content);
-    $("#main-pic").attr('src', data.img || 'static/img/mont-fuji.JPG');
+    $("#main-pic").attr('src', data.img || 'static/img/nest.png');
+    data.id && (data.id == app.getPostNum()?history.replaceState({id: data.id}, "", './post?p='+data.id):history.pushState({id: data.id}, "", './post?p='+data.id));
+    app.processContent();
+};
+app.processContent = function () {
+    let content = $("#content");
     content.find('img').each(function (i, item) {
-            $(item).addClass('responsive-img');
-        });
+        $(item).addClass('responsive-img').addClass("materialboxed");
+    });
     content.find('p').each(function (i, item) {
         $(item).addClass('flow-text');
     });
+    $('.materialboxed').materialbox();
     if(app.lazyLoad) app.lazyLoad.load();
-    else app.lazyLoad = utils.LazyLoad.of({placeHolder: "static/img/st.jpg"});
-    data.id && (data.id == app.getPostNum()?history.replaceState({id: data.id}, "", './post?p='+data.id):history.pushState({id: data.id}, "", './post?p='+data.id));
+    else app.lazyLoad = utils.LazyLoad.of({placeHolder: "static/img/observe.jpg"});
     app.setBtns();
-    utils.colorUtils.apply({selector: "#main-pic", text:"#content,#sub-title,#date", changeText: true});
-    //$.adaptiveBackground.run({selector:"#main-pic", parent: $("#content"), normalizeTextColor: true});
-    //app.firstLoad();
-};
+    this.setDigest();
+    this.trigger("load");
+    utils.colorUtils.apply({selector: "#main-pic", text:"#content,#sub-title,#date,.digest-nav-el", changeText: true});
+}
 app.setBtns = function () {
     let next = app.getOffset(1), prev = app.getOffset(-1);
     $("#next-btn").attr('href', './post?p=' + next).css('display', next>=0?"":"none");
     $("#prev-btn").attr('href', './post?p=' + prev).css('display', prev>=0?"":"none");
 };
+app.setDigest = function(){
+    this.postDigest = $("#content h1,h2,h3").map(function (i) {
+        $(this).addClass("section scrollspy");
+        return [[this.id = this.id || `section-${i}`, this.innerHTML]];
+    }).get();
+    app.mainVue.$nextTick(function(){
+        let $content = $("#content"), $nav = $("#digest-nav");
+        $nav.pushpin({
+            top: $content.offset().top,
+            offset: 150,
+            bottom: $content.height() + $content.offset().top - $nav.height()
+        });
+        $(".scrollspy").scrollSpy();
+    });
+};
 app.loadContent = function (p) {
     if(p === undefined) p = app.getPostNum();
     else app.triggerUnload();
-    app.preloaded = false;
     let notFound = {
             title: 'Page Not Found',
-            subtitle: "Please check your post-id. Or try to <a href='login.html' onclick='utils.setRedirect(utils.getAbsPath())'" +">Login</a>",
+            subtitle: "Please check your post-id. Or try to <a href='login' onclick='utils.setRedirect(utils.getAbsPath())'" +">Login</a>",
             date: (new Date()).toDateString(),
             tags: ['404'],
             content: '<p>There might be some problem here. Please check your input</p>',
@@ -82,13 +101,13 @@ app.loadContent = function (p) {
             data: getData,
             success: function (data) {
                 app.loading = false;
+                app.preloaded = false;
                 app.postData = data;
                 if(data === 'null') {
                     data = null;
                 }
                 data || bar.abort();
                 app.showContent(data || notFound);
-                app.triggerLoad();
                 bar.stopAnimate();
             },
             error: function () {
@@ -141,7 +160,7 @@ $(document).ready(function () {
     $('.parallax').parallax();
     $(window).resize(utils.throttle(resizer, 500));
     $(window).scroll(utils.throttle(function(){
-        $(".gotop")["fade"+["In", "Out"][($(window).height()>$(document).scrollTop())+0]](500);
+        $(".gotop .btn-floating, .gotop.btn-floating")[["remove", "add"][($(window).height()>$(document).scrollTop())+0]+"Class"]("scale-to-zero");
     }, 500));
     let userData = utils.getLoginData();
     utils.setLoginUI(userData);
@@ -152,7 +171,7 @@ $(document).ready(function () {
         app.postData && app.postData.notFound && app.loadContent();
         app.postData && app.postData.secret && ((!app.userData) || (app.userData.role + 1 < app.postData.secret)) && app.showContent({
             title: 'Oops!',
-            subtitle: "You have no access to this post. Please try to <a href='login.html' onclick='utils.setRedirect(utils.getAbsPath())'" +">Login</a>",
+            subtitle: "You have no access to this post. Please try to <a href='login' onclick='utils.setRedirect(utils.getAbsPath())'" +">Login</a>",
             date: (new Date()).toDateString(),
             tags: ['403'],
             content: '<p>This post has a level beyond you!</p>',
@@ -161,43 +180,26 @@ $(document).ready(function () {
         });
     });
     app.loading = true;
+    app.preloaded = true;
     app.onLoad(utils.setHeimu);
-    if(window.ROSELIA_CONFIG){
-        let conf = ROSELIA_CONFIG;
-        app.preloaded = true;
-        app.postData = {
-            prev: conf.prev,
-            next: conf.next
-        };
-        let content = $("#content");
-        content.find('img').each(function (i, item) {
-            $(item).addClass('responsive-img');
-        });
-        content.find('p').each(function (i, item) {
-            $(item).addClass('flow-text');
-        });
-        if(app.lazyLoad) app.lazyLoad.load();
-        else app.lazyLoad = utils.LazyLoad.of({placeHolder: "static/img/st.jpg"});
-        app.setBtns();
-        app.triggerLoad();
-        utils.colorUtils.apply({selector: "#main-pic", text:"#content,#sub-title,#date", changeText: true});
-        conf.notFound && userData && (app.preloaded = false, app.loadContent());
-    } else {
-        app.preloaded = false;
-        app.loadContent();
-    }
-    /*new Vue({
-        el: "#post",
-        data: {
-            userData: userData
-        }
-    });*/
+    app.postDigest = [];
     app.mainVue = new Vue({
         el: "#main",
         data: {
             utils, app, userData
         }
     });
+    if(window.ROSELIA_CONFIG){
+        let conf = ROSELIA_CONFIG;
+        app.preloaded = true;
+        app.postData = conf;
+        conf.notFound || history.replaceState({id: conf.current}, "", './post?p='+conf.current);
+        app.processContent();
+        conf.notFound && userData && (app.preloaded = false, app.loadContent());
+    } else {
+        app.preloaded = false;
+        app.loadContent();
+    }
     
     window.addEventListener('popstate', e => e.state.id && app.loadContent(e.state.id))
 });

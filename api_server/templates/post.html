@@ -56,19 +56,19 @@
             <br><br>
         </div>
     </div>
-    {% set prefix = '.' + '' if post.img and post.img.startswith('/') else '/' %}
-    <div class="parallax"><img id="main-pic" src="{{ (prefix+post.img) if post.img else './static/img/mont-fuji.JPG' }}"> </div>
+    <div class="parallax"><img id="main-pic" src="{{ (post.img) if post.img else './static/img/mont-fuji.JPG' }}"> </div>
 </div>
 
-<div class="container" id="main">
-
-    <div class="section">
+<div id="main">
+    <div class="fixed-action-btn gotop">
+        <button class="btn-floating btn-large blog-color waves-effect" onclick="$('html,body').animate({scrollTop: 0})">
+            <i class="large material-icons">keyboard_arrow_up</i>
+        </button>
+    </div>
+    <div class="row section container">
         <div class="row" id="post">
             <div class="card-action right-align">
-                {% if userData and userData.role and post.id>=0 %}
-                <a v-if="app.preloaded" href="./edit.html?post={{ post.id }}" class="btn waves-effect blog-color"><i class="material-icons">mode_edit</i></a>
-                {% endif %}
-                <a v-if="(!app.preloaded) && app.userData && app.userData.role" onclick="app.setEditPage(this)" class="btn waves-effect blog-color"><i class="material-icons">mode_edit</i></a>
+                <a v-if="app.userData && app.userData.role" onclick="app.setEditPage(this)" class="btn waves-effect blog-color"><i class="material-icons">mode_edit</i></a>
             </div>
             <div class="col s12" id="tags">
                 {% for tag in post.tags %}
@@ -76,9 +76,16 @@
                 {% endfor %}
             </div>
         </div>
-        <div class="col s12 m6" id="content">
+        <div class="col s12 l9 m9" id="content">
             {{ post.content | safe }}
         </div>
+        <div class="col hide-on-small-only m3 l2 right" v-if="app.postDigest">
+            <ul id="digest-nav" class="section table-of-contents">
+                <li v-for="[hash, title] in app.postDigest"><a class="digest-nav-el" :href="'#'+hash">{{ "{{ title }}" }}</a></li>
+            </ul>
+        </div>
+    </div>
+    <div class="section container">
         <div v-if="app.preloaded" class="row">
             {% if post.next >=0 %}
             <a id="next-btn-seo" href="./post?p={{ post.next }}" onclick="app.shiftPost(1);return false;" class="btn waves-light waves-effect blog-color left"><i class="material-icons">chevron_left</i></a>
@@ -133,6 +140,7 @@
         preloaded: true,
         next: {{post.next}},
         prev: {{post.prev}},
+        current: {{post.id}},
         secret: {{ post.secret }},
         notFound: {{ ["false", "true"][post.id < 0] }}
     };

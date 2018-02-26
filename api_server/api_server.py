@@ -16,6 +16,7 @@ BLOG_INFO = {
     "title": "Roselia-Blog",
     "motto": "Do what you want to do, be who you want to be."
 }
+DEBUG = True
 
 
 def to_json(func):
@@ -104,12 +105,14 @@ def getpostpage():
 @app.errorhandler(404)
 def error_404(error):
     print(error)
-    return render_template('error.html', error_code='404 Not Found', error_taunt="Oops, seemed you've drunk"), 404
+    return render_template('error.html', error_code='404 Not Found', error_taunt="Oops, seemed you've drunk", 
+    path=request.path, link=BLOG_LINK, info=BLOG_INFO, url=request.url, method=request.method), 404
 
 @app.errorhandler(500)
 def error_500(error):
     print(error)
-    return render_template('error.html', error_code='500 Internal Server Error', error_taunt="SHHH! That's shame. Do not tell others.")
+    return render_template('error.html', error_code='500 Internal Server Error', error_taunt="SHHH! That's shame. Do not tell others.",
+    path=request.path, link=BLOG_LINK, info=BLOG_INFO, url=request.url, method=request.method), 500
 
 
 @app.route('/post/<int:p>')
@@ -164,9 +167,9 @@ def change_password():
     else:
         status = acm.change_password(username, old_password, new_password)
     if status:
-        log.v('Password changed.', username=username, by=data.get('admin'), force=stat)
+        log.v('Password changed.', username=username, by=data.get('admin') if stat else username, force=stat)
     return {
-        'success': status, 'msg': 'Bad Params'
+        'success': status, 'msg': 'Wrong token or expired' if token else 'Wrong password.'
     }
 
 @app.route('/api/user/list')
@@ -489,4 +492,4 @@ def rss_feed():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', threaded=True)
+    app.run(host='0.0.0.0', threaded=True, debug=DEBUG)
