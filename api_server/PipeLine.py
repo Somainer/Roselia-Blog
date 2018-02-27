@@ -5,13 +5,14 @@ import datetime
 import time
 import markdown
 from Logger import log
+from config import DB_POST, DB_USER
 
 
 class ManagerAccount:
     def __init__(self):
         self.Prefix = "wsp"
         self.Suffix = "9mm1WSp"
-        self.DBName = 'User.db'
+        self.DBName = DB_USER
         self.table_name = 'Users'
         self.check_existence()
 
@@ -108,7 +109,7 @@ class ManagerAccount:
 
 class PostManager:
     def __init__(self):
-        self.DB_name = 'Post.db'
+        self.DB_name = DB_POST
         self.table_name = 'Posts'
         self.keys = [
             'title',

@@ -11,13 +11,7 @@ app = Flask(__name__, static_folder='../', static_url_path='')
 ppl = PipeLine.PostManager()
 acm = PipeLine.ManagerAccount()
 token_processor = TokenProcessor()
-BLOG_LINK = "https://roselia.moe/blog/"
-BLOG_INFO = {
-    "title": "Roselia-Blog",
-    "motto": "Do what you want to do, be who you want to be."
-}
-DEBUG = True
-
+from config import BLOG_INFO, BLOG_LINK, DEBUG
 
 def to_json(func):
     @functools.wraps(func)

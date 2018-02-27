@@ -156,12 +156,11 @@ app.setEditPage = function (e) {
 
 $(document).ready(function () {
     $(".button-collapse").sideNav();
-    resizer();
     $('.parallax').parallax();
-    $(window).resize(utils.throttle(resizer, 500));
+    $(window).resize(utils.throttle(resizer, 500).runAfterDeclare());
     $(window).scroll(utils.throttle(function(){
         $(".gotop .btn-floating, .gotop.btn-floating")[["remove", "add"][($(window).height()>$(document).scrollTop())+0]+"Class"]("scale-to-zero");
-    }, 500));
+    }, 500).runAfterDeclare());
     let userData = utils.getLoginData();
     utils.setLoginUI(userData);
     app.userData = userData;

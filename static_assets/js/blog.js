@@ -244,8 +244,7 @@ $(document).ready(function () {
     $("meta[name=apple-mobile-web-app-title]").attr("content", utils.BLOG_TITLE);
     $(".button-collapse").sideNav();
     $('.parallax').parallax();
-    resizer();
-    $(window).resize(utils.throttle(resizer, 500));
+    $(window).resize(utils.throttle(resizer, 500).runAfterDeclare());
     app.userData = userData;
     utils.setLoginUI(userData);
     addEventListener("storage", e => (e.key === 'loginData') && (utils.setLoginUI(), app.getPosts(), (app.userData = utils.getLoginData())));
@@ -267,5 +266,5 @@ $(document).ready(function () {
     $(".dropdown-button").dropdown();
     $(window).scroll(utils.throttle(function(){
         $(".gotop .btn-floating, .gotop.btn-floating")[["remove", "add"][($(window).height()>$(document).scrollTop())+0]+"Class"]("scale-to-zero");
-    }, 500));
+    }, 500).runAfterDeclare());
 });

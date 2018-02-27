@@ -258,6 +258,7 @@
         const funcTemplate = expr => `with(data || {}) {return (${expr});}`;
         return template.replace(new RegExp((delim || ["{{", "}}"]).join("\\s*?(.*?)\\s*?"), "gm"), (_, expr) => (new Function("data", funcTemplate(expr)))(context));
     };
+    Function.prototype.runAfterDeclare = function(...args){return this(...args), this;};
     window.utils = utils;
 })(window);
 

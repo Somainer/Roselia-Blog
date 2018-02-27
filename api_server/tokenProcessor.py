@@ -1,12 +1,12 @@
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer, JSONWebSignatureSerializer as UnlimitedSerializer
 from itsdangerous import SignatureExpired, BadSignature, BadData
 import time
-
+from config import APP_KEY, APP_SALT
 
 class TokenProcessor:
     def __init__(self):
-        self.secret_key = ''
-        self.salt = ''
+        self.secret_key = APP_KEY
+        self.salt = APP_SALT
         self.token_exp = 3600
         self.rftoken_exp = self.token_exp * 24
         self.serializer = Serializer(secret_key=self.secret_key, salt=self.salt, expires_in=self.token_exp)
