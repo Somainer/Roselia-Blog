@@ -62,6 +62,8 @@ app.setDigest = function(){
         $(this).addClass("section scrollspy");
         return [[this.id = this.id || `section-${i}`, this.innerHTML]];
     }).get();
+    let contentClass = ["m9 l10", "m12 l12"], hasDigest = this.postDigest.length > 0;
+    $("#content").removeClass(contentClass[hasDigest ^ 0]).addClass(contentClass[hasDigest ^ 1]);
     app.mainVue.$nextTick(function(){
         let $content = $("#content"), $nav = $("#digest-nav");
         $nav.pushpin({

@@ -1,6 +1,6 @@
 # Roselia-Blog-NEO
 ## A new trial of blog system. 
-    同时是本人的JavaScript学习日程，第一个文件，编辑自2017-8-15，我开始学习JavaScript。这个Blog作为练手项目，比较私人化，有些令人头疼的历史遗留问题……原定彻底通过AJAX加载所有内容，QTMD SEO，但是Roselia-Blog-NEO这个Branch是我尝试解决SEO问题的一个尝试。
+同时是本人的JavaScript学习日程，第一个文件，编辑自2017-8-15，我开始学习JavaScript。这个Blog作为练手项目，比较私人化，有些令人头疼的历史遗留问题……原定彻底通过AJAX加载所有内容，QTMD SEO，但是Roselia-Blog-NEO这个Branch是我尝试解决SEO问题的一个尝试。
 
 
 > NEO VS Normal

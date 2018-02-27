@@ -99,7 +99,7 @@ def getpostpage():
 @app.errorhandler(404)
 def error_404(error):
     print(error)
-    return render_template('error.html', error_code='404 Not Found', error_taunt="Oops, seemed you've drunk", 
+    return render_template('error.html', error_code='404 Not Found', error_taunt="Oops‽ seemed you've drunk", 
     path=request.path, link=BLOG_LINK, info=BLOG_INFO, url=request.url, method=request.method), 404
 
 @app.errorhandler(500)
@@ -475,8 +475,8 @@ def rss_feed():
             title=post['title'],
             description=post['subtitle'],
             author='Somainer',
-            link="{}post.html?p={}".format(BLOG_LINK, post['id']),
-            guid=PyRSS2Gen.Guid("{}post.html?p={}".format(BLOG_LINK, post['id'])),
+            link="{}post?p={}".format(BLOG_LINK, post['id']),
+            guid=PyRSS2Gen.Guid("{}post?p={}".format(BLOG_LINK, post['id'])),
             categories=post['tags'],
             pubDate=datetime.datetime.fromtimestamp(post['time'])
         ) for post in data]
