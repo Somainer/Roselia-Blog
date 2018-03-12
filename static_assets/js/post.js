@@ -153,7 +153,7 @@ app.shiftPost = function (offset) {
 };
 
 app.setEditPage = function (e) {
-    $(e).attr('href', './edit.html?post=' + app.getPostNum());
+    $(e).attr('href', './edit?post=' + app.getPostNum());
 };
 
 $(document).ready(function () {

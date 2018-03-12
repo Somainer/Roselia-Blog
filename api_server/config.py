@@ -5,8 +5,25 @@ BLOG_INFO = {
 }
 DEBUG = True
 
+HOST = '0.0.0.0'
+PORT = 5000
+
 DB_USER = 'User.db'
 DB_POST = 'Post.db'
+
+COLOR = {
+    "light": {
+        "themeColor": "#7c4dff",
+        "textColor": "#651fff",
+        "btnHover": "#b388ff"
+    },
+    "dark": {
+        "themeColor": "#5869b1",
+        "textColor": "#5f5dd3",
+        "btnHover": "#687ac9"
+    }
+}["light"]
+
 
 import os
 def gen_key():

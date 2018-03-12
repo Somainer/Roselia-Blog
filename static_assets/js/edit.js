@@ -21,7 +21,7 @@ $(document).ready(function () {
         $("#content").fadeOut();
         Materialize.toast("Please login first.");
         setTimeout(function () {
-            app.makeRedirect('login.html');
+            app.makeRedirect('login');
         }, 2000);
     }
     if(!userData.role){
@@ -32,7 +32,7 @@ $(document).ready(function () {
         }, 2000);
     }
     addEventListener("storage", e => {
-        e.key === "loginData" && (e.newValue || app.makeRedirect("login.html"));
+        e.key === "loginData" && (e.newValue || app.makeRedirect("login"));
     });
     $(".username").html(userData.username);
     $(".chips").material_chip();
@@ -95,7 +95,7 @@ app.loadContent = function (post_num, callback) {
 app.showContent = function (data) {
 
     if(!data){
-        window.location.href = './edit.html';
+        window.location.href = './edit';
         return;
     }
     document.title = "Edit post " + data.title;
@@ -187,7 +187,7 @@ app.doRequest = function () {
                     app.saveDraft();
                     Materialize.toast('Token Expired!', 2000);
                     setTimeout(function () {
-                        app.makeRedirect('login.html');
+                        app.makeRedirect('login');
                     }, 2000);
                 }else{
                     Materialize.toast(data.msg);
@@ -221,7 +221,7 @@ app.deletePost = function (pid) {
             }else{
                 if(data.msg === 'expired'){
                     Materialize.toast('Token Expired!', 2000, "", function () {
-                        app.makeRedirect('login.html', window.location.href);
+                        app.makeRedirect('login', window.location.href);
                     });
                 }else{
                     Materialize.toast(data.msg);

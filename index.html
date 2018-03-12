@@ -25,11 +25,11 @@
             </ul>
             <ul id="nav-mobile" class="right hide-on-med-and-down">
                 <li><a href="/">Index</a> </li>
-                <li><a href="./login.html" class="username">Login</a> </li>
+                <li><a href="./login" class="username">Login</a> </li>
             </ul>
             <ul class="side-nav" id="mobile-list">
                 <li><a href="/">Index</a> </li>
-                <li><a href="./login.html" class="username">Log-in</a> </li>
+                <li><a href="./login" class="username">Log-in</a> </li>
             </ul>
         </div>
     </div>
@@ -53,7 +53,7 @@
     <div class="section">
         <div id="content" class="row" style="display: none;">
             <div v-if="app.userData && app.userData.role" class="fixed-action-btn">
-                <a class="btn-floating btn-large blog-color waves-effect" href="edit.html">
+                <a class="btn-floating btn-large blog-color waves-effect" href="edit">
                   <i class="large material-icons">add</i>
                 </a>
                 <ul>
@@ -70,7 +70,7 @@
                 <li v-for="post in app.postData">
                     <div class="card" v-bind:id="'post-' + post.id">
                         <div v-if="post.img" class="card-image waves-effect waves-block waves-light">
-                            <a v-bind:href="('post.html?p='+post.id)">
+                            <a v-bind:href="('post?p='+post.id)">
                                 <img v-bind:src="post.img || 'static/img/st.jpg'">
                             </a>
                             <div class="card-title col s12" id="tags">
@@ -79,7 +79,7 @@
                                 </a>
                             </div>
                         </div>
-                        <a v-bind:href="('post.html?p='+post.id)">
+                        <a v-bind:href="('post?p='+post.id)">
                         <div class="card-content" style="color:#212121">
                             <p class="right">{{ post.date }}</p>
                             <span class="card-title">{{ post.title }}</span>
@@ -88,7 +88,7 @@
                         </a>
                         <div v-if="app.userData && app.userData.role" class="card-action right-align">
                             <button v-bind:onclick="'app.openModal('+post.id+')'" v-if="app.userData.role" class="btn waves-effect red"><i class="material-icons">delete</i></button>
-                            <a v-bind:href="('edit.html?post='+post.id)" class="btn waves-effect blog-color"><i class="material-icons">mode_edit</i></a>
+                            <a v-bind:href="('edit?post='+post.id)" class="btn waves-effect blog-color"><i class="material-icons">mode_edit</i></a>
                         </div>
                     </div>
 

@@ -3,8 +3,8 @@
  */
 ;(function(window){
 
-    let BLOG_TITLE = 'Roselia-Blog';
-    let BLOG_MOTTO = 'Do what you want to do, be who you want to be.';
+    let BLOG_TITLE = "{{ title }}";
+    let BLOG_MOTTO = "{{ motto }}";
     let utils = {};
     utils.BLOG_TITLE = BLOG_TITLE;
     utils.BLOG_MOTTO = BLOG_MOTTO;
@@ -59,7 +59,7 @@
     
     utils.removeLoginData = () => window.localStorage.loginData && window.localStorage.removeItem("loginData");
 
-    utils.setLoginUI = (data) => (data || (data = utils.getLoginData())) ? $(".username").text(data.username).attr('href', './userspace.html') : $(".username").text("Login").attr('onclick', 'utils.setRedirect(utils.getAbsPath())').attr('href', './login.html');
+    utils.setLoginUI = (data) => (data || (data = utils.getLoginData())) ? $(".username").text(data.username).attr('href', './userspace') : $(".username").text("Login").attr('onclick', 'utils.setRedirect(utils.getAbsPath())').attr('href', './login');
     
     utils.getPosts = function (callback) {
         let args = {}, login = utils.getLoginData();
@@ -264,7 +264,7 @@
 
 (function ($) {
     $(document).ready(function () {
-        $('.blog-title').html(utils.LOG_TITLE);
-        $('.blog-motto').html(utils.BLOG_MOTTO);
+        $('.blog-title').each((_,e) => e.innerHTML = utils.BLOG_TITLE);
+        $('.blog-motto').each((_,e) => e.innerHTML = utils.BLOG_MOTTO);
     });
 })(jQuery);

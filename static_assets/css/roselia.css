@@ -1,9 +1,9 @@
 .blog-color {
-    background-color: #7c4dff !important;
+    background-color: {{ themeColor }} !important;
     /*#7c4dff */
 }
 .blog-color.btn:hover,.btn-floating:hover{
-    background: #b388ff !important;
+    background: {{ btnHover }} !important;
 }
 .btn:not([disabled]):active, .btn-floating:not([disabled]):active{
     box-shadow: 0 4px 8px 0 rgba(0,0,0,.4);
@@ -16,7 +16,7 @@
     transform: scale(0);
 }
 .blog-text {
-    color: #651fff !important;
+    color: {{ textColor }} !important;
     /* #651fff*/
 }
 
@@ -24,18 +24,22 @@ code{
     font-family: Consolas, "Courier New", monospace;
 }
 
+body {
+    font-family: Seravek, 'JAF Bernino Sans', 'Myriad Pro', Myriad, 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
 ::selection{
-    background: #7c4dff;
+    background: {{ themeColor }};
     color: #fff;
 }
 .table-of-contents a.active{
-    border-left: 2px solid #7c4dff;
+    border-left: 2px solid {{ themeColor }};
 }
 .table-of-contents a:hover{
-    border-left: 1px solid #7c4dff;
+    border-left: 1px solid {{ themeColor }};
 }
 blockquote{
-	border-left: 5px solid #7c4dff;
+	border-left: 5px solid {{ themeColor }};
 }
 
 span.heimu {background:black;color:black;}

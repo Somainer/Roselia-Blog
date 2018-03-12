@@ -11,7 +11,7 @@ $(document).ready(function () {
     resizer();
     $(window).resize(resizer);
     addEventListener("storage", e => {
-        e.key === "loginData" && (e.newValue || (utils.setRedirect(utils.getAbsPath()), utils.redirectTo("./login.html")));
+        e.key === "loginData" && (e.newValue || (utils.setRedirect(utils.getAbsPath()), utils.redirectTo("./login")));
     });
     app.loading = false;
     let lang = navigator.language || navigator.browserLanguage;
@@ -26,7 +26,7 @@ $(document).ready(function () {
     if(!window.localStorage.loginData){
         Materialize.toast("Please login first!", 3000, '', function () {
             utils.setRedirect(utils.getAbsPath());
-            window.location.href = './login.html';
+            window.location.href = './login';
         });
     }
     if(window.sessionStorage.suToken) window.sessionStorage.removeItem('suToken');
@@ -133,7 +133,7 @@ app.loadUser = function () {
                 Materialize.toast('Load failed.', 2000);
                 bar.abort();
                 utils.setRedirect(utils.getAbsPath());
-                window.location.href = './login.html';
+                window.location.href = './login';
             }else{
                 app.mainVue.users = raw_data.data;
                 bar.stopAnimate();

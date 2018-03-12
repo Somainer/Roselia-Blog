@@ -18,11 +18,11 @@
 
             </ul>
             <ul id="nav-mobile" class="right hide-on-med-and-down">
-                <li><a href="./login.html" class="username">Login</a></li>
+                <li><a href="./login" class="username">Login</a></li>
             </ul>
             <ul class="side-nav" id="mobile-list">
                 <li><a href="./">Roselia-Blog</a> </li>
-                <li><a href="./login.html" class="username">Login</a></li>
+                <li><a href="./login" class="username">Login</a></li>
                 <li><div class="divider"></div> </li>
                 <li><a href="/">Main-Page</a> </li>
             </ul>
@@ -67,7 +67,7 @@
     <div v-else class="section">
         <div class="row" id="post">
             <div v-if="app.userData && app.userData.role" class="card-action right-align">
-                <a href="./edit.html" id="edit-btn" onclick="app.setEditPage(this)" class="btn waves-effect blog-color"><i class="material-icons">mode_edit</i></a>
+                <a href="./edit" id="edit-btn" onclick="app.setEditPage(this)" class="btn waves-effect blog-color"><i class="material-icons">mode_edit</i></a>
             </div>
             <div class="col s12" id="tags">
             </div>
@@ -76,8 +76,8 @@
 
         </div>
         <div class="row">
-            <a id="next-btn" v-bind:href="`./post.html?p=${app.getOffset(1)}`" onclick="app.shiftPost(1);return false;" class="btn waves-light waves-effect blog-color left"><i class="material-icons">chevron_left</i></a>
-            <a id="prev-btn" v-bind:href="`./post.html?p=${app.getOffset(-1)}`" onclick="app.shiftPost(-1);return false;" class="btn waves-light waves-effect blog-color right"><i class="material-icons">chevron_right</i></a>
+            <a id="next-btn" v-bind:href="`./post?p=${app.getOffset(1)}`" onclick="app.shiftPost(1);return false;" class="btn waves-light waves-effect blog-color left"><i class="material-icons">chevron_left</i></a>
+            <a id="prev-btn" v-bind:href="`./post?p=${app.getOffset(-1)}`" onclick="app.shiftPost(-1);return false;" class="btn waves-light waves-effect blog-color right"><i class="material-icons">chevron_right</i></a>
         </div>
 
     </div>

@@ -7,11 +7,15 @@ import PyRSS2Gen
 import datetime
 from Logger import log
 
+from gevent import monkey
+from gevent.pywsgi import WSGIServer
+monkey.patch_all()
+
 app = Flask(__name__, static_folder='../', static_url_path='')
 ppl = PipeLine.PostManager()
 acm = PipeLine.ManagerAccount()
 token_processor = TokenProcessor()
-from config import BLOG_INFO, BLOG_LINK, DEBUG
+from config import BLOG_INFO, BLOG_LINK, DEBUG, HOST, PORT
 
 def to_json(func):
     @functools.wraps(func)
@@ -486,4 +490,8 @@ def rss_feed():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', threaded=True, debug=DEBUG)
+    app.config.update(DEBUG=DEBUG)
+    print("{} ran on {}:{}".format(BLOG_INFO["title"], HOST, PORT))
+    http_server = WSGIServer(('', 5000), app)
+    http_server.serve_forever()
+    #app.run(host='0.0.0.0', threaded=True, debug=DEBUG)

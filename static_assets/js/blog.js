@@ -190,7 +190,7 @@ app.deletePost = function (pid) {
                 bar.stopAnimate();
                 if(data.msg === 'expired'){
                     Materialize.toast('Token Expired!', 2000, "", function () {
-                        app.makeRedirect('login.html', window.location.href);
+                        app.makeRedirect('login', window.location.href);
                     });
                 }else{
                     Materialize.toast(data.msg);

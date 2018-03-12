@@ -37,12 +37,12 @@ function crawlFile(dir, callback){
 }
 console.log("Building assets...", jsPath, "=>", digestPath);
 crawlFile(jsPath, f => {
-    if(!f.endsWith(".js") || f.endsWith(".min.js")) return false;
+    if(!f.toLowerCase().endsWith(".js") || f.toLowerCase().endsWith(".min.js")) return false;
     console.log("   Building:", f);
     return (new Promise(function(resolve, reject){
         fs.readFile(f, (err, data) => err?reject(err):resolve(data))
     })).then(data => {
-        return UglifyJS.minify(data.toString(), options).code;
+        return '"use strict";' + UglifyJS.minify(data.toString(), options).code;
     }).then(buf => {
         //console.log(`${f}.replace("${jsPath}", "${digestPath}") =`, f.replace(jsPath, digestPath))
         console.log("   Writing to ", f.replace(jsPath, digestPath))

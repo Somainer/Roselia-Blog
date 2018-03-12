@@ -6,27 +6,19 @@
 > NEO VS Normal
     
     NEO 分支将在第一次请求时返回渲染好的页面，后续内容再通过AJAX加载。
-    没了，就这一个改动……
+    我已经放弃master branch了
 
 > Demo: [Roselia-Blog](https://roselia.moe/blog/)
----
-由于定位是一个由个人维护的网站，故暂时不开放注册。今后可能也不会……
----
 ### Usage:
-
+> * 设置 api_server/config.py
+> * 编译静态文件
 > * RUN api_server/api_server.py
 > * Access localhost:5000
  ### Also capable with Nginx/Caddy etc.:
- > * Set proxy rule of localhost/api -> localhost:5000/api 
-
->Oh, don't forget:
     
-    将api_server文件夹剪切到整个项目之外运行，不然别人可以直接把服务脚本都下过来……
-    外层的服务器可以为/static文件夹建立特殊规则，使其可以不通过api_server.
+    将编译完成后的static文件夹拷贝到Nginx/Caddy文件夹下，交由他们处理，设置static文件夹通过静态服务器代理，其余路径通过api_server，即localhost:5000
 
-### Update:
-
-将 `static` 重命名为 `static_assets`
+### 编译静态文件:
 
 增加了生成压缩图片/js的脚本，在scripts里面。使用方法：
     

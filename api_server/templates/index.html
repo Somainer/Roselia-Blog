@@ -110,7 +110,7 @@
                         {% if userData and userData.role %}
                         <div v-if="userData && userData.role" class="card-action right-align">
                             <a href="#modal-{{post.id}}" class="btn waves-effect red modal-trigger">delete</a>
-                            <a href="./edit.html?post={{post.id}}" class="btn waves-effect blog-color">Edit</a>
+                            <a href="./edit?post={{post.id}}" class="btn waves-effect blog-color">Edit</a>
                         </div>
                         {% endif %}
                     </div>
