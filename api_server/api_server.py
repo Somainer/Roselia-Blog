@@ -491,7 +491,7 @@ def rss_feed():
 
 if __name__ == '__main__':
     app.config.update(DEBUG=DEBUG)
-    print("{} ran on {}:{}".format(BLOG_INFO["title"], HOST, PORT))
-    http_server = WSGIServer(('', 5000), app)
+    log.info("{} ran on {}:{}".format(BLOG_INFO["title"], HOST, PORT))
+    http_server = WSGIServer((HOST, PORT), app)
     http_server.serve_forever()
     #app.run(host='0.0.0.0', threaded=True, debug=DEBUG)
