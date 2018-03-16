@@ -85,7 +85,7 @@ app.preload = function () {
 };
 
 app.loadContent = function (post_num, callback) {
-    $.getJSON('./api/post/'+post_num,{token: utils.getLoginData().token}, function (data) {
+    utils.fetchJSON(utils.apiFor("post", post_num)).then(function (data) {
         if(data === 'null') data = null;
         app.postData = data;
         callback(data);
@@ -171,7 +171,7 @@ app.doRequest = function () {
     app.loading = true;
     $.ajax({
         type: "POST",
-        url: "./api/add",
+        url: utils.apiFor("add"),
         contentType: "application/json",
         dataType: "json",
         data: JSON.stringify(app.makeRequest(app.makeForm())),
@@ -208,7 +208,7 @@ app.deletePost = function (pid) {
     app.loading = true;
     $.ajax({
         type: "DELETE",
-        url: "./api/remove",
+        url: utils.apiFor("remove"),
         contentType: "application/json",
         dataType: "json",
         data: JSON.stringify({postID: pid, token:userData.token}),

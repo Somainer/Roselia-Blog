@@ -135,7 +135,9 @@ app.getLoginCode = function () {
 app.codeLogin = function () {
     app.loading = true;
     app.loginCode = "Loading...";
-    this.getLoginCode().then(code => app.loginCode = code).then(app.codeLoginTriggers);
+    this.getLoginCode().then(code => {
+        app.loginCode = (Array(6).join('0') + code).slice(-6);
+    }).then(app.codeLoginTriggers);
 };
 
 app.codeLoginTriggers = function () {
