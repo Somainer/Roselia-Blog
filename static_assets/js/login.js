@@ -70,6 +70,8 @@ function shock(obj) {
 }
 window.app = {};
 app.loading = true;
+app.loginCode = "";
+app.scannedUsername = "";
 app.login = function () {
     app.loading = true;
     let username = $("#username").val();
@@ -122,4 +124,53 @@ app.tokenLogin = function(token){
         utils.redirectTo(redirectURL);
         app.cleanUp();
     });
-}
+};
+
+app.getLoginCode = function () {
+    return utils.fetchJSON(utils.apiFor("login", "code", "gen")).then(data => {
+        return data.code;
+    }).catch(_ => app.loginCode ="Please retry.");
+};
+
+app.codeLogin = function () {
+    app.loading = true;
+    app.loginCode = "Loading...";
+    this.getLoginCode().then(code => app.loginCode = code).then(app.codeLoginTriggers);
+};
+
+app.codeLoginTriggers = function () {
+    app.codeChecker = setInterval(function () {
+        if(!app.loginCode) return;
+        utils.fetchJSON(utils.apiFor("login", "code", app.loginCode), "POST", {}, false).then(
+            data => {
+                if(!data.success){
+                    return;
+                }
+                let payload = data.data;
+                if(payload.username) {
+                    app.scannedUsername = payload.username;
+                }
+                if(payload.token){
+                    utils.setLoginData({
+                        username: payload.username,
+                        role: payload.role,
+                        token: payload.token
+                    });
+                    let redirectURL = utils.getRedirect();
+                    utils.redirectTo(redirectURL);
+                    app.cleanUp();
+                }
+            }
+        ).catch(_ => true);
+    }, 3000);
+    setTimeout(() => {
+        app.codeLoginCleanUp();
+    }, 60000);
+};
+
+app.codeLoginCleanUp = function () {
+    this.codeChecker && clearInterval(this.codeChecker);
+    this.loading = false;
+    this.loginCode = "";
+    this.scannedUsername = "";
+};

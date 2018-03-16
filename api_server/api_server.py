@@ -6,6 +6,7 @@ import functools
 import PyRSS2Gen
 import datetime
 from Logger import log
+import AuthLogin
 
 from gevent import monkey
 from gevent.pywsgi import WSGIServer
@@ -15,6 +16,7 @@ app = Flask(__name__, static_folder='../', static_url_path='')
 ppl = PipeLine.PostManager()
 acm = PipeLine.ManagerAccount()
 token_processor = TokenProcessor()
+auth_login = AuthLogin.AuthLogin()
 from config import BLOG_INFO, BLOG_LINK, DEBUG, HOST, PORT
 
 def to_json(func):
@@ -25,6 +27,13 @@ def to_json(func):
 
     return wrapper
 
+def conn_info():
+    ua = request.user_agent
+    return {
+        "ip": request.access_route[0],
+        "browser": ua.browser.capitalize(),
+        "os": ua.platform.capitalize()
+    }
 
 @app.route('/')
 #def mainpage():
@@ -334,7 +343,11 @@ def all_post():
 
 @app.route('/login')
 def login_page():
-    return app.send_static_file('login.html')
+    return app.send_static_file('login.html')\
+
+@app.route('/userspace')
+def userspace_page():
+    return app.send_static_file('userspace.html')
 
 
 @app.route('/api/login', methods=['POST'])
@@ -488,10 +501,117 @@ def rss_feed():
     )
     return rss.to_xml('utf-8'), 201, {'Content-Type': 'application/xml'}
 
+@app.route("/api/login/code/gen")
+@to_json
+def gen_code():
+    return {
+        "success": True,
+        "code": auth_login.gen_random_token(conn_info())
+    }
+
+@app.route("/api/login/code/scan/<int:code>", methods=["POST"])
+@to_json
+def scan_code(code):
+    form = request.get_json()
+    if not form:
+        form = request.form
+    token = form.get("token", "")
+    def hndl_code():
+        if not code:
+            return False, "No code"
+        if not token:
+            return False, "No token"
+        vaild, user = token_processor.get_username(token)
+        if not vaild:
+            return False, "Invalid token"
+        stat, info = auth_login.get_code(code)
+        if not stat:
+            return False, info
+        auth_login.set_code(code, user)
+        conn = auth_login.conns.get(code)
+        return True, conn
+    succ, info = hndl_code()
+    return {
+        "success": succ,
+        "msg": info
+    }
+
+
+@app.route("/api/login/code/confirm/<int:code>", methods=["POST"])
+@to_json
+def confirm_code(code):
+    form = request.get_json()
+    if not form:
+        form = request.form
+    token = form.get("token", "")
+    succ, info = auth_login.get_code(code)
+    valid, token_user = token_processor.get_username(token)
+    def handler():
+        if not succ:
+            return False, info
+        if not valid:
+            return False, token_user
+        user = info.get("user", {})
+        username = user.get("username", "")
+        role = user.get("role", 0)
+        if username != token_user.get("username"):
+            return False, "Wrong user"
+        auth_login.confirm_login(code)
+        return True, "Confirmed"
+
+    succ, pld = handler()
+    return {
+        "success": succ,
+        "data": pld
+    }
+
+
+
+@app.route("/api/login/code/<int:code>", methods=["POST"])
+@to_json
+def query_code(code):
+    succ, info = auth_login.get_code(code)
+
+    def handler():
+        if not succ:
+            return False, info
+        user = info.get("user", {})
+        res = {
+            "username": user.get("username", ""),
+            "role": user.get("role", 0)
+        }
+        if info.get("confirmed"):
+            _, t = token_processor.iss_token(res["username"], res["role"])
+            res["token"] = t["token"]
+            auth_login.pop_code(code)
+        return True, res
+
+    succ, pld = handler()
+    return {
+        "success": succ,
+        "data": pld
+    }
+
+@app.route("/api/login/code/info/<int:code>")
+@to_json
+def getlkdfsja(code):
+    _, info = auth_login.get_code(code)
+    return {
+        "info": info
+    }
+
+
+@app.route("/api/conn")
+@to_json
+def get_inform():
+    return conn_info()
+
 
 if __name__ == '__main__':
-    app.config.update(DEBUG=DEBUG)
-    log.info("{} ran on {}:{}".format(BLOG_INFO["title"], HOST, PORT))
-    http_server = WSGIServer((HOST, PORT), app)
-    http_server.serve_forever()
-    #app.run(host='0.0.0.0', threaded=True, debug=DEBUG)
+    if DEBUG:
+        app.run(host='0.0.0.0', threaded=True, debug=DEBUG)
+    else:
+        log.info("{} ran on {}:{}".format(BLOG_INFO["title"], HOST, PORT))
+        http_server = WSGIServer((HOST, PORT), app)
+        http_server.serve_forever()
+    

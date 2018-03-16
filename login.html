@@ -35,6 +35,8 @@
                         <div class="indeterminate blog-color"></div>
                     </div>
                     <div class="row card-content">
+                        <p v-if="app.loginCode" class="right blog-text" onclick="app.codeLoginCleanUp()">With username</p>
+                        <p v-else="" class="right blog-text" onclick="app.codeLogin()">With access code</p>
                         <div class="col container">
                             <span class="card-title blog-text">Log in</span>
                             <p>{{ app.message || "Log in to manage posts" }}</p>
@@ -56,7 +58,18 @@
                             </form>
                         </div>
                         <div v-show="app.loading" class="col s12 container">
-                            <h5>Loading...</h5>
+                            <div v-if="app.loginCode">
+                                <div v-if="app.scannedUsername">
+                                    <h6>Welcome, please confirm:</h6>
+                                    <h1 class="blog-text center" v-text="app.scannedUsername"></h1>
+                                </div>
+                                <div v-else="">
+                                    <h6>Your login code:</h6>
+                                    <h1 class="blog-text center" v-text="app.loginCode"></h1>
+                                </div>
+                            </div>
+
+                            <h5 v-else="">Loading...</h5>
                         </div>
                     </div>
                     <div class="card-action right-align">
@@ -77,8 +90,6 @@
                     </div>
                 </div>
             </div>
-
-
         </div>
     </div>
 </div>

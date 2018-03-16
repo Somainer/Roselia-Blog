@@ -50,6 +50,10 @@
     utils.getAbsPath = function () {
         return window.location.pathname + window.location.search;
     };
+
+    utils.notify = function (message, displayLength, className, completeCallback){
+        return Materialize.toast(message, displayLength, className, completeCallback);
+    };
     
     utils.redirectTo = url => window.location.href = url || './';
     
@@ -87,6 +91,27 @@
         if(post) callback(JSON.parse(post));
         else utils.getPosts(callback);
         return false;
+    };
+    utils.fetchJSON = function (url, method = "GET", payload = {}, withToken = true, individual=true) {
+        let loginData = this.getLoginData();
+        let token = loginData?loginData.token:"";
+        method = method.toUpperCase();
+        if(individual){
+            payload["random_t"] = (new Date).getTime();
+        }
+        let data = (withToken && method!=="GET")?Object.assign({}, payload, {token: token}):payload;
+        if(method!=="GET") data = JSON.stringify(data);
+        return new Promise(function (resolve, reject) {
+            $.ajax({
+                type: method,
+                url: url,
+                contentType: "application/json",
+                dataType: "json",
+                data: data,
+                success: resolve,
+                error: reject
+            });
+        });
     };
     (function(utils, $){
         utils.colorUtils = {
@@ -221,13 +246,13 @@
             this.destroy = function(){
                 this.alive = false;
                 removeEventListener("scroll", this.handler);
-            }
+            };
             this.options.load && this.load();
             
         };
         AdovecLazyLoad.of = function(o){
             return new AdovecLazyLoad(o);
-        }
+        };
         AdovecLazyLoad.utils = _;
         return AdovecLazyLoad;
     }(jQuery);
@@ -259,6 +284,9 @@
         return template.replace(new RegExp((delim || ["{{", "}}"]).join("\\s*?(.*?)\\s*?"), "gm"), (_, expr) => (new Function("data", funcTemplate(expr)))(context));
     };
     Function.prototype.runAfterDeclare = function(...args){return this(...args), this;};
+    if(!Promise.prototype.finally) Promise.prototype.finally = function (f) {
+        return this.then(f, f);
+    };
     window.utils = utils;
 })(window);
 

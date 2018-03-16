@@ -17,12 +17,12 @@
             <ul id="nav-mobile" class="right hide-on-med-and-down">
                 <li><a href="/">Index</a> </li>
                 <li class="active"><a class="username" href="#!"></a> </li>
-                <li><a href="./login.html">Logout</a> </li>
+                <li><a href="./login">Logout</a> </li>
             </ul>
             <ul class="side-nav" id="mobile-list">
                 <li><a href="/">Index</a> </li>
-                <li class="active"><a class="username"href="#!"></a> </li>
-                <li><a href="./login.html"></a>Logout</li>
+                <li class="active"><a class="username" href="#!"></a> </li>
+                <li><a href="./login"></a>Logout</li>
             </ul>
         </div>
     </div>
@@ -35,6 +35,7 @@
             <h3 class="blog-text">{{ $t('message.operation') }}</h3>
             <button class="blog-color btn waves-effect waves-light" onclick="$('#change-password').fadeIn()">{{ $t('message.changePW') }}</button>
             <button v-if="userData.role" onclick="app.openManage()" class="blog-color btn waves-effect waves-light">{{ $t('message.optManage') }}</button>
+            <button onclick="$('#remote-login').fadeIn();app.remoteCode=''" class="blog-color btn waves-effect waves-light">{{ $t('message.remoteLogin') }}</button>
             <a href="login.html" class="btn pink darken-1 waves-effect waves-light">{{ $t('message.logout') }}</a>
         </div>
         <div id="modal-su" class="modal modal-fixed-footer">
@@ -53,6 +54,16 @@
             <div class="modal-footer">
                 <a href="#!" class="modal-action modal-close waves-effect waves-light btn blog-color">{{ $t('message.close') }}</a>
                 <a href="#!" onclick="app.getSUToken()" class="modal-action waves-effect waves-light btn blog-color">{{ $t('message.OK') }}</a>
+            </div>
+        </div>
+        <div id="modal-remote" class="modal">
+            <div class="modal-content container">
+                <h4 class="blog-text offset-s3">{{ $t('message.remoteLogin') }}</h4>
+                <p>{{ $t('message.remoteMeta', app.userMeta) }}</p>
+            </div>
+            <div v-if="!app.loading" class="modal-footer">
+                <a href="#!" class="modal-action modal-close waves-effect waves-light btn blog-color">{{ $t('message.close') }}</a>
+                <a href="#!" onclick="app.confirmCode()" class="btn modal-action waves-effect waves-light blog-color">{{ $t('message.OK') }}</a>
             </div>
         </div>
         <div class="row container" id="manage" style="display: none;" v-if="userData.role">
@@ -153,7 +164,46 @@
                     </div>
                 </div>
             </div>
+        </div>
 
+        <div class="row" id="remote-login" style="display: none;">
+            <div class="col s12 m6 offset-m3">
+                <div class="card" id="login-form">
+                    <div v-if="app.loading" class="progress deep-purple accent-1">
+                        <div class="indeterminate blog-color"></div>
+                    </div>
+                    <div class="row card-content">
+                        <div class="col container">
+                            <span class="card-title blog-text">{{ $t('message.remoteLogin') }}</span>
+                        </div>
+                        <form class="col s12">
+                            <div class="container row">
+                                <div class="input-field col s12">
+                                    <input @keyup.enter="app.scanCode(app.remoteCode)" id="login-code" type="number" v-model="app.remoteCode" class="validate" required="required">
+                                    <label for="login-code">{{ $t('message.loginCode') }}</label>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="card-action right-align">
+                        <button onclick="$('#remote-login').fadeOut()" class="btn pink darken-1 waves-effect waves-light" v-if="!app.loading">{{ $t('message.close') }}</button>
+                        <button id="code-login-button" onclick="app.scanCode(app.remoteCode)" class="btn waves-effect blog-color waves-light" v-if="!app.loading">{{ $t('message.OK') }}</button>
+                        <div class="preloader-wrapper small active" v-if="app.loading">
+                            <div class="spinner-layer spinner-blue-only">
+                                <div class="circle-clipper left">
+                                    <div class="circle"></div>
+                                </div>
+                                <div class="gap-patch">
+                                    <div class="circle"></div>
+                                </div>
+                                <div class="circle-clipper right">
+                                    <div class="circle"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
         <div class="row" id="change-password" style="display: none;">
             <div class="col s12 m6 offset-m3">
@@ -206,8 +256,6 @@
                     </div>
                 </div>
             </div>
-
-
         </div>
     </div>
 </div>

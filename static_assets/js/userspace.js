@@ -79,6 +79,8 @@ function shock(obj) {
 }
 window.app = {};
 app.loading = true;
+app.remoteCode = "";
+app.userMeta = {};
 app.submitChange = function (username, oldPassword, newPassword, token, success, error) {
     $.post('./api/user/change',{
         username: username, oldPassword: oldPassword, newPassword: newPassword, token: token || ""
@@ -124,7 +126,7 @@ app.loadUser = function () {
     bar.startAnimate();
     $.ajax({
         type: "GET",
-        url: "./api/user/list",
+        url: utils.apiFor("user", "list"),
         contentType: "application/json",
         dataType: "json",
         data: {token: userData.token},
@@ -195,7 +197,7 @@ app.commitDelete = function () {
     bar.startAnimate();
     $.ajax({
         type: "DELETE",
-        url: "./api/user/remove",
+        url: utils.apiFor("user", "remove"),
         contentType: "application/json",
         dataType: "json",
         data: JSON.stringify({username: username, token:window.sessionStorage.suToken || ''}),
@@ -234,7 +236,7 @@ app.addUser = function () {
     bar.startAnimate();
     $.ajax({
         type: "POST",
-        url: "./api/user/add",
+        url: utils.apiFor("user", "add"),
         contentType: "application/json",
         dataType: "json",
         data: JSON.stringify({username: username, password: password, token:window.sessionStorage.suToken || ''}),
@@ -287,6 +289,44 @@ app.commitSet = function () {
     });
 };
 
+app.scanCode = function (code) {
+    app.loading = true;
+    utils.fetchJSON(utils.apiFor("login", "code", "scan", code), "POST").then(data => {
+        app.loading = false;
+        if(!data.success) {
+            utils.notify(data.msg);
+            shock("#remote-login");
+            return;
+        }
+        app.confirmCodeModal(data.msg);
+    }).catch(_ => {
+        app.loading = false;
+        utils.notify("Network error.");
+        shock("#remote-login");
+    });
+};
+
+app.confirmCodeModal = function (meta) {
+    app.userMeta = meta;
+    $("#modal-remote").modal().modal('open');
+};
+
+app.confirmCode = function () {
+    let bar = new AdvBar();
+    bar.createBar($("#modal-remote")[0]);
+    bar.startAnimate();
+    app.loading = true;
+    utils.fetchJSON(utils.apiFor("login", "code", "confirm", app.remoteCode), "POST").then(data => {
+        if(!data.success){
+            utils.notify(data.msg);
+            bar.abort();
+        }
+        bar.stopAnimate();
+        $("#remote-login").fadeOut();
+        $("#modal-remote").modal('close');
+    }).catch(_ => {bar.abort(); utils.notify("Network error")}).finally(_ => app.loading = false);
+};
+
 app.makeTranslation = function (locale) {
     let messages = {
         en: {
@@ -319,7 +359,10 @@ app.makeTranslation = function (locale) {
                 oldPW: 'Old Password',
                 newPW: 'New Password',
                 confirmPW: 'Confirm Password',
-                changePWInform: 'Change password for {0}'
+                changePWInform: 'Change password for {0}',
+                remoteLogin: 'Remote login',
+                loginCode: 'Login Code',
+                remoteMeta: 'Will login at {os} {browser} device on {ip}'
             }
         },
         zh: {
@@ -352,7 +395,10 @@ app.makeTranslation = function (locale) {
                 oldPW: '旧密码',
                 newPW: '新密码',
                 confirmPW: '确认密码',
-                changePWInform: '设置{0}的密码'
+                changePWInform: '设置{0}的密码',
+                remoteLogin: '远程登入',
+                loginCode: '登入代码',
+                remoteMeta: '将登入位于 {ip} 的 {os} {browser}设备'
             }
         },jp: {
             message:{
@@ -384,7 +430,10 @@ app.makeTranslation = function (locale) {
                 oldPW: '旧密码',
                 newPW: '新密码',
                 confirmPW: '确认密码',
-                changePWInform: '设置{0}的密码'
+                changePWInform: '设置{0}的密码',
+                remoteLogin: '远程登入',
+                loginCode: '登入代码',
+                remoteMeta: '将登入位于 {ip} 的 {os} {browser}设备'
             }
         },
     };
