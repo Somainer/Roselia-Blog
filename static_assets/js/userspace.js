@@ -312,16 +312,11 @@ app.confirmCodeModal = function (meta) {
 };
 
 app.confirmCode = function () {
-    let bar = new AdvBar();
-    bar.createBar($("#modal-remote")[0]);
-    bar.startAnimate();
     app.loading = true;
     utils.fetchJSON(utils.apiFor("login", "code", "confirm", app.remoteCode), "POST").then(data => {
         if(!data.success){
             utils.notify(data.msg);
-            bar.abort();
         }
-        bar.stopAnimate();
         $("#remote-login").fadeOut();
         $("#modal-remote").modal('close');
     }).catch(_ => {bar.abort(); utils.notify("Network error")}).finally(_ => app.loading = false);

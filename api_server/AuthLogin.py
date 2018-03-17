@@ -53,6 +53,7 @@ class AuthLogin:
         return False, "Wrong code"
 
     def pop_code(self, code):
+        self.conns.pop(code)
         return self.dic.pop(code)
 
 
