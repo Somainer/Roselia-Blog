@@ -195,7 +195,7 @@ $(document).ready(function () {
         app.preloaded = true;
         app.postData = conf;
         conf.notFound || history.replaceState({id: conf.current}, "", './post?p='+conf.current);
-        app.processContent();
+        conf.notFound || app.processContent();
         conf.notFound && userData && (app.preloaded = false, app.loadContent());
     } else {
         app.preloaded = false;

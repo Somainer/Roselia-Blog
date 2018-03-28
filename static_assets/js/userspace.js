@@ -55,7 +55,8 @@ $(document).ready(function () {
             app.getSUToken();
         }
     });
-    $(".username").html(utils.getLoginData().username);
+    utils.setLoginUI();
+    $("select").material_select();
 
 });
 
@@ -81,6 +82,7 @@ window.app = {};
 app.loading = true;
 app.remoteCode = "";
 app.userMeta = {};
+app.userData = utils.getLoginData();
 app.submitChange = function (username, oldPassword, newPassword, token, success, error) {
     $.post('./api/user/change',{
         username: username, oldPassword: oldPassword, newPassword: newPassword, token: token || ""
@@ -231,16 +233,13 @@ app.commitDelete = function () {
 app.addUser = function () {
     let username = $("#username").val();
     let password = $("#password").val();
+    let role = $("#user-role").val();
     let bar = new AdvBar();
     bar.createBar($("#modal-add")[0]);
     bar.startAnimate();
-    $.ajax({
-        type: "POST",
-        url: utils.apiFor("user", "add"),
-        contentType: "application/json",
-        dataType: "json",
-        data: JSON.stringify({username: username, password: password, token:window.sessionStorage.suToken || ''}),
-        success: function (data) {
+    utils.fetchJSON(utils.apiFor("user", "add"), "POST",
+        {username: username, password: password, role:role, token: window.sessionStorage.suToken || ''},
+        false).then(function (data) {
             console.log(data);
             //data = JSON.parse(data);
             if(data.success){
@@ -260,13 +259,11 @@ app.addUser = function () {
                     Materialize.toast(data.msg,2000);
                 }
             }
-        },
-        error:function () {
+        }).catch(function () {
             shock("#modal-add");
             bar.abort();
             Materialize.toast("Network Error!", 2000);
-        }
-    })
+        });
 };
 
 app.openSet = function (username) {
@@ -295,14 +292,14 @@ app.scanCode = function (code) {
         app.loading = false;
         if(!data.success) {
             utils.notify(data.msg);
-            shock("#remote-login");
+            shock("#remote-login-form");
             return;
         }
         app.confirmCodeModal(data.msg);
     }).catch(_ => {
         app.loading = false;
         utils.notify("Network error.");
-        shock("#remote-login");
+        shock("#remote-login-form");
     });
 };
 
@@ -357,7 +354,8 @@ app.makeTranslation = function (locale) {
                 changePWInform: 'Change password for {0}',
                 remoteLogin: 'Remote login',
                 loginCode: 'Login Code',
-                remoteMeta: 'Will login at {os} {browser} device on {ip}'
+                remoteMeta: 'Will login at {os} {browser} device on {ip}',
+                userRole: 'User Level'
             }
         },
         zh: {
@@ -393,7 +391,8 @@ app.makeTranslation = function (locale) {
                 changePWInform: '设置{0}的密码',
                 remoteLogin: '远程登入',
                 loginCode: '登入代码',
-                remoteMeta: '将登入位于 {ip} 的 {os} {browser}设备'
+                remoteMeta: '将登入位于 {ip} 的 {os} {browser}设备',
+                userRole: "用户权限等级"
             }
         },jp: {
             message:{
@@ -428,7 +427,8 @@ app.makeTranslation = function (locale) {
                 changePWInform: '设置{0}的密码',
                 remoteLogin: '远程登入',
                 loginCode: '登入代码',
-                remoteMeta: '将登入位于 {ip} 的 {os} {browser}设备'
+                remoteMeta: '将登入位于 {ip} 的 {os} {browser}设备',
+                userRole: "用户权限"
             }
         },
     };

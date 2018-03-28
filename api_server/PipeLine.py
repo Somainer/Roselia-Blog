@@ -3,10 +3,10 @@ import hashlib
 import os
 import datetime
 import time
-import markdown
 from Logger import log
 from config import DB_POST, DB_USER
 
+from CodeHighLight import markdown
 
 class ManagerAccount:
     def __init__(self):
@@ -117,7 +117,7 @@ class PostManager:
             'content',
             'time',
             'tags',
-            'img', 'secret'
+            'img', 'secret', 'md_content'
         ]
         self.check_existence()
 
@@ -135,7 +135,8 @@ class PostManager:
                 r'time integer, ' +
                 r'tags text,' +
                 r'img text,' +
-                r'secret integer)')
+                r'secret integer,'
+                r'md_content text)')
             cursor.close()
             connection.commit()
 
@@ -172,7 +173,7 @@ class PostManager:
             cursor.close()
             connection.commit()
 
-    def find_post(self, pid):
+    def find_post(self, pid, need_md=False):
         with sqlite3.connect(self.DB_name) as connection:
             cursor = connection.cursor()
             cursor.execute('select * from {} WHERE id=?'.format(self.table_name), (pid,))
@@ -181,7 +182,10 @@ class PostManager:
         if not data:
             return None
         data_dict = self.tuple_to_dict(data)
-
+        md = data_dict.get('md_content', '')
+        data_dict.pop('md_content')
+        if need_md and len(md):
+            data_dict['content'] = md
         return data_dict
 
     def get_prev(self, pid, level=0):
@@ -202,7 +206,8 @@ class PostManager:
         keys = self.keys
         if not all(i in keys for i in post.keys()): return False
         if fmt_md:
-            post['content'] = markdown.markdown(post['content'])
+            post['md_content'] = post['content']
+            post['content'] = markdown(post['content'])
         cnv_dict = {
             'title': post.get('title', 'Untitled'),
             'subtitle': post.get('subtitle', ''),
@@ -210,10 +215,11 @@ class PostManager:
             'time': int(datetime.datetime.now().timestamp()),
             'tags': str(post.get('tags', [])),
             'img': post.get('img', ''),
-            'secret': int(post.get('secret', 0))
+            'secret': int(post.get('secret', 0)),
+            'md_content': post.get('md_content', '')
         }
         arg_list = ['{}'.format(cnv_dict[k]) for k in keys]
-        print(','.join(arg_list))
+        #print(','.join(arg_list))
         with sqlite3.connect(self.DB_name) as connection:
             cursor = connection.cursor()
             cursor.execute('insert into {}({}) VALUES ({})'
@@ -228,7 +234,8 @@ class PostManager:
         if not all(k in self.keys for k in post.keys()): return False
         print("Format_MD:", fmt_md)
         if fmt_md and post.get('content'):
-            post['content'] = markdown.markdown(post['content'])
+            post['md_content'] = post['content']
+            post['content'] = markdown(post['content'])
         if isinstance(post.get('tags', []), list):
             post['tags'] = str(post.get('tags', []))
         edit_str = ','.join('{}=?'.format(k) for k in post.keys())

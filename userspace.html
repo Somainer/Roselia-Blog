@@ -87,6 +87,15 @@
                                 <label for="password">{{ $t('message.password') }}</label>
                             </div>
                         </div>
+                        <div class="container row">
+                            <div class="input-field col s12">
+                                <select id="user-role">
+                                    <option value="0" selected>Level 0</option>
+                                    <option v-for="idx in app.userData.role - 1" :value="idx">Level {{ idx }}</option>
+                                </select>
+                                <label>{{ $t('message.userRole') }}</label>
+                            </div>
+                        </div>
                     </form>
                 </div>
                 <div class="modal-footer">
@@ -171,7 +180,7 @@
 
         <div class="row" id="remote-login" style="display: none;">
             <div class="col s12 m6 offset-m3">
-                <div class="card" id="login-form">
+                <div class="card" id="remote-login-form">
                     <div v-if="app.loading" class="progress deep-purple accent-1">
                         <div class="indeterminate blog-color"></div>
                     </div>

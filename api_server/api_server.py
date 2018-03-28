@@ -7,6 +7,7 @@ import PyRSS2Gen
 import datetime
 from Logger import log
 import AuthLogin
+import time
 
 from gevent import monkey
 from gevent.pywsgi import WSGIServer
@@ -26,6 +27,17 @@ def to_json(func):
         # return json.dumps(func(*args, **kwargs))
 
     return wrapper
+
+def log_time(item):
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            s = time.time()
+            res = func(*args, **kwargs)
+            log.d(item, "finish in", time.time()-s, "s.")
+            return res
+        return wrapper
+    return decorator
 
 def conn_info():
     ua = request.user_agent
@@ -248,7 +260,12 @@ def add_user():
     username = form.get('username')
     password = form.get('password')
     token = form.get('token')
-    if not all([username, password, token]):
+    role = form.get('role', 0)
+    try:
+        role = int(role)
+    except Exception:
+        role = -1
+    if not all([username, password, token]) or role < 0:
         return {
             "success": False, 'msg': 'Bad Request'
         }
@@ -257,12 +274,14 @@ def add_user():
         return {
             'success': False, 'msg': info
         }
-    if info.get('su', 0) == 0:
+    su_role = info.get('su', 0)
+    if su_role == 0 or role >= su_role:
         return {
             'success': False, 'msg': 'role error'
         }
-    state = acm.add_user(username, password, 0)
-    log.v("User added.", username=username, by=info.get('admin'))
+    state = acm.add_user(username, password, role)
+    if state:
+        log.v("User added.", username=username, by=info.get('admin'), role=role)
     return {
         'success': state, 'msg': 'User Exists'
     }
@@ -300,7 +319,8 @@ def get_post(p):
         logged_in = state
     if not logged_in:
         data = {'role': 0}
-    post = ppl.find_post(p)
+    need_markdown = request.args.get('markdown', False, bool)
+    post = ppl.find_post(p, need_markdown)
     level = logged_in + data['role']
     if post:
         return dict(post, prev=ppl.get_prev(p, level), next=ppl.get_next(p, level)) if level >= post['secret'] else None
@@ -501,7 +521,7 @@ def rss_feed():
     )
     return rss.to_xml('utf-8'), 201, {'Content-Type': 'application/xml'}
 
-@app.route("/api/login/code/gen")
+@app.route("/api/login/code/gen", methods=["GET", "POST"])
 @to_json
 def gen_code():
     return {

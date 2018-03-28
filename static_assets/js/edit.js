@@ -85,7 +85,7 @@ app.preload = function () {
 };
 
 app.loadContent = function (post_num, callback) {
-    utils.fetchJSON(utils.apiFor("post", post_num)).then(function (data) {
+    utils.fetchJSON(utils.apiFor("post", post_num), "GET", {markdown: true}).then(function (data) {
         if(data === 'null') data = null;
         app.postData = data;
         callback(data);
