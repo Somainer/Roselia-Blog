@@ -1,5 +1,5 @@
 import PipeLine
-from flask import Flask, request, send_from_directory, jsonify, render_template
+from flask import Flask, request, send_from_directory, jsonify, render_template, redirect
 import json
 from tokenProcessor import TokenProcessor
 import functools
@@ -54,6 +54,8 @@ def conn_info():
 
 #@app.route('/seo')
 def seo_main():
+    if acm.is_empty():
+        return redirect('/firstrun')
     logged_in = True
     token = request.args.get('token')
     data = None
@@ -120,17 +122,28 @@ def getpostpage():
     user_data = {'username': data['username'], 'role': data['role'], 'token': token} if logged_in else None
     return render_template('post.html', post=post_data, userData=user_data, info=BLOG_INFO)
 
+@app.route('/firstrun')
+def first_run():
+    if not acm.is_empty():
+        return redirect('/')
+    user_data = {
+        "username": "Master",
+        'role': 3
+    }
+    _, token = token_processor.iss_token(**user_data)
+    su_token = token_processor.iss_su_token(user_data['username'], user_data['role'])
+    return render_template("firstrun.html", su_token=su_token, info=BLOG_INFO, user_data=user_data, token=token['token'])
+
 
 @app.errorhandler(404)
 def error_404(error):
-    print(error)
-    return render_template('error.html', error_code='404 Not Found', error_taunt="Oops‽ seemed you've drunk", 
+    return render_template('error.html', error_code='404 Not Found', error_taunt=error if isinstance(error, str) else "Oops‽ seemed you've drunk. ", 
     path=request.path, link=BLOG_LINK, info=BLOG_INFO, url=request.url, method=request.method), 404
 
 @app.errorhandler(500)
 def error_500(error):
     print(error)
-    return render_template('error.html', error_code='500 Internal Server Error', error_taunt="SHHH! That's shame. Do not tell others.",
+    return render_template('error.html', error_code='500 Internal Server Error', error_taunt=error if isinstance(error, str) else "SHHH! That's shame. Do not tell others.",
     path=request.path, link=BLOG_LINK, info=BLOG_INFO, url=request.url, method=request.method), 500
 
 
@@ -319,7 +332,7 @@ def get_post(p):
         logged_in = state
     if not logged_in:
         data = {'role': 0}
-    need_markdown = request.args.get('markdown', False, bool)
+    need_markdown = json.loads(request.args.get('markdown', "false").lower())
     post = ppl.find_post(p, need_markdown)
     level = logged_in + data['role']
     if post:
@@ -620,6 +633,13 @@ def getlkdfsja(code):
         "info": info
     }
 
+@app.route('/404')
+def need_404():
+    return error_404("You required a 404, make you happy.")
+
+@app.route('/500')
+def need_500():
+    return error_500("You required a 500, make you happy.")
 
 @app.route("/api/conn")
 @to_json

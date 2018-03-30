@@ -5,6 +5,8 @@
 
 window.app = {};
 
+app.useMarkdown = true;
+
 app.makeRedirect = function (from) {
     utils.setRedirect(utils.getAbsPath());
     window.location.href = "./" + from;
@@ -34,7 +36,7 @@ $(document).ready(function () {
     addEventListener("storage", e => {
         e.key === "loginData" && (e.newValue || app.makeRedirect("login"));
     });
-    $(".username").html(userData.username);
+    utils.setLoginUI();
     $(".chips").material_chip();
 
     //app.mdEdit = new SimpleMDE();
@@ -76,7 +78,7 @@ app.preload = function () {
     let loaded = app.loadDraft();
     if(!loaded){
         if(pid === -1){
-        app.mdEdit = new SimpleMDE();
+            app.mdEdit ? app.mdEdit.value("") : (app.mdEdit = new SimpleMDE());
         }else{
             app.loadContent(pid, app.showContent);
         }
@@ -84,12 +86,21 @@ app.preload = function () {
     app.loading = false;
 };
 
-app.loadContent = function (post_num, callback) {
-    utils.fetchJSON(utils.apiFor("post", post_num), "GET", {markdown: true}).then(function (data) {
+app.editRawHTML = function(btn){
+    let pid = app.getPostNum();
+    pid > 0 && app.loadContent(pid, app.showContent, false);
+    $(btn).fadeOut();
+}
+
+app.loadContent = function (post_num, callback, markdown=true) {
+    let bar = new AdvBar;
+    bar.startAnimate();
+    utils.fetchJSON(utils.apiFor("post", post_num), "GET", {markdown: markdown}).then(function (data) {
         if(data === 'null') data = null;
         app.postData = data;
+        app.useMarkdown = markdown;
         callback(data);
-    });
+    }).then(bar.stopAnimate.bind(bar), bar.abort.bind(bar));
 };
 
 app.showContent = function (data) {
@@ -109,10 +120,10 @@ app.showContent = function (data) {
     });
     $("#secret").val(data.secret);
     //$("#post-content").val(data.content).trigger('autoresize');
-    app.mdEdit = new SimpleMDE({
+    app.mdEdit ? app.mdEdit.value(data.content) : (app.mdEdit = new SimpleMDE({
         element: $("#post-content")[0],
         initialValue: data.content
-    });
+    }));
     $("#title").focus();
     app.loading = false;
     //app.mdEdit.value(data.content);

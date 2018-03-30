@@ -53,13 +53,14 @@
                     <div class="switch">
                         <label>
                             HTML
-                            <input type="checkbox" id="markdown" class="validate" checked>
+                            <input type="checkbox" id="markdown" class="validate" checked v-model="app.useMarkdown">
                             <span class="lever"></span>
                             Markdown
                         </label>
                     </div>
                 </div>
             </div>
+            <a href="javascript:void(0)" v-if="!app.useMarkdown" onclick="app.editRawHTML(this)" class="btn blog-color waves-effect">Edit raw HTML</a>
             <!--
             <div class="row">
                 <div class="col">
@@ -119,6 +120,7 @@
             <div class="col right">
                 <div v-if="!app.loading">
                     <button class="btn waves-effect blog-color" onclick="app.saveDraft()">Save Draft</button>
+                    <button v-if="app.operationType()" class="btn waves-effect red" onclick="utils.deleteDraft();app.preload();">Reload</button>
                     <a v-if="app.operationType()" href="#delete-post" class="btn waves-effect red modal-trigger">Delete</a>
                     <button class="btn waves-effect blog-color" onclick="app.doRequest()">{{ app.operationName() }}</button>
                 </div>

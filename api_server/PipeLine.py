@@ -6,7 +6,7 @@ import time
 from Logger import log
 from config import DB_POST, DB_USER
 
-from CodeHighLight import markdown
+from CodeHighLighter import markdown
 
 class ManagerAccount:
     def __init__(self):
@@ -106,6 +106,14 @@ class ManagerAccount:
         if data[2] == self.SHA256Encrypt(password):
             return True, data[3]
         return False, -1
+
+    def is_empty(self):
+        with sqlite3.connect(self.DBName) as connection:
+            cursor = connection.cursor()
+            cursor.execute("SELECT count(*) FROM {}".format(self.table_name))
+            data = cursor.fetchone()
+            cursor.close()
+        return data[0] == 0
 
 class PostManager:
     def __init__(self):

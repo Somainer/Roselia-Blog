@@ -29,7 +29,8 @@ $(document).ready(function () {
             window.location.href = './login';
         });
     }
-    if(window.sessionStorage.suToken) window.sessionStorage.removeItem('suToken');
+    let isFirstRun = utils.getArguments().firstrun;
+    if(!isFirstRun && window.sessionStorage.suToken) window.sessionStorage.removeItem('suToken');
     app.mainVue = new Vue({
         el: '#content',
         data: {
@@ -57,6 +58,7 @@ $(document).ready(function () {
     });
     utils.setLoginUI();
     $("select").material_select();
+    isFirstRun && app.openManage();
 
 });
 
@@ -84,7 +86,7 @@ app.remoteCode = "";
 app.userMeta = {};
 app.userData = utils.getLoginData();
 app.submitChange = function (username, oldPassword, newPassword, token, success, error) {
-    $.post('./api/user/change',{
+    $.post(utils.apiFor('user', 'change'),{
         username: username, oldPassword: oldPassword, newPassword: newPassword, token: token || ""
     } , function (data, stat) {
         if(!(data.success)){
@@ -166,7 +168,7 @@ app.getSUToken = function () {
     let bar = new AdvBar();
     bar.createBar($("#modal-su")[0]);
     bar.startAnimate();
-    $.post('./api/user/su', {
+    $.post(utils.apiFor('user', 'su'), {
         username: utils.getLoginData().username,
         password: password
     }, function(raw_data){
