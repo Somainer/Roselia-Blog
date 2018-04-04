@@ -58,8 +58,8 @@ class MultiProducer(multiprocessing.Process):
         for _ in self.workers:
             self.add_task(self.poison_pill)
 
-        for worker in self.workers:
-            worker.join()
+        #for worker in self.workers:
+        #    worker.join()
 
         self.encounter_end()
 

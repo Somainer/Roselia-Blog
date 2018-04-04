@@ -34,9 +34,9 @@ app.showContent = function (data) {
     content.html(data.content);
     $("#main-pic").attr('src', data.img || 'static/img/nest.png');
     data.id && (data.id == app.getPostNum()?history.replaceState({id: data.id}, "", './post?p='+data.id):history.pushState({id: data.id}, "", './post?p='+data.id));
-    app.processContent();
+    app.processContent(data.content);
 };
-app.processContent = function () {
+app.processContent = function (text) {
     let content = $("#content");
     content.find('img').each(function (i, item) {
         $(item).addClass('responsive-img').addClass("materialboxed");
@@ -44,6 +44,11 @@ app.processContent = function () {
     content.find('p').each(function (i, item) {
         $(item).addClass('flow-text');
     });
+    if (text && text.indexOf('$') !== -1) {
+        if(window.MathJax){
+            window.MathJax.Hub.Queue(["Typeset",MathJax.Hub,"output"]);
+        }
+    }
     $('.materialboxed').materialbox();
     if(app.lazyLoad) app.lazyLoad.load();
     else app.lazyLoad = utils.LazyLoad.of({placeHolder: "static/img/observe.jpg"});

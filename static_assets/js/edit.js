@@ -90,7 +90,7 @@ app.editRawHTML = function(btn){
     let pid = app.getPostNum();
     pid > 0 && app.loadContent(pid, app.showContent, false);
     $(btn).fadeOut();
-}
+};
 
 app.loadContent = function (post_num, callback, markdown=true) {
     let bar = new AdvBar;
@@ -180,6 +180,8 @@ app.deleteDraft = function () {
 
 app.doRequest = function () {
     app.loading = true;
+    let bar = new AdvBar;
+    bar.startAnimate();
     $.ajax({
         type: "POST",
         url: utils.apiFor("add"),
@@ -187,13 +189,14 @@ app.doRequest = function () {
         dataType: "json",
         data: JSON.stringify(app.makeRequest(app.makeForm())),
         success: function (data) {
-            console.log(data);
             //data = JSON.parse(data);
             if(data.success){
                 Materialize.toast("Success!", 2000);
-                app.deleteDraft();
+                bar.stopAnimate();
                 window.location.href = './';
+                app.deleteDraft();
             }else{
+                bar.abort();
                 if(data.msg === 'expired'){
                     app.saveDraft();
                     Materialize.toast('Token Expired!', 2000);

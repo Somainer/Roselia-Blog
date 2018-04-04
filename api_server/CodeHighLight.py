@@ -6,6 +6,8 @@ from pygments.lexers import get_lexer_by_name
 
 class HighlighterRenderer(m.HtmlRenderer):
     def blockcode(self, text, lang):
+        if lang.lower() == 'math':
+            return "<p>$$ {} $$</p>".format(h.escape_html(text.strip()))
         try:
             lexer = get_lexer_by_name(lang, stripall=True)
         except ClassNotFound:
