@@ -43,8 +43,8 @@ def conn_info():
     ua = request.user_agent
     return {
         "ip": request.access_route[0],
-        "browser": ua.browser.capitalize(),
-        "os": ua.platform.capitalize()
+        "browser": ua.browser and ua.browser.capitalize(),
+        "os": ua.platform and ua.platform.capitalize()
     }
 
 @app.route('/')
@@ -398,8 +398,9 @@ def login():
         })
     log.v("User logged in successfully!", username=username, role=code)
     return json.dumps({
-        'success': True, 'token': TokenProcessor().iss_token(username, code)[1]['token'],
-        'role': code
+        'success': True, 'token': token_processor.iss_token(username, code)[1]['token'],
+        'role': code,
+        'rftoken': token_processor.iss_rf_token(username, code)
     })
 
 @app.route('/api/login/token', methods=['POST'])
@@ -412,6 +413,24 @@ def login_token():
     stat, payload = token_processor.get_username(token)
     return {
         'success': stat, 'payload': payload, 'msg': 'Bad token'
+    }
+
+@app.route('/api/login/token/refresh', methods=['POST'])
+@to_json
+def refresh_token():
+    form = request.get_json()
+    if not form:
+        form = request.form
+    token = form.get('token')
+    stat, payload = token_processor.refresh_token(token)
+    if stat:
+        return {
+            'success': True,
+            'token': payload['token']
+        }
+    return {
+        'success': False,
+        'msg': payload
     }
 
 

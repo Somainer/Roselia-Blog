@@ -13,9 +13,9 @@ DB_POST = 'Post.db'
 
 COLOR = {
     "light": {
-        "themeColor": "#7c4dff",
+        "themeColor": "#6670ed", #7c4dff",
         "textColor": "#651fff",
-        "btnHover": "#b388ff"
+        "btnHover": "#8289f3"
     },
     "dark": {
         "themeColor": "#5869b1",

@@ -39,6 +39,7 @@
             <button class="blog-color btn waves-effect waves-light" onclick="$('#change-password').fadeIn()">{{ $t('message.changePW') }}</button>
             <button v-if="userData.role" onclick="app.openManage()" class="blog-color btn waves-effect waves-light">{{ $t('message.optManage') }}</button>
             <button onclick="$('#remote-login').fadeIn();app.remoteCode=''" class="blog-color btn waves-effect waves-light">{{ $t('message.remoteLogin') }}</button>
+            <button onclick="app.refreshToken()" class="blog-color btn waves-effect waves-light">{{ $t('message.refreshToken') }}</button>
             <a href="login.html" class="btn pink darken-1 waves-effect waves-light">{{ $t('message.logout') }}</a>
         </div>
         <div id="modal-su" class="modal modal-fixed-footer">

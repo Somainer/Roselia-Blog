@@ -78,9 +78,13 @@ app.getPosts = function (page) {
                 document.title = "Tag: " + tag;
             }
             if(!raw_data.valid){
-                if(user_data) Materialize.toast("Token expired.");
-                utils.removeLoginData();
-                utils.setLoginUI(), app.userData = null;
+                utils.refreshToken().then(function (userData) {
+                    app.userData = userData;
+                    app.getPosts(page);
+                }, function () {
+                    if(user_data) Materialize.toast("Token expired.");
+                    app.userData = null;
+                }).finally(_ => utils.setLoginUI());
             }
             //data.reverse();
             app.postData = data;

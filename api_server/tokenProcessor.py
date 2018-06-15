@@ -1,7 +1,9 @@
-from itsdangerous import TimedJSONWebSignatureSerializer as Serializer, JSONWebSignatureSerializer as UnlimitedSerializer
+from itsdangerous import TimedJSONWebSignatureSerializer as Serializer, \
+    JSONWebSignatureSerializer as UnlimitedSerializer
 from itsdangerous import SignatureExpired, BadSignature, BadData
 import time
 from config import APP_KEY, APP_SALT
+
 
 class TokenProcessor:
     def __init__(self):
@@ -30,6 +32,25 @@ class TokenProcessor:
             'iat': iss_time,
             'su': level
         }).decode()
+
+    def iss_rf_token(self, username, level=1):
+        serializer = Serializer(secret_key=self.secret_key, salt=self.salt, expires_in=self.rftoken_exp)
+        return serializer.dumps({
+            'username': username,
+            'role': level,
+            'type': 'refresh'
+        }).decode()
+
+    def refresh_token(self, token):
+        stat, payload = self.token_decode(token)
+        if not stat:
+            return False, payload
+        username = payload.get('username')
+        role = payload.get('role')
+        typ = payload.get('type', '')
+        if typ != 'refresh' or not all([username, role]):
+            return False, 'wrong token'
+        return self.iss_token(username, role)
 
     def is_su(self, token):
         stat, payload = self.token_decode(token)
@@ -93,4 +114,3 @@ class TokenProcessor:
             'for_app': payload.get('app_name', ""),
             'role': user_role
         }).decode()
-

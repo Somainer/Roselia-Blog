@@ -127,6 +127,7 @@ class PostManager:
             'tags',
             'img', 'secret', 'md_content'
         ]
+        self.brief_keys = {'id', 'title', 'subtitle', 'date', 'tags', 'img', 'secret', 'time'}
         self.check_existence()
 
     def check_existence(self):
@@ -158,7 +159,7 @@ class PostManager:
         return data_dict
 
     def brief_dict(self, tup):
-        data_dict = {k: v for k, v in zip(['id'] + self.keys, tup)}
+        data_dict = {k: v for k, v in zip(['id'] + self.keys, tup) if k in self.brief_keys}
         data_dict['tags'] = eval(data_dict.get('tags', '[]'))
         time_sp = data_dict['time']
         data_dict['date'] = datetime.datetime.fromtimestamp(time_sp).strftime('%b %d, %Y')

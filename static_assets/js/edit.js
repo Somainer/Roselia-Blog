@@ -198,11 +198,13 @@ app.doRequest = function () {
             }else{
                 bar.abort();
                 if(data.msg === 'expired'){
-                    app.saveDraft();
-                    Materialize.toast('Token Expired!', 2000);
-                    setTimeout(function () {
-                        app.makeRedirect('login');
-                    }, 2000);
+                    utils.refreshToken().then(_ => app.doRequest(), function () {
+                        app.saveDraft();
+                        utils.notify('Token Expired!', 2000);
+                        setTimeout(function () {
+                            app.makeRedirect('login');
+                        }, 2000);
+                    });
                 }else{
                     Materialize.toast(data.msg);
                 }

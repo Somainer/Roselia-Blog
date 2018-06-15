@@ -23,7 +23,7 @@
     };
     
     utils.setRedirect = function (url) {
-        window.sessionStorage.setItem('redirectURL', url);
+        window.sessionStorage.setItem('redirectURL', url || utils.getAbsPath());
     };
     
     utils.getRedirect = function () {
@@ -71,6 +71,26 @@
         $.getJSON('./api/posts', args, function (data) {
             utils.setPosts(data);
             callback && callback(data);
+        });
+    };
+
+    utils.refreshToken = function (token) {
+        if(!token){
+            let userData = utils.getLoginData();
+            token = userData && userData.rftoken;
+        }
+        if(!token) return Promise.reject("No token");
+        return utils.fetchJSON(utils.apiFor('login', 'token', 'refresh'),
+            'POST', {token}, false, false).then(function (data) {
+                if(data.success){
+                    let userData = utils.getLoginData();
+                    userData && (userData.token = data.token) && utils.setLoginData(userData);
+                    return userData;
+                } else {
+                    utils.notify(data.msg);
+                    utils.removeLoginData();
+                    return Promise.reject(data.msg);
+                }
         });
     };
     

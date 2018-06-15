@@ -56,7 +56,7 @@ app.processContent = function (text) {
     this.setDigest();
     this.trigger("load");
     utils.colorUtils.apply({selector: "#main-pic", text:"#content,#sub-title,#date,.digest-nav-el", changeText: true});
-}
+};
 app.setBtns = function () {
     let next = app.getOffset(1), prev = app.getOffset(-1);
     $("#next-btn").attr('href', './post?p=' + next).css('display', next>=0?"":"none");
@@ -87,7 +87,7 @@ app.loadContent = function (p) {
             subtitle: "Please check your post-id. Or try to <a href='login' onclick='utils.setRedirect(utils.getAbsPath())'" +">Login</a>",
             date: (new Date()).toDateString(),
             tags: ['404'],
-            content: '<p>There might be some problem here. Please check your input</p>',
+            content: '<p>There might be some problem here. Please check your input</p><p>Or maybe you know why.</p>',
             notFound: true
         };
     let userData = utils.getLoginData();
@@ -207,5 +207,10 @@ $(document).ready(function () {
         app.loadContent();
     }
     
-    window.addEventListener('popstate', e => e.state.id && app.loadContent(e.state.id))
+    window.addEventListener('popstate', e => e.state.id && app.loadContent(e.state.id));
+    window.addEventListener('keyup', ev => {
+        let code = ev.key;
+        if(code === 'ArrowLeft') app.shiftPost(1);
+        if(code === 'ArrowRight') app.shiftPost(-1);
+    });
 });

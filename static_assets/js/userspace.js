@@ -321,6 +321,17 @@ app.confirmCode = function () {
     }).catch(_ => {bar.abort(); utils.notify("Network error")}).finally(_ => app.loading = false);
 };
 
+app.refreshToken = function () {
+    app.loading = true;
+    let bar = new AdvBar;
+    bar.startAnimate();
+    utils.refreshToken().then(data => app.userData = data, msg => {
+        utils.notify(msg);
+        utils.setRedirect();
+        utils.redirectTo('login');
+    }).then(_ => bar.stopAnimate(), _ => bar.abort()).finally(_ => app.loading = false);
+};
+
 app.makeTranslation = function (locale) {
     let messages = {
         en: {
@@ -357,7 +368,8 @@ app.makeTranslation = function (locale) {
                 remoteLogin: 'Remote login',
                 loginCode: 'Login Code',
                 remoteMeta: 'Will login at {os} {browser} device on {ip}',
-                userRole: 'User Level'
+                userRole: 'User Level',
+                refreshToken: 'Session Relet'
             }
         },
         zh: {
@@ -394,7 +406,8 @@ app.makeTranslation = function (locale) {
                 remoteLogin: '远程登入',
                 loginCode: '登入代码',
                 remoteMeta: '将登入位于 {ip} 的 {os} {browser}设备',
-                userRole: "用户权限等级"
+                userRole: "用户权限等级",
+                refreshToken: '会话续租'
             }
         },jp: {
             message:{
@@ -430,7 +443,8 @@ app.makeTranslation = function (locale) {
                 remoteLogin: '远程登入',
                 loginCode: '登入代码',
                 remoteMeta: '将登入位于 {ip} 的 {os} {browser}设备',
-                userRole: "用户权限"
+                userRole: "用户权限",
+                refreshToken: '会话续租'
             }
         },
     };

@@ -4,4 +4,4 @@ api_server/log.txt
 api_server/*.db
 static/*
 scripts/node_modules/*
-*.db
+log.txt

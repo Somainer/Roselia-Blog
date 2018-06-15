@@ -93,7 +93,7 @@ app.login = function () {
             return;
         }
         utils.setLoginData({
-            username: username, token: data.token, role: data.role
+            username: username, token: data.token, role: data.role, rftoken: data.rftoken
         });
         let redirectURL = utils.getRedirect();
         utils.redirectTo(redirectURL);
