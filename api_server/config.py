@@ -13,7 +13,7 @@ DB_POST = 'Post.db'
 
 COLOR = {
     "light": {
-        "themeColor": "#6670ed", #7c4dff",
+        "themeColor": "#6670ed",  # 7c4dff",
         "textColor": "#651fff",
         "btnHover": "#8289f3"
     },
@@ -24,9 +24,14 @@ COLOR = {
     }
 }["light"]
 
+UPLOAD_DIR = '../static/img'
 
 import os
+
+
 def gen_key():
     return os.urandom(24)
-APP_KEY = '' or gen_key()
-APP_SALT = '' or gen_key()
+
+
+APP_KEY = 'MODIFY_OR_EMPTY_WHEN_CHANGE_EVERY_LAUNCH' or gen_key()
+APP_SALT = 'MODIFY_OR_EMPTY_WHEN_CHANGE_EVERY_LAUNCH' or gen_key()

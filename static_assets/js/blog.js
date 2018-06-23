@@ -271,4 +271,9 @@ $(document).ready(function () {
     $(window).scroll(utils.throttle(function(){
         $(".gotop .btn-floating, .gotop.btn-floating")[["remove", "add"][($(window).height()>$(document).scrollTop())+0]+"Class"]("scale-to-zero");
     }, 500).runAfterDeclare());
+    window.addEventListener('keyup', ev => {
+        let code = ev.key;
+        if(code === 'ArrowLeft') app.shiftPage(-1);
+        if(code === 'ArrowRight') app.shiftPage(1);
+    });
 });

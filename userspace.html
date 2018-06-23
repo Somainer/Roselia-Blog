@@ -18,13 +18,13 @@
 
             </ul>
             <ul id="nav-mobile" class="right hide-on-med-and-down">
-                <li><a href="/">Index</a> </li>
-                <li class="active"><a class="username" href="#!"></a> </li>
-                <li><a href="./login">Logout</a> </li>
+                <li><a href="/">Index</a></li>
+                <li class="active"><a class="username" href="#!"></a></li>
+                <li><a href="./login">Logout</a></li>
             </ul>
             <ul class="side-nav" id="mobile-list">
-                <li><a href="/">Index</a> </li>
-                <li class="active"><a class="username" href="#!"></a> </li>
+                <li><a href="/">Index</a></li>
+                <li class="active"><a class="username" href="#!"></a></li>
                 <li><a href="./login"></a>Logout</li>
             </ul>
         </div>
@@ -36,10 +36,16 @@
         <div class="row">
             <h2 class="blog-text">{{ $t('message.hello', [userData.username]) }}</h2>
             <h3 class="blog-text">{{ $t('message.operation') }}</h3>
-            <button class="blog-color btn waves-effect waves-light" onclick="$('#change-password').fadeIn()">{{ $t('message.changePW') }}</button>
-            <button v-if="userData.role" onclick="app.openManage()" class="blog-color btn waves-effect waves-light">{{ $t('message.optManage') }}</button>
-            <button onclick="$('#remote-login').fadeIn();app.remoteCode=''" class="blog-color btn waves-effect waves-light">{{ $t('message.remoteLogin') }}</button>
-            <button onclick="app.refreshToken()" class="blog-color btn waves-effect waves-light">{{ $t('message.refreshToken') }}</button>
+            <button class="blog-color btn waves-effect waves-light" onclick="$('#change-password').fadeIn()">
+                {{ $t('message.changePW') }}</button>
+            <button v-if="userData.role" onclick="app.openManage()" class="blog-color btn waves-effect waves-light">
+                {{ $t('message.optManage') }}</button>
+            <button onclick="$('#remote-login').fadeIn();app.remoteCode=''"
+                    class="blog-color btn waves-effect waves-light">{{ $t('message.remoteLogin') }}</button>
+            <button onclick="app.refreshToken()" class="blog-color btn waves-effect waves-light">
+                {{ $t('message.refreshToken') }}</button>
+            <button v-if="userData.role" onclick="app.getUploadedImage()" class="blog-color btn waves-effect waves-light">
+                {{ $t('message.manageImages') }}</button>
             <a href="login.html" class="btn pink darken-1 waves-effect waves-light">{{ $t('message.logout') }}</a>
         </div>
         <div id="modal-su" class="modal modal-fixed-footer">
@@ -56,8 +62,10 @@
                 </form>
             </div>
             <div class="modal-footer">
-                <a href="#!" class="modal-action modal-close waves-effect waves-light btn blog-color">{{ $t('message.close') }}</a>
-                <a href="#!" onclick="app.getSUToken()" class="modal-action waves-effect waves-light btn blog-color">{{ $t('message.OK') }}</a>
+                <a href="#!" class="modal-action modal-close waves-effect waves-light btn blog-color">
+                    {{ $t('message.close') }}</a>
+                <a href="#!" onclick="app.getSUToken()" class="modal-action waves-effect waves-light btn blog-color">
+                    {{ $t('message.OK') }}</a>
             </div>
         </div>
         <div id="modal-remote" class="modal">
@@ -66,8 +74,10 @@
                 <p>{{ $t('message.remoteMeta', app.userMeta) }}</p>
             </div>
             <div v-if="!app.loading" class="modal-footer">
-                <a href="#!" class="modal-action modal-close waves-effect waves-light btn blog-color">{{ $t('message.close') }}</a>
-                <a href="#!" onclick="app.confirmCode()" class="btn modal-action waves-effect waves-light blog-color">{{ $t('message.OK') }}</a>
+                <a href="#!" class="modal-action modal-close waves-effect waves-light btn blog-color">
+                    {{ $t('message.close') }}</a>
+                <a href="#!" onclick="app.confirmCode()" class="btn modal-action waves-effect waves-light blog-color">
+                    {{ $t('message.OK') }}</a>
             </div>
         </div>
         <div class="row container" id="manage" style="display: none;" v-if="userData.role">
@@ -100,8 +110,10 @@
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <a href="#!" class="modal-action modal-close waves-effect waves-light btn blog-color">{{ $t('message.close') }}</a>
-                    <a href="#!" onclick="app.addUser()" class="modal-action waves-effect waves-light btn blog-color">{{ $t('message.add') }}</a>
+                    <a href="#!" class="modal-action modal-close waves-effect waves-light btn blog-color">
+                        {{ $t('message.close') }}</a>
+                    <a href="#!" onclick="app.addUser()" class="modal-action waves-effect waves-light btn blog-color">
+                        {{ $t('message.add') }}</a>
                 </div>
             </div>
             <div id="modal-delete" class="modal modal-fixed-footer">
@@ -120,8 +132,10 @@
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <a href="#!" class="modal-action modal-close waves-effect waves-light btn blog-color">{{ $t('message.close') }}</a>
-                    <a href="#!" onclick="app.commitDelete()" class="modal-action waves-effect waves-light btn pink darken-1">{{ $t('message.del') }}</a>
+                    <a href="#!" class="modal-action modal-close waves-effect waves-light btn blog-color">
+                        {{ $t('message.close') }}</a>
+                    <a href="#!" onclick="app.commitDelete()"
+                       class="modal-action waves-effect waves-light btn pink darken-1">{{ $t('message.del') }}</a>
                 </div>
             </div>
             <div id="modal-set" class="modal modal-fixed-footer">
@@ -140,8 +154,10 @@
                     </form>
                 </div>
                 <div class="modal-footer">
-                    <a href="#!" class="modal-action modal-close waves-effect waves-light btn blog-color">{{ $t('message.close') }}</a>
-                    <a href="#!" onclick="app.commitSet()" class="modal-action waves-effect waves-light btn pink darken-1">{{ $t('message.set') }}</a>
+                    <a href="#!" class="modal-action modal-close waves-effect waves-light btn blog-color">
+                        {{ $t('message.close') }}</a>
+                    <a href="#!" onclick="app.commitSet()"
+                       class="modal-action waves-effect waves-light btn pink darken-1">{{ $t('message.set') }}</a>
                 </div>
             </div>
 
@@ -164,21 +180,60 @@
                             <tr v-if="users" v-for="user in users">
                                 <th>{{ user.username }}</th>
                                 <th>
-                                    <button v-bind:onclick="`app.openSet('${user.username}')`" class="btn small waves-effect waves-light blog-color">{{ $t('message.setPW') }}</button>
-                                    <button v-bind:onclick="`app.openDelete('${user.username}')`" class="btn small waves-effect waves-light pink darken-1">{{ $t('message.del') }}</button>
+                                    <button v-bind:onclick="`app.openSet('${user.username}')`"
+                                            class="btn small waves-effect waves-light blog-color">
+                                        {{ $t('message.setPW') }}</button>
+                                    <button v-bind:onclick="`app.openDelete('${user.username}')`"
+                                            class="btn small waves-effect waves-light pink darken-1">
+                                        {{ $t('message.del') }}</button>
                                 </th>
                             </tr>
                             </tbody>
                         </table>
-                        <button onclick="$('#modal-add').modal().modal('open')" class="right btn waves-light waves-effect">{{ $t('message.addUser') }}</button>
+                        <button onclick="$('#modal-add').modal().modal('open')"
+                                class="right btn waves-light waves-effect">{{ $t('message.addUser') }}</button>
                     </div>
                     <div class="card-action right-align">
-                        <button onclick="$('#manage').fadeOut()" class="btn pink darken-1 waves-effect waves-light">{{ $t('message.close') }}</button>
+                        <button onclick="$('#manage').fadeOut()" class="btn pink darken-1 waves-effect waves-light">
+                            {{ $t('message.close') }}</button>
                     </div>
                 </div>
             </div>
         </div>
+        <div class="row" id="image-management" style="display: none;">
+            <div class="col s12 m12">
+                <div class="container card" id="image-management-form">
+                    <div class="row card-content">
+                        <div class="col container">
+                            <span class="card-title blog-text">{{ $t('message.manageImages') }}</span>
+                        </div>
+                        <div class="row">
+                            <div v-for="img in app.uploadedImages">
+                                <div class="col s12 m4">
+                                    <div class="card hoverable">
+                                        <div class="card-image">
+                                            <img :src="img.url"/>
+                                        </div>
+                                        <div class="card-action">
+                                            <div class="row">
+                                                <span class="left truncate">{{ img.fileName }}</span>
+                                                <button :onclick="`app.deleteUploadedImage('${img.fileName}')`" class="right btn-flat waves-effect red-text"><i class="material-icons">delete</i></button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-action right-align">
+                        <button onclick="$('#image-management').fadeOut()"
+                                class="btn pink darken-1 waves-effect waves-light" v-if="!app.loading">
+                            {{ $t('message.close') }}</button>
+                    </div>
+                </div>
+            </div>
 
+        </div>
         <div class="row" id="remote-login" style="display: none;">
             <div class="col s12 m6 offset-m3">
                 <div class="card" id="remote-login-form">
@@ -192,15 +247,20 @@
                         <form class="col s12">
                             <div class="container row">
                                 <div class="input-field col s12">
-                                    <input @keyup.enter="app.scanCode(app.remoteCode)" id="login-code" type="number" v-model="app.remoteCode" class="validate" required="required">
+                                    <input @keyup.enter="app.scanCode(app.remoteCode)" id="login-code" type="number"
+                                           v-model="app.remoteCode" class="validate" required="required">
                                     <label for="login-code">{{ $t('message.loginCode') }}</label>
                                 </div>
                             </div>
                         </form>
                     </div>
                     <div class="card-action right-align">
-                        <button onclick="$('#remote-login').fadeOut()" class="btn pink darken-1 waves-effect waves-light" v-if="!app.loading">{{ $t('message.close') }}</button>
-                        <button id="code-login-button" onclick="app.scanCode(app.remoteCode)" class="btn waves-effect blog-color waves-light" v-if="!app.loading">{{ $t('message.OK') }}</button>
+                        <button onclick="$('#remote-login').fadeOut()"
+                                class="btn pink darken-1 waves-effect waves-light" v-if="!app.loading">
+                            {{ $t('message.close') }}</button>
+                        <button id="code-login-button" onclick="app.scanCode(app.remoteCode)"
+                                class="btn waves-effect blog-color waves-light" v-if="!app.loading">
+                            {{ $t('message.OK') }}</button>
                         <div class="preloader-wrapper small active" v-if="app.loading">
                             <div class="spinner-layer spinner-blue-only">
                                 <div class="circle-clipper left">
@@ -251,8 +311,12 @@
                         </form>
                     </div>
                     <div class="card-action right-align">
-                        <button onclick="$('#change-password').fadeOut()" class="btn pink darken-1 waves-effect waves-light" v-if="!app.loading">{{ $t('message.close') }}</button>
-                        <button id="login-button" onclick="app.changePassword()" class="btn waves-effect blog-color waves-light" v-if="!app.loading">{{ $t('message.change') }}</button>
+                        <button onclick="$('#change-password').fadeOut()"
+                                class="btn pink darken-1 waves-effect waves-light" v-if="!app.loading">
+                            {{ $t('message.close') }}</button>
+                        <button id="login-button" onclick="app.changePassword()"
+                                class="btn waves-effect blog-color waves-light" v-if="!app.loading">
+                            {{ $t('message.change') }}</button>
                         <div class="preloader-wrapper small active" v-if="app.loading">
                             <div class="spinner-layer spinner-blue-only">
                                 <div class="circle-clipper left">

@@ -20,11 +20,11 @@
             </ul>
             <ul id="nav-mobile" class="right hide-on-med-and-down">
                 <li><a href="#" class="username">Log-in</a></li>
-                <li><a href="/">Index</a> </li>
+                <li><a href="/">Index</a></li>
             </ul>
             <ul class="side-nav" id="mobile-list">
-                <li><a href="#" class="username">Log-in</a> </li>
-                <li><a href="/">Index</a> </li>
+                <li><a href="#" class="username">Log-in</a></li>
+                <li><a href="/">Index</a></li>
             </ul>
         </div>
     </div>
@@ -60,7 +60,8 @@
                     </div>
                 </div>
             </div>
-            <a href="javascript:void(0)" v-if="!app.useMarkdown" onclick="app.editRawHTML(this)" class="btn blog-color waves-effect">Edit raw HTML</a>
+            <a href="javascript:void(0)" v-if="!app.useMarkdown" onclick="app.editRawHTML(this)"
+               class="btn blog-color waves-effect">Edit raw HTML</a>
             <!--
             <div class="row">
                 <div class="col">
@@ -80,7 +81,7 @@
                     <label for="secret">Secret Level</label>
                     <div class="range-field">
                         <label>0-Public 1-Logged in 2-Admin</label>
-                    <input type="range" id="secret" min="0" v-bind:max="app.userData.role+1" value="0">
+                        <input type="range" id="secret" min="0" v-bind:max="app.userData.role+1" value="0">
                     </div>
 
                 </div>
@@ -98,6 +99,46 @@
                 </div>
             </div>
             <div class="row">
+                <div class="col s6">
+                    <div class="file-field input-field">
+                        <div class="btn blog-color waves-effect">
+                            <span><i class="material-icons">add_a_photo</i></span>
+                            <input id="upload-img" type="file" accept="image/*">
+                        </div>
+                        <div class="file-path-wrapper">
+                            <input id="upload-img-file-name" class="file-path validate" type="text" value="Drag & Drop">
+                        </div>
+                    </div>
+                </div>
+                <p>
+                    <input type="checkbox" class="filled-in" id="convert-box" checked="checked"/>
+                    <label for="convert-box">To webp</label>
+                </p>
+                <a href="javascript:void(0)" onclick="app.uploadImage()" class="btn blog-color waves-effect">
+                    <i class="material-icons">file_upload</i>
+                </a>
+            </div>
+            <div class="row" v-if="app.uploadedImages">
+                <ul>
+                    <li v-for="img in app.uploadedImages" class="row">
+                        <div class="col s3">
+                            <img :src="img" class="responsive-img"/>
+                        </div>
+                        <span class="col">{{ img }}</span>
+                        <div class="col s6">
+                            <a class="btn blog-color waves-effect"
+                               :onclick="`app.setImageAsPicture('${img}')`" href="javascript:void(0)">Set As Picture</a>
+                            <a class="btn blog-color waves-effect"
+                               :onclick="`app.insertToContent('${img}')`" href="javascript:void(0)">Insert</a>
+                            <a class="btn red waves-effect"
+                               :onclick="`app.deleteUploadedImage('${img}')`" href="javascript:void(0)">Delete</a>
+                        </div>
+
+
+                    </li>
+                </ul>
+            </div>
+            <div class="row">
                 <label for="post-content">Content</label>
                 <div class="input-field col s12">
                     <textarea id="post-content" class="materialize-textarea"></textarea>
@@ -112,7 +153,9 @@
             </div>
             <div class="modal-footer">
                 <a href="#!" class=" modal-action modal-close waves-effect waves-purple btn-flat">No</a>
-                <button v-bind:onclick="`app.deletePost()`" class=" modal-action modal-close waves-effect waves-red btn-flat red-text">Yes</button>
+                <button v-bind:onclick="`app.deletePost()`"
+                        class=" modal-action modal-close waves-effect waves-red btn-flat red-text">Yes
+                </button>
             </div>
         </div>
 
@@ -120,9 +163,13 @@
             <div class="col right">
                 <div v-if="!app.loading">
                     <button class="btn waves-effect blog-color" onclick="app.saveDraft()">Save Draft</button>
-                    <button v-if="app.operationType()" class="btn waves-effect red" onclick="utils.deleteDraft();app.preload();">Reload</button>
-                    <a v-if="app.operationType()" href="#delete-post" class="btn waves-effect red modal-trigger">Delete</a>
-                    <button class="btn waves-effect blog-color" onclick="app.doRequest()">{{ app.operationName() }}</button>
+                    <button v-if="app.operationType()" class="btn waves-effect red"
+                            onclick="utils.deleteDraft();app.preload();">Reload
+                    </button>
+                    <a v-if="app.operationType()" href="#delete-post"
+                       class="btn waves-effect red modal-trigger">Delete</a>
+                    <button class="btn waves-effect blog-color"
+                            onclick="app.doRequest()">{{ app.operationName() }}</button>
                 </div>
                 <div class="preloader-wrapper small active" v-if="app.loading">
                     <div class="spinner-layer spinner-blue-only">

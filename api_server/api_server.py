@@ -1,5 +1,6 @@
 import PipeLine
-from flask import Flask, request, send_from_directory, jsonify, render_template, redirect
+from flask import Flask, request, send_from_directory, jsonify, render_template, redirect, url_for
+from werkzeug.utils import secure_filename
 import json
 from tokenProcessor import TokenProcessor
 import functools
@@ -8,17 +9,23 @@ import datetime
 from Logger import log
 import AuthLogin
 import time
+import os
+from config import BLOG_INFO, BLOG_LINK, DEBUG, HOST, PORT, UPLOAD_DIR
+from ImageConverter import ImageConverter
+from middleware import verify_token
 
 from gevent import monkey
 from gevent.pywsgi import WSGIServer
+
 monkey.patch_all()
 
 app = Flask(__name__, static_folder='../', static_url_path='')
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 ppl = PipeLine.PostManager()
 acm = PipeLine.ManagerAccount()
 token_processor = TokenProcessor()
 auth_login = AuthLogin.AuthLogin()
-from config import BLOG_INFO, BLOG_LINK, DEBUG, HOST, PORT
+
 
 def to_json(func):
     @functools.wraps(func)
@@ -28,16 +35,20 @@ def to_json(func):
 
     return wrapper
 
+
 def log_time(item):
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             s = time.time()
             res = func(*args, **kwargs)
-            log.d(item, "finish in", time.time()-s, "s.")
+            log.d(item, "finish in", time.time() - s, "s.")
             return res
+
         return wrapper
+
     return decorator
+
 
 def conn_info():
     ua = request.user_agent
@@ -47,12 +58,12 @@ def conn_info():
         "os": ua.platform and ua.platform.capitalize()
     }
 
+
 @app.route('/')
-#def mainpage():
+# def mainpage():
 #    return app.send_static_file('index.html')
 
-
-#@app.route('/seo')
+# @app.route('/seo')
 def seo_main():
     if acm.is_empty():
         return redirect('/firstrun')
@@ -82,12 +93,14 @@ def seo_main():
         pages = total // limit + (total % limit > 0)
     user_data = {'username': data['username'], 'role': data['role'], 'token': token} if logged_in else None
     tag = tag.capitalize() if tag else None
-    return render_template('index.html', posts=posts, userData=user_data, tag=tag, info=BLOG_INFO, 
-        pages={'total': total, "current": page, "pages": pages})
+    return render_template('index.html', posts=posts, userData=user_data, tag=tag, info=BLOG_INFO,
+                           pages={'total': total, "current": page, "pages": pages})
+
 
 @app.route('/edit')
 def edit_page():
     return app.send_static_file("edit.html")
+
 
 @app.route('/post')
 def getpostpage():
@@ -110,7 +123,7 @@ def getpostpage():
     else:
         post_data = {
             'title': 'Page Not Found',
-            'subtitle': "Please check your post-id. Or try to <a href='../login.html' onclick='utils.setRedirect(utils.getAbsPath())'" +">Login</a>",
+            'subtitle': "Please check your post-id. Or try to <a href='../login.html' onclick='utils.setRedirect(utils.getAbsPath())'" + ">Login</a>",
             'date': datetime.datetime.now().strftime('%B %d, %Y'),
             'tags': ['404'],
             'content': '<p>There might be some problem here. Please check your input.</p>',
@@ -122,6 +135,7 @@ def getpostpage():
     user_data = {'username': data['username'], 'role': data['role'], 'token': token} if logged_in else None
     return render_template('post.html', post=post_data, userData=user_data, info=BLOG_INFO)
 
+
 @app.route('/firstrun')
 def first_run():
     if not acm.is_empty():
@@ -132,19 +146,25 @@ def first_run():
     }
     _, token = token_processor.iss_token(**user_data)
     su_token = token_processor.iss_su_token(user_data['username'], user_data['role'])
-    return render_template("firstrun.html", su_token=su_token, info=BLOG_INFO, user_data=user_data, token=token['token'])
+    return render_template("firstrun.html", su_token=su_token, info=BLOG_INFO, user_data=user_data,
+                           token=token['token'])
 
 
 @app.errorhandler(404)
 def error_404(error):
-    return render_template('error.html', error_code='404 Not Found', error_taunt=error if isinstance(error, str) else "Oops‽ seemed you've drunk. ", 
-    path=request.path, link=BLOG_LINK, info=BLOG_INFO, url=request.url, method=request.method), 404
+    return render_template('error.html', error_code='404 Not Found',
+                           error_taunt=error if isinstance(error, str) else "Oops‽ seemed you've drunk. ",
+                           path=request.path, link=BLOG_LINK, info=BLOG_INFO, url=request.url,
+                           method=request.method), 404
+
 
 @app.errorhandler(500)
 def error_500(error):
     print(error)
-    return render_template('error.html', error_code='500 Internal Server Error', error_taunt=error if isinstance(error, str) else "SHHH! That's shame. Do not tell others.",
-    path=request.path, link=BLOG_LINK, info=BLOG_INFO, url=request.url, method=request.method), 500
+    return render_template('error.html', error_code='500 Internal Server Error',
+                           error_taunt=error if isinstance(error, str) else "SHHH! That's shame. Do not tell others.",
+                           path=request.path, link=BLOG_LINK, info=BLOG_INFO, url=request.url,
+                           method=request.method), 500
 
 
 @app.route('/post/<int:p>')
@@ -168,7 +188,7 @@ def seo_post(p):
     else:
         post_data = {
             'title': 'Page Not Found',
-            'subtitle': "Please check your post-id. Or try to <a href='../login.html' onclick='utils.setRedirect(utils.getAbsPath())'" +">Login</a>",
+            'subtitle': "Please check your post-id. Or try to <a href='../login.html' onclick='utils.setRedirect(utils.getAbsPath())'" + ">Login</a>",
             'date': datetime.datetime.now().strftime('%B %d, %Y'),
             'tags': ['404'],
             'content': '<p>There might be some problem here. Please check your input.</p>',
@@ -179,6 +199,7 @@ def seo_post(p):
         }
     user_data = {'username': data['username'], 'role': data['role'], 'token': token} if logged_in else None
     return render_template('post.html', post=post_data, userData=user_data, info=BLOG_INFO)
+
 
 @app.route('/api/user/change', methods=['POST'])
 @to_json
@@ -204,6 +225,7 @@ def change_password():
         'success': status, 'msg': 'Wrong token or expired' if token else 'Wrong password.'
     }
 
+
 @app.route('/api/user/list')
 @to_json
 def get_user_list():
@@ -218,6 +240,7 @@ def get_user_list():
     return {
         'success': True, 'data': acm.get_all_user(data.get('role', 0))
     }
+
 
 @app.route('/api/user/su', methods=['POST'])
 @to_json
@@ -240,6 +263,7 @@ def get_su_token():
     return {
         'success': True, 'token': token_processor.iss_su_token(username, code)
     }
+
 
 @app.route('/api/user/remove', methods=['DELETE'])
 @to_json
@@ -265,6 +289,7 @@ def delete_user():
     return {
         'success': True
     }
+
 
 @app.route('/api/user/add', methods=['POST'])
 @to_json
@@ -299,6 +324,7 @@ def add_user():
         'success': state, 'msg': 'User Exists'
     }
 
+
 @app.route('/tag/<string:t>')
 def tag_post(t):
     logged_in = True
@@ -318,6 +344,7 @@ def tag_post(t):
     user_data = {'username': data['username'], 'role': data['role'], 'token': token} if logged_in else None
     return render_template('index.html', posts=posts, userData=user_data, tag=t.capitalize(), info=BLOG_INFO)
 
+
 @app.route('/api/post/<int:p>')
 @to_json
 def get_post(p):
@@ -328,7 +355,7 @@ def get_post(p):
         logged_in = False
     else:
         state, data = token_processor.get_username(token)
-        #print(data)
+        # print(data)
         logged_in = state
     if not logged_in:
         data = {'role': 0}
@@ -350,7 +377,7 @@ def all_post():
         logged_in = False
     else:
         state, data = token_processor.get_username(token)
-        #print(data)
+        # print(data)
         logged_in = state
     if not logged_in:
         data = {'role': 0}
@@ -376,7 +403,8 @@ def all_post():
 
 @app.route('/login')
 def login_page():
-    return app.send_static_file('login.html')\
+    return app.send_static_file('login.html')
+
 
 @app.route('/userspace')
 def userspace_page():
@@ -403,6 +431,7 @@ def login():
         'rftoken': token_processor.iss_rf_token(username, code)
     })
 
+
 @app.route('/api/login/token', methods=['POST'])
 @to_json
 def login_token():
@@ -414,6 +443,7 @@ def login_token():
     return {
         'success': stat, 'payload': payload, 'msg': 'Bad token'
     }
+
 
 @app.route('/api/login/token/refresh', methods=['POST'])
 @to_json
@@ -487,6 +517,7 @@ def add_edit_post():
         'success': state
     }
 
+
 @app.route('/api/oauth/authorize', methods=['POST'])
 @to_json
 def authorize():
@@ -510,6 +541,7 @@ def authorize():
         'success': stat, 'token': token, 'msg': token, 'username': info.get("username")
     }
 
+
 @app.route('/api/oauth/get')
 @to_json
 def get_infos():
@@ -518,6 +550,7 @@ def get_infos():
     return {
         'success': stat, 'info': info
     }
+
 
 @app.route('/api/rss')
 def rss_feed():
@@ -528,7 +561,7 @@ def rss_feed():
         logged_in = False
     else:
         state, data = token_processor.get_username(token)
-        #print(data)
+        # print(data)
         logged_in = state
     if not logged_in:
         data = {'role': 0}
@@ -553,6 +586,7 @@ def rss_feed():
     )
     return rss.to_xml('utf-8'), 201, {'Content-Type': 'application/xml'}
 
+
 @app.route("/api/login/code/gen", methods=["GET", "POST"])
 @to_json
 def gen_code():
@@ -561,6 +595,7 @@ def gen_code():
         "code": auth_login.gen_random_token(conn_info())
     }
 
+
 @app.route("/api/login/code/scan/<int:code>", methods=["POST"])
 @to_json
 def scan_code(code):
@@ -568,6 +603,7 @@ def scan_code(code):
     if not form:
         form = request.form
     token = form.get("token", "")
+
     def hndl_code():
         if not code:
             return False, "No code"
@@ -582,6 +618,7 @@ def scan_code(code):
         auth_login.set_code(code, user)
         conn = auth_login.conns.get(code)
         return True, conn
+
     succ, info = hndl_code()
     return {
         "success": succ,
@@ -598,6 +635,7 @@ def confirm_code(code):
     token = form.get("token", "")
     succ, info = auth_login.get_code(code)
     valid, token_user = token_processor.get_username(token)
+
     def handler():
         if not succ:
             return False, info
@@ -616,7 +654,6 @@ def confirm_code(code):
         "success": succ,
         "data": pld
     }
-
 
 
 @app.route("/api/login/code/<int:code>", methods=["POST"])
@@ -644,6 +681,7 @@ def query_code(code):
         "data": pld
     }
 
+
 @app.route("/api/login/code/info/<int:code>")
 @to_json
 def getlkdfsja(code):
@@ -652,18 +690,93 @@ def getlkdfsja(code):
         "info": info
     }
 
+
 @app.route('/404')
 def need_404():
     return error_404("You required a 404, make you happy.")
+
 
 @app.route('/500')
 def need_500():
     return error_500("You required a 500, make you happy.")
 
+
 @app.route("/api/conn")
 @to_json
 def get_inform():
     return conn_info()
+
+
+@app.route('/pic/<filename>')
+def uploaded_file(filename):
+    return send_from_directory(UPLOAD_DIR, filename)
+
+
+@app.route('/api/pic/upload', methods=['POST'])
+@to_json
+def upload_pic():
+    file = request.files['file']
+    token = request.form.get('token', '')
+    convert = request.form.get('to')
+    status, msg = token_processor.get_username(token)
+    if status and not msg['role']:
+        status = False
+        msg = 'No Access'
+    if status:
+        msg = ''
+        if file and file.filename.split('.')[-1].lower() in ('jpg', 'jpeg', 'png', 'bmp', 'webp'):
+            filename = secure_filename(file.filename)
+            if not os.path.exists(UPLOAD_DIR):
+                os.mkdir(UPLOAD_DIR)
+            filename = datetime.datetime.now().strftime("Upload_%Y%m%d%H%M%S_") + filename
+            filename = ImageConverter(file, filename, convert).save(UPLOAD_DIR)
+            return {
+                'success': True, 'picURL': url_for('uploaded_file', filename=filename), 'msg': ''
+            }
+        else:
+            msg += 'File Not Supported'
+    return {
+        'success': False, 'picURL': "", 'msg': msg
+    }
+
+
+@app.route('/api/pic/list')
+@to_json
+@verify_token(1)
+def get_list(username, role):
+    file_list = [x for x in os.listdir(UPLOAD_DIR) if os.path.isfile(os.path.join(UPLOAD_DIR, x))]
+    return {
+        'success': True,
+        'result': [{
+            'url': url,
+            'fileName': name
+        } for name, url in zip(file_list, map(lambda x: url_for('uploaded_file', filename=x), file_list))]
+    }
+
+
+@app.route('/api/pic/remove', methods=['POST'])
+@to_json
+@verify_token(1, True)
+def delete_image(username, role):
+    form = request.get_json()
+    if not form:
+        form = request.form
+    file_name = form.get('fileName')
+    if not file_name:
+        return {
+            'success': False,
+            'msg': 'Missing Filename'
+        }
+    secure = secure_filename(file_name)
+    full_path = os.path.join(UPLOAD_DIR, secure)
+    success = os.path.exists(full_path)
+    if success:
+        os.remove(full_path)
+    msg = "DO NOT PLAY TRICKS." if file_name != secure else '' if success else 'File Not Found'
+    return {
+        'success': success,
+        'msg': msg
+    }
 
 
 if __name__ == '__main__':
@@ -673,4 +786,3 @@ if __name__ == '__main__':
         log.info("{} ran on {}:{}".format(BLOG_INFO["title"], HOST, PORT))
         http_server = WSGIServer((HOST, PORT), app)
         http_server.serve_forever()
-    

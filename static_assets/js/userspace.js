@@ -85,6 +85,7 @@ app.loading = true;
 app.remoteCode = "";
 app.userMeta = {};
 app.userData = utils.getLoginData();
+app.uploadedImages = [];
 app.submitChange = function (username, oldPassword, newPassword, token, success, error) {
     $.post(utils.apiFor('user', 'change'),{
         username: username, oldPassword: oldPassword, newPassword: newPassword, token: token || ""
@@ -332,6 +333,32 @@ app.refreshToken = function () {
     }).then(_ => bar.stopAnimate(), _ => bar.abort()).finally(_ => app.loading = false);
 };
 
+app.getUploadedImage = function(){
+    let bar = new AdvBar;
+    bar.createBar($("#image-management-form")[0]);
+    bar.startAnimate();
+    utils.fetchJSONWithSuccess(utils.apiFor('pic', 'list')).then(pics => {
+        app.uploadedImages = pics;
+        bar.stopAnimate();
+        $("#image-management").fadeIn();
+    }).catch(bar.abort().bind(bar));
+};
+
+app.deleteUploadedImage = function (fileName) {
+    let images = this.uploadedImages.map(e => e.fileName);
+    if (!images.includes(fileName)) return;
+    let bar = new AdvBar;
+    bar.startAnimate();
+    utils.fetchJSONWithSuccess(utils.apiFor('pic', 'remove'), "POST", {fileName}).then(data => {
+        bar.stopAnimate();
+        app.uploadedImages.splice(images.indexOf(fileName), 1);
+    }).catch(msg => {
+        utils.notify(msg);
+        bar.abort();
+        msg && msg === 'File Not Found' && app.uploadedImages.splice(images.indexOf(fileName), 1);
+    });
+};
+
 app.makeTranslation = function (locale) {
     let messages = {
         en: {
@@ -369,7 +396,8 @@ app.makeTranslation = function (locale) {
                 loginCode: 'Login Code',
                 remoteMeta: 'Will login at {os} {browser} device on {ip}',
                 userRole: 'User Level',
-                refreshToken: 'Session Relet'
+                refreshToken: 'Session Relet',
+                manageImages: "Manage Images"
             }
         },
         zh: {
@@ -407,7 +435,8 @@ app.makeTranslation = function (locale) {
                 loginCode: '登入代码',
                 remoteMeta: '将登入位于 {ip} 的 {os} {browser}设备',
                 userRole: "用户权限等级",
-                refreshToken: '会话续租'
+                refreshToken: '会话续租',
+                manageImages: "上传图片管理"
             }
         },jp: {
             message:{
@@ -444,7 +473,8 @@ app.makeTranslation = function (locale) {
                 loginCode: '登入代码',
                 remoteMeta: '将登入位于 {ip} 的 {os} {browser}设备',
                 userRole: "用户权限",
-                refreshToken: '会话续租'
+                refreshToken: '会话续租',
+                manageImages: "上传图片管理"
             }
         },
     };
