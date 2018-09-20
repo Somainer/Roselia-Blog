@@ -1,5 +1,5 @@
 import PipeLine
-from flask import Flask, request, send_from_directory, jsonify, render_template, redirect, url_for
+from flask import Flask, request, send_from_directory, jsonify, render_template, redirect, url_for, abort, make_response
 from werkzeug.utils import secure_filename
 import json
 from tokenProcessor import TokenProcessor
@@ -30,7 +30,12 @@ auth_login = AuthLogin.AuthLogin()
 def to_json(func):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
-        return jsonify(func(*args, **kwargs))
+        response = make_response(jsonify(func(*args, **kwargs)))
+        if DEBUG:
+            response.headers['Access-Control-Allow-Origin'] = '*'
+            response.headers['Access-Control-Allow-Methods'] = 'POST'
+            response.headers['Access-Control-Allow-Headers'] = 'x-requested-with,content-type'
+        return response
         # return json.dumps(func(*args, **kwargs))
 
     return wrapper
@@ -58,6 +63,40 @@ def conn_info():
         "os": ua.platform and ua.platform.capitalize()
     }
 
+if DEBUG:
+    @app.route('/__webpack_hmr')
+    def npm():
+        return redirect('http://localhost:8080/__webpack_hmr')
+    # @app.route('/static/fonts/<string:path>')
+    def nppm(path):
+        import requests
+        response = make_response(requests.get('http://localhost:8080/static/fonts/' + path).content)
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        response.headers['Access-Control-Allow-Methods'] = 'POST'
+        response.headers['Access-Control-Allow-Headers'] = 'x-requested-with,content-type'
+        return response
+
+static_urls = [
+    'login', 'userspace', 'me', 'edit', 'add', 'hello'
+]
+
+if DEBUG:
+    static_urls.append('/')
+    static_urls.append('post')
+
+    def new_index(*args, **kwargs):
+        return render_template('index_vue_dev.html')
+
+else:
+    def new_index(*args, **kwargs):
+        return render_template('index_vue.html')
+
+for u in static_urls:
+    app.route('/' + u)(new_index)
+    app.route('/' + u + '/')(new_index)
+
+app.route('/userspace/<string:p>')(new_index)
+
 
 @app.route('/')
 # def mainpage():
@@ -66,7 +105,9 @@ def conn_info():
 # @app.route('/seo')
 def seo_main():
     if acm.is_empty():
-        return redirect('/firstrun')
+        return redirect('/hello')
+    # return new_index()
+    
     logged_in = True
     token = request.args.get('token')
     data = None
@@ -93,7 +134,7 @@ def seo_main():
         pages = total // limit + (total % limit > 0)
     user_data = {'username': data['username'], 'role': data['role'], 'token': token} if logged_in else None
     tag = tag.capitalize() if tag else None
-    return render_template('index.html', posts=posts, userData=user_data, tag=tag, info=BLOG_INFO,
+    return render_template('index_vue.html', posts=posts, userData=user_data, tag=tag, info=BLOG_INFO,
                            pages={'total': total, "current": page, "pages": pages})
 
 
@@ -133,9 +174,29 @@ def getpostpage():
             'secret': 0 if not post else post.get('secret', 0)
         }
     user_data = {'username': data['username'], 'role': data['role'], 'token': token} if logged_in else None
-    return render_template('post.html', post=post_data, userData=user_data, info=BLOG_INFO)
+    return render_template('post_vue.html', post=post_data, userData=user_data, info=BLOG_INFO)
 
-
+@app.route('/api/firstrun')
+@to_json
+def first_run_api():
+    if not acm.is_empty():
+        return {
+            'success': False,
+            'msg': 'User is not empty.'
+        }
+    user_data = {
+        "username": "Master",
+        'role': 3
+    }
+    _, token = token_processor.iss_token(**user_data)
+    su_token = token_processor.iss_su_token(user_data['username'], user_data['role'])
+    return {
+        'success': True,
+        'result': dict(user_data, **{
+            'token': token['token'],
+            'su_token': su_token
+        })
+    }
 @app.route('/firstrun')
 def first_run():
     if not acm.is_empty():
@@ -204,10 +265,13 @@ def seo_post(p):
 @app.route('/api/user/change', methods=['POST'])
 @to_json
 def change_password():
-    username = request.form.get('username')
-    old_password = request.form.get('oldPassword')
-    new_password = request.form.get('newPassword')
-    token = request.form.get('token', '')
+    form = request.get_json()
+    if not form:
+        form = request.form
+    username = form.get('username')
+    old_password = form.get('oldPassword')
+    new_password = form.get('newPassword')
+    token = form.get('token', '')
     stat, data = token_processor.is_su(token)
     if stat:
         stat = stat and data['su']
@@ -248,7 +312,14 @@ def get_su_token():
     form = request.get_json()
     if not form:
         form = request.form
-    username = form.get('username')
+    token = form.get('token')
+    username = None
+    if token:
+        stat, info = token_processor.get_username(token)
+        if stat:
+            username = info['username']
+    else:
+        username = form.get('username')
     password = form.get('password')
     if not all([username, password]):
         return {
@@ -265,10 +336,12 @@ def get_su_token():
     }
 
 
-@app.route('/api/user/remove', methods=['DELETE'])
+@app.route('/api/user/remove', methods=['DELETE', 'POST'])
 @to_json
 def delete_user():
     form = request.get_json()
+    if not form:
+        form = request.form
     username = form.get('username')
     token = form.get('token')
     if not all([username, token]):
@@ -412,24 +485,28 @@ def userspace_page():
 
 
 @app.route('/api/login', methods=['POST'])
+@to_json
 def login():
-    username = request.form.get('username')
-    password = request.form.get('password')
+    form = request.get_json()
+    if not form:
+        form = request.form
+    username = form.get('username')
+    password = form.get('password')
     if not all([username, password]):
-        return json.dumps({
+        return {
             'success': False, 'msg': 'Missing Username or Password'
-        })
+        }
     status, code = acm.check_user(username, password)
     if not status:
-        return json.dumps({
+        return {
             'success': False, 'msg': 'Wrong Username or Password'
-        })
+        }
     log.v("User logged in successfully!", username=username, role=code)
-    return json.dumps({
+    return {
         'success': True, 'token': token_processor.iss_token(username, code)[1]['token'],
         'role': code,
         'rftoken': token_processor.iss_rf_token(username, code)
-    })
+    }
 
 
 @app.route('/api/login/token', methods=['POST'])
@@ -464,10 +541,12 @@ def refresh_token():
     }
 
 
-@app.route('/api/remove', methods=['DELETE'])
+@app.route('/api/remove', methods=['DELETE', 'POST'])
 @to_json
 def delete_post():
     form = request.get_json()
+    if not form:
+        form = request.form
     pid = form.get('postID')
     token = form.get('token')
     valid, info = token_processor.get_username(token)
@@ -505,11 +584,11 @@ def add_edit_post():
         return {
             'success': False, 'msg': info
         }
-    if info.get('role') == 0:
+    if info.get('role', 0) == 0 or info.get('role', 0) + 1 < data.get('secret', 0):
         return {
             'success': False, 'msg': 'role error'
         }
-    if pid is None:
+    if not pid:
         state = ppl.add_post(data, markdown)
     else:
         state = ppl.edit_post(pid, data, markdown)
@@ -724,7 +803,7 @@ def upload_pic():
         msg = 'No Access'
     if status:
         msg = ''
-        if file and file.filename.split('.')[-1].lower() in ('jpg', 'jpeg', 'png', 'bmp', 'webp'):
+        if file and file.filename.split('.')[-1].lower() in {'jpg', 'jpeg', 'png', 'bmp', 'webp', 'gif'}:
             filename = secure_filename(file.filename)
             if not os.path.exists(UPLOAD_DIR):
                 os.mkdir(UPLOAD_DIR)
@@ -777,6 +856,42 @@ def delete_image(username, role):
         'success': success,
         'msg': msg
     }
+
+@app.route('/<string:post_title>')
+def getpostpage_from_title(post_title):
+    logged_in = True
+    data = None
+    token = request.args.get('token')
+    if not token:
+        logged_in = False
+    else:
+        state, data = token_processor.get_username(token)
+        print(data)
+        logged_in = state
+    if not logged_in:
+        data = {'role': 0}
+    post = ppl.find_post_by_title(post_title) if post_title else None
+    p = post['id'] if post else -1
+    level = logged_in + data['role']
+    if post and level >= post['secret']:
+        post_data = dict(post, prev=ppl.get_prev(p, level), next=ppl.get_next(p, level), notFound=False)
+    else:
+        if not post:
+            abort(404)
+        post_data = {
+            'title': 'Page Not Found',
+            'subtitle': "Please check your post-id. Or try to <a href='../login.html' onclick='utils.setRedirect(utils.getAbsPath())'" + ">Login</a>",
+            'date': datetime.datetime.now().strftime('%B %d, %Y'),
+            'tags': ['404'],
+            'content': '<p>There might be some problem here. Please check your input.</p>',
+            'id': p,
+            'prev': -1,
+            'next': -1,
+            'secret': 0 if not post else post.get('secret', 0),
+            'notFound': True
+        }
+    user_data = {'username': data['username'], 'role': data['role'], 'token': token} if logged_in else None
+    return render_template('post.html', post=post_data, userData=user_data, info=BLOG_INFO)
 
 
 if __name__ == '__main__':
