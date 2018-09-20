@@ -42,7 +42,7 @@
                 {{ $t('message.optManage') }}</button>
             <button onclick="$('#remote-login').fadeIn();app.remoteCode=''"
                     class="blog-color btn waves-effect waves-light">{{ $t('message.remoteLogin') }}</button>
-            <button onclick="app.refreshToken()" class="blog-color btn waves-effect waves-light">
+            <button v-if="userData.rftoken" onclick="app.refreshToken()" class="blog-color btn waves-effect waves-light">
                 {{ $t('message.refreshToken') }}</button>
             <button v-if="userData.role" onclick="app.getUploadedImage()" class="blog-color btn waves-effect waves-light">
                 {{ $t('message.manageImages') }}</button>

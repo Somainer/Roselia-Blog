@@ -196,6 +196,22 @@ class PostManager:
         if need_md and len(md):
             data_dict['content'] = md
         return data_dict
+    
+    def find_post_by_title(self, title, need_md=False):
+        title = title.replace('-', ' ')
+        with sqlite3.connect(self.DB_name) as connection:
+            cursor = connection.cursor()
+            cursor.execute('select * from {} WHERE lower(title)=lower(?)'.format(self.table_name), (title,))
+            data = cursor.fetchone()
+            cursor.close()
+        if not data:
+            return None
+        data_dict = self.tuple_to_dict(data)
+        md = data_dict.get('md_content', '')
+        data_dict.pop('md_content')
+        if need_md and len(md):
+            data_dict['content'] = md
+        return data_dict
 
     def get_prev(self, pid, level=0):
         data = self.execute_query('select * from {} WHERE id < ? AND secret <= ? ORDER BY id DESC limit 0, 1'.format(self.table_name), pid, level)
@@ -213,7 +229,10 @@ class PostManager:
         if not isinstance(post, dict):
             return False
         keys = self.keys
-        if not all(i in keys for i in post.keys()): return False
+        # if not all(i in keys for i in post.keys()): return False
+        post = {
+            k: v for k, v in post.items() if k in self.keys
+        }
         if fmt_md:
             post['md_content'] = post['content']
             post['content'] = markdown(post['content'])
@@ -240,13 +259,16 @@ class PostManager:
 
     def edit_post(self, pid, post, fmt_md=False):
         if not isinstance(post, dict): return False
-        if not all(k in self.keys for k in post.keys()): return False
-        print("Format_MD:", fmt_md)
+        # if not all(k in self.keys for k in post.keys()): return False
+        # print("Format_MD:", fmt_md)
         if fmt_md and post.get('content'):
             post['md_content'] = post['content']
             post['content'] = markdown(post['content'])
         if isinstance(post.get('tags', []), list):
             post['tags'] = str(post.get('tags', []))
+        post = {
+            k: v for k, v in post.items() if k in self.keys
+        }
         edit_str = ','.join('{}=?'.format(k) for k in post.keys())
         with sqlite3.connect(self.DB_name) as connection:
             cursor = connection.cursor()

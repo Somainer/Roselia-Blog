@@ -17,9 +17,9 @@ app.firstLoad = function () {
     $("html,body").stop(false, true).delay(1200).animate({scrollTop: $("#content").offset().top}, "normal", "swing");
     $('#main-pic').css({width: (window.innerWidth)});
 };
-app.getPostNum = () => utils.getArguments().p || -1;
+app.getPostNum = () => utils.getArguments().p || (app.postData && app.postData.id) || (window.ROSELIA_CONFIG && window.ROSELIA_CONFIG.current) || -1;
 
-app.showContent = function (data) {
+app.showContent = function (data, isReplaceState = false) {
     this.triggerRender(data);
     app.postData = data;
     document.title = data.title;
@@ -33,7 +33,9 @@ app.showContent = function (data) {
     let content = $("#content");
     content.html(data.content);
     $("#main-pic").attr('src', data.img || 'static/img/nest.png');
-    data.id && (data.id == app.getPostNum()?history.replaceState({id: data.id}, "", './post?p='+data.id):history.pushState({id: data.id}, "", './post?p='+data.id));
+    // data.id && (data.id == app.getPostNum()?history.replaceState({id: data.id}, "", './post?p='+data.id):history.pushState({id: data.id}, "", './post?p='+data.id));
+    isReplaceState || history.pushState({id: data.id}, "", './'+app.getSafeTitle());
+    // data.id && (data.id == app.getPostNum()?history.replaceState({id: data.id}, "", './'+app.getSafeTitle()):history.pushState({id: data.id}, "", './'+app.getSafeTitle()));
     app.processContent(data.content);
 };
 app.processContent = function (text) {
@@ -79,7 +81,7 @@ app.setDigest = function(){
         $(".scrollspy").scrollSpy();
     });
 };
-app.loadContent = function (p) {
+app.loadContent = function (p, isReplaceState = false) {
     if(p === undefined) p = app.getPostNum();
     else app.triggerUnload();
     let notFound = {
@@ -114,7 +116,7 @@ app.loadContent = function (p) {
                     data = null;
                 }
                 data || bar.abort();
-                app.showContent(data || notFound);
+                app.showContent(data || notFound, isReplaceState);
                 bar.stopAnimate();
             },
             error: function () {
@@ -140,11 +142,15 @@ app.getOffset = function (offset) {
     if(!app.postData) return -1;
     if(offset === 1) return app.postData.next;
     if(offset === -1) return app.postData.prev;
-    let idx = app.getPostNum();
+    let idx = app.postData.current || app.getPostNum();
     let finalIdx = idx + offset;
     return (finalIdx >= 0)?finalIdx:-1;
 
 };
+
+app.getSafeTitle = function(){
+    return (this.postData.title || window.ROSELIA_CONFIG.title).replace(/ /g, '-')
+}
 
 app.shiftPost = function (offset) {
     let idx = app.getOffset(offset);
@@ -199,15 +205,16 @@ $(document).ready(function () {
         let conf = ROSELIA_CONFIG;
         app.preloaded = true;
         app.postData = conf;
-        conf.notFound || history.replaceState({id: conf.current}, "", './post?p='+conf.current);
+        // conf.notFound || history.replaceState({id: conf.current}, "", './post?p='+conf.current);
+        conf.notFound || conf.secret || history.replaceState({id: conf.current}, "", './'+app.getSafeTitle());
         conf.notFound || app.processContent();
-        conf.notFound && userData && (app.preloaded = false, app.loadContent());
+        conf.secret && userData && (app.preloaded = false, app.loadContent());
     } else {
         app.preloaded = false;
         app.loadContent();
     }
     
-    window.addEventListener('popstate', e => e.state.id && app.loadContent(e.state.id));
+    window.addEventListener('popstate', e => e.state.id && app.loadContent(e.state.id, true));
     window.addEventListener('keyup', ev => {
         let code = ev.key;
         if(code === 'ArrowLeft') app.shiftPost(1);

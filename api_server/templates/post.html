@@ -146,7 +146,8 @@
         prev: {{post.prev}},
         current: {{post.id}},
         secret: {{ post.secret }},
-        notFound: {{ ["false", "true"][post.id < 0] }}
+        notFound: {{ ["false", "true"][post.notFound] }},
+        title: "{{ post.title }}"
     };
 </script>
 </body>

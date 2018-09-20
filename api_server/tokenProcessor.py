@@ -48,7 +48,7 @@ class TokenProcessor:
         username = payload.get('username')
         role = payload.get('role')
         typ = payload.get('type', '')
-        if typ != 'refresh' or not all([username, role]):
+        if typ != 'refresh' or not all([username]):
             return False, 'wrong token'
         return self.iss_token(username, role)
 

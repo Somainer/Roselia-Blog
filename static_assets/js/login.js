@@ -82,10 +82,10 @@ app.login = function () {
         return false;
     }
     console.log($("#login-data").serialize());
-    $.post(utils.apiFor('login'),{
+    utils.fetchJSON(utils.apiFor('login'), 'POST', {
         username: username, password: password
-    } , function (data, stat) {
-        data = $.parseJSON(data);
+    }).then(function (data, stat) {
+        // data = $.parseJSON(data);
         if(!(data.success)){
             shock('#login-form');
             Materialize.toast(data.msg, 2000);
@@ -108,9 +108,9 @@ app.cleanUp = function () {
 
 app.tokenLogin = function(token){
     this.loading = true;
-    $.post(utils.apiFor('login','token'),{
+    utils.fetchJSON(utils.apiFor('login','token'),"POST", {
         token
-    } , function (data, stat) {
+    }).then(function (data, stat) {
         if(!(data.success)){
             shock('#login-form');
             Materialize.toast(data.msg, 2000);
