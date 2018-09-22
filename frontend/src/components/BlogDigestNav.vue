@@ -56,9 +56,9 @@ export default {
 <style src="materialize-css/dist/css/materialize.css" scoped></style>
 <style scoped>
   .table-of-contents a:hover {
-    border-left: 1px solid #6670ed;
+    border-left: 1px solid var(--theme-color);
   }
   .table-of-contents a.active {
-    border-left: 2px solid #6670ed;
+    border-left: 2px solid var(--theme-color);
   }
 </style>

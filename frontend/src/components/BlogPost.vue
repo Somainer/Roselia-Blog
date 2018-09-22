@@ -79,7 +79,7 @@
       :origin="preview.origin"
     >
       <v-card
-        color="accent"
+        :color="preview.color"
         dark
       >
         <v-img v-if="preview.img" :src="preview.img"/>
@@ -144,7 +144,8 @@ export default {
       attach: "",
       origin: "center center",
       img: "",
-      cacheData: null
+      cacheData: null,
+      color: 'secondary'
     },
     cachedData: false,
     renderer: null,
@@ -185,7 +186,7 @@ export default {
     processContent () {
       this.postData.content = this.renderer.render(this.postData.content)
       this.$nextTick(async _ => {
-          utils.setHeimu()
+          // utils.setHeimu()
           utils.colorUtils.apply({selector: '#main-pic img', text: '#title,#subtitle,#date,.digest-nav-el,#digest-nav', changeText: true})
           const postImages = this.$refs.content.querySelectorAll('img')
           Array.from(postImages).forEach(e => {
@@ -363,18 +364,18 @@ export default {
 </script>
 
 <style scoped>
- code, pre {
+code, pre {
     font-family: Consolas, "Courier New", monospace;
-  }
+}
 
-  #materialbox-overlay {
-    position: fixed;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    background: #292929 !important;
-    z-index: 1000;
-    will-change: opacity;
-  }
+#materialbox-overlay {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: #292929 !important;
+  z-index: 1000;
+  will-change: opacity;
+}
 </style>

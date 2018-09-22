@@ -1,5 +1,4 @@
 import axios from './ajax-bar-axios'
-import Materialize from 'materialize-css'
 import _ from 'lodash'
 import router from '../router/index'
 import config from './config'
@@ -24,23 +23,8 @@ utils.cleanRedirect = function () {
   window.sessionStorage.removeItem('redirectURL')
 }
 
-utils.setHeimu = () => {
-  document.querySelectorAll('.heimu').forEach(e => {
-    e.addEventListener('mouseover', ev => {
-      ev.target.style.color = 'white'
-    })
-    e.addEventListener('mouseout', ev => {
-      ev.target.style.color = 'black'
-    })
-  })
-}
-
 utils.getAbsPath = function () {
   return window.location.pathname + window.location.search + window.location.hash
-}
-
-utils.notify = function (message, displayLength, className, completeCallback) {
-  return Materialize.toast(message, displayLength, className, completeCallback)
 }
 
 utils.redirectTo = url => {
@@ -57,7 +41,7 @@ utils.removeLoginData = () => window.localStorage.loginData && window.localStora
 
 // utils.setLoginUI = (data) => (data || (data = utils.getLoginData())) ? $('.username').text(data.username).attr('href', './userspace') : $('.username').text('Login').attr('onclick', 'utils.setRedirect(utils.getAbsPath())').attr('href', './login')
 
-utils.saveSUToken = function(token) {
+utils.saveSUToken = function (token) {
   window.sessionStorage.setItem('suToken', token)
 }
 
@@ -86,7 +70,7 @@ utils.refreshToken = function (token) {
       userData && (userData.token = data.token) && utils.setLoginData(userData)
       return userData
     } else {
-      utils.notify(data.msg)
+      // utils.notify(data.msg)
       utils.removeLoginData()
       return Promise.reject(data.msg)
     }
@@ -131,11 +115,6 @@ utils.fetchJSON = function (url, method = 'GET', payload = {}, withToken = true,
   return axios[method.toLowerCase()](url, data).then(x => x.data).catch(reason => {
     // app.$Progress.fail()
     return Promise.reject(reason)
-  })
-  return this.ajaxPromised({
-    method: method,
-    url: url,
-    data: data
   })
   /*
       return new Promise(function (resolve, reject) {

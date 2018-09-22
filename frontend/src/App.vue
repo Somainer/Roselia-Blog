@@ -56,47 +56,49 @@ export default {
 </script>
 
 <style>
-
-  .btn:not([disabled]):active, .btn-floating:not([disabled]):active {
-    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, .4);
-  }
-
-  .scale-to-zero {
-    -webkit-transform: scale(0);
-    -moz-transform: scale(0);
-    -ms-transform: scale(0);
-    -o-transform: scale(0);
-    transform: scale(0);
+  :root {
+    --theme-color: #6670ed;
   }
 
   code, pre {
     font-family: Consolas, "Courier New", monospace;
   }
 
+pre {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
   body {
     font-family: Seravek, 'JAF Bernino Sans', 'Myriad Pro', Myriad, 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   }
 
   ::selection {
-    background: #6670ed;
+    background: var(--theme-color);
     color: #fff;
   }
 
   .table-of-contents a.active {
-    border-left: 2px solid #7c4dff;
+    border-left: 2px solid var(--theme-color);
   }
 
   .table-of-contents a:hover {
-    border-left: 1px solid #7c4dff;
+    border-left: 1px solid var(--theme-color);
   }
 
   blockquote {
-    border-left: 5px solid #7c4dff;
+    border-left: 5px solid var(--theme-color);
   }
 
   span.heimu {
     background: black;
     color: black;
+    transition: background 0.25s ease;
+  }
+
+  span.heimu:hover {
+    color: inherit;
+    background: inherit;
   }
 
   span.heimu a:link {

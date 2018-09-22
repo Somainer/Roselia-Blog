@@ -216,6 +216,19 @@ class RoseliaScript {
     return document.getElementById((name in this.functions) ? this.functions[name] : name)
   }
 
+  raw (s) {
+    // s = s.split('\n').map(x => `<p>${x}</p>`).join('\n')
+    return `<pre>Roselia{{${s}}}</pre>`
+  }
+
+  previewColor (color) {
+    const prevColor = this.app.preview.color
+    this.app.preview.color = color
+    this.onceUnload(() => {
+      this.app.preview.color = prevColor
+    })
+  }
+
   Y = fn => (u => u(u))(x => fn(s => x(x)(s)))
   
 }
