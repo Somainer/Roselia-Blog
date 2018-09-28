@@ -1,11 +1,11 @@
-let BLOG_TITLE = 'Roselia-Blog'
+let BLOG_TITLE = 'Mohuety'
 let BLOG_MOTTO = 'Do what you want to do, be who you want to be.'
 // const apiBase = '/api'
 // const apiBase = 'http://localhost:5000/api'
-// const apiBase = 'https://roselia.moe/blog/api'
-const urlPrefix = ''
-// const urlPrefix = '/blog'
-const apiBase = `${urlPrefix}/api`
+const apiBase = 'https://roselia.moe/blog/api'
+// const urlPrefix = ''
+const urlPrefix = '/blog'
+// const apiBase = `${urlPrefix}/api`
 const roseliaTheme = {
   primary: '#6670ed',
   secondary: '#890f87',
@@ -28,7 +28,7 @@ export default {
   title: BLOG_TITLE,
   motto: BLOG_MOTTO,
   apiBase: apiBase,
-  theme: roseliaTheme,
+  theme: mohuetyTheme,
   roseliaScript: false,
   urlPrefix
 }

@@ -12,7 +12,8 @@ import time
 import os
 from config import BLOG_INFO, BLOG_LINK, DEBUG, HOST, PORT, UPLOAD_DIR
 from ImageConverter import ImageConverter
-from middleware import verify_token
+from middleware import verify_token, ReverseProxied, make_option_dict
+from urllib.parse import quote
 
 from gevent import monkey
 from gevent.pywsgi import WSGIServer
@@ -21,6 +22,7 @@ monkey.patch_all()
 
 app = Flask(__name__, static_folder='../', static_url_path='')
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
+app.wsgi_app = ReverseProxied(app.wsgi_app)
 ppl = PipeLine.PostManager()
 acm = PipeLine.ManagerAccount()
 token_processor = TokenProcessor()
@@ -63,10 +65,13 @@ def conn_info():
         "os": ua.platform and ua.platform.capitalize()
     }
 
+
 if DEBUG:
     @app.route('/__webpack_hmr')
     def npm():
         return redirect('http://localhost:8080/__webpack_hmr')
+
+
     # @app.route('/static/fonts/<string:path>')
     def nppm(path):
         import requests
@@ -83,6 +88,7 @@ static_urls = [
 if DEBUG:
     static_urls.append('/')
     static_urls.append('post')
+
 
     def new_index(*args, **kwargs):
         return render_template('index_vue_dev.html')
@@ -107,7 +113,7 @@ def seo_main():
     if acm.is_empty():
         return redirect('/hello')
     # return new_index()
-    
+
     logged_in = True
     token = request.args.get('token')
     data = None
@@ -176,6 +182,7 @@ def getpostpage():
     user_data = {'username': data['username'], 'role': data['role'], 'token': token} if logged_in else None
     return render_template('post_vue.html', post=post_data, userData=user_data, info=BLOG_INFO)
 
+
 @app.route('/api/firstrun')
 @to_json
 def first_run_api():
@@ -197,6 +204,8 @@ def first_run_api():
             'su_token': su_token
         })
     }
+
+
 @app.route('/firstrun')
 def first_run():
     if not acm.is_empty():
@@ -512,10 +521,14 @@ def login():
 @app.route('/api/login/token', methods=['POST'])
 @to_json
 def login_token():
-    token = request.form.get('token')
-    if not token: return {
-        'success': False, 'msg': 'Bad Params'
-    }
+    form = request.get_json()
+    if not form:
+        form = request.form
+    token = form.get('token')
+    if not token:
+        return {
+            'success': False, 'msg': 'Bad Params'
+        }
     stat, payload = token_processor.get_username(token)
     return {
         'success': stat, 'payload': payload, 'msg': 'Bad token'
@@ -857,6 +870,7 @@ def delete_image(username, role):
         'msg': msg
     }
 
+
 @app.route('/<string:post_title>')
 def getpostpage_from_title(post_title):
     logged_in = True
@@ -892,6 +906,54 @@ def getpostpage_from_title(post_title):
         }
     user_data = {'username': data['username'], 'role': data['role'], 'token': token} if logged_in else None
     return render_template('post.html', post=post_data, userData=user_data, info=BLOG_INFO)
+
+
+from oauth.adapters import adapters as oauth_adapters
+
+
+@app.route('/api/login/oauth/adapters')
+@to_json
+def get_adapters_list():
+    return {
+        'success': True,
+        'result': list(oauth_adapters.keys())
+    }
+
+
+@app.route('/api/login/oauth/<string:third>/url')
+@to_json
+def get_oauth_url(third):
+    adp = oauth_adapters.get(third.lower())
+    base = request.args.get('base', '')
+    redirection = request.args.get('redirect', '')
+    if not adp:
+        return {
+            'success': False,
+            'msg': 'Adapter not found'
+        }
+    return {
+        'success': True,
+        'result': adp.get_uri() + '&redirect_uri=' + BLOG_LINK[:-1] + quote(url_for('oauth_callback', third=third, base=base, redirect=redirection))
+    }
+
+
+@app.route('/api/login/oauth/<string:third>/callback')
+def oauth_callback(third):
+    adp = oauth_adapters.get(third.lower())
+    code = request.args.get('code')
+    base = request.args.get('base')
+    redirection = request.args.get('redirect')
+
+    def login_uri(token):
+        if base:
+            return '{}?token={}{}'.format(base, token, '&redirect=' + quote(redirection) if redirection else '')
+        return url_for('login_page', **make_option_dict(token=token, redirect=redirection))
+
+    if not adp or not code:
+        return redirect(base or url_for('seo_main'))
+    return adp.login_payload(code).map(lambda token: redirect(login_uri(token))).get_or(
+        redirect(base or url_for('seo_main'))
+    )
 
 
 if __name__ == '__main__':

@@ -185,7 +185,7 @@ export default {
     },
     processContent () {
       this.postData.content = this.renderer.render(this.postData.content)
-      this.$nextTick(async _ => {
+      this.$nextTick(_ => {
           // utils.setHeimu()
           utils.colorUtils.apply({selector: '#main-pic img', text: '#title,#subtitle,#date,.digest-nav-el,#digest-nav', changeText: true})
           const postImages = this.$refs.content.querySelectorAll('img')

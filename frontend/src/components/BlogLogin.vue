@@ -33,7 +33,24 @@
                   <h1 class="primary--text display-3">{{loginCode}}</h1>
                 </div>
               </v-layout>
-          </v-container>
+            </v-container>
+            <v-layout align-center justify-center v-if="!loading && hasOauthAdapter">
+              <h4>Login using</h4>
+              <div>
+                <div class="text-xs-center">
+                  <v-btn 
+                    v-for="adapter in oauthLogin.adapters" 
+                    :key="adapter" 
+                    round color="accent" dark 
+                    :loading="oauthLogin.loading" 
+                    @click="redirectOauthLogin(adapter)"
+                  >
+                    {{adapter}}
+                  </v-btn>
+                </div>
+              </div>
+              
+            </v-layout>
           </v-card-text>
           <v-card-actions>
             <v-btn v-if="loginCode" color="info" @click="codeLoginCleanUp">With username</v-btn>
@@ -71,7 +88,11 @@ export default {
     valid: false,
     loginCode: '',
     scannedUsername: '',
-    focusAt: false
+    focusAt: false,
+    oauthLogin: {
+      loading: false,
+      adapters: []
+    }
   }),
   props: {
     source: String
@@ -176,6 +197,25 @@ export default {
     },
     focusPassword () {
       if (this.rules.map(r => r(this.username)).every(x => x === true)) { this.$refs.passWord.focus() }
+    },
+    getAdapters () {
+      utils.fetchJSONWithSuccess(utils.apiFor('login', 'oauth', 'adapters')).then(adps => {
+        this.oauthLogin.adapters = adps
+      }).catch(err => {
+        this.showToast(err, 'error')
+      })
+    },
+    redirectOauthLogin(adapter) {
+      this.oauthLogin.loading = true
+      utils.fetchJSONWithSuccess(utils.apiFor('login', 'oauth', adapter, 'url'), 'GET', {
+        base: window.location.href.split('?')[0],
+        redirect: this.redirection
+      }).then(url => {
+        window.location.href = url
+      }).catch(err => {
+        this.oauthLogin.loading = false
+        this.showToast(err, 'error')
+      })
     }
   },
   computed: {
@@ -184,6 +224,9 @@ export default {
     },
     message() {
       return window.sessionStorage.getItem('message') || this.$route.params.message || 'Login'
+    },
+    hasOauthAdapter () {
+      return this.oauthLogin.adapters.length > 0
     }
   },
   mounted () {
@@ -199,10 +242,13 @@ export default {
       e.key === 'loginData' && e.newValue && utils.redirectTo(this.redirection)
     })
     let token = utils.getArguments.call(this).token
-    token && this.tokenLogin()
+    token && this.tokenLogin(token)
+    if (!token) {
+      this.getAdapters()
+    }
   },
   destroyed () {
-    this.cleanUp()
+    this.oauthLogin.loading || this.cleanUp()
     this.codeLoginCleanUp()
   }
 }

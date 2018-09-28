@@ -28,7 +28,7 @@ class RenderResult {
 
 function render (template, context, delim) { // A not so naive template engine.
   const funcTemplate = expr => `with(data || {}) { with(data.functions) {return (${expr});}}`
-  return template.replace(new RegExp((delim || ['{{', '}}']).join('\\s*?(.*?)\\s*?'), 'gms'), (_total, expr) => {
+  return template.replace(new RegExp((delim || ['{{', '}}']).join('\\s*?(([\\s\\S]+?))\\s*?'), 'gm'), (_total, expr) => {
     try {
       const bigC = /([a-zA-Z_$]+[a-zA-Z_0-9]*){([\s\S]+)}/.exec(expr)
       let res
@@ -87,7 +87,13 @@ class RoseliaRenderer {
     ])
   }
   render (template) {
-    return render(template, this.context, ['(?:Roselia|roselia|r|R){{', '}}'])
+    try {
+      return render(template, this.context, ['(?:Roselia|roselia|r|R){{', '}}'])
+    } catch (e) {
+      console.error(e)
+      return template
+    }
+    // return render(template, this.context, ['(?:Roselia|roselia|r|R){{', '}}'])
   }
 }
 class RoseliaScript {

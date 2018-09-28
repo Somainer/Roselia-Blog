@@ -1,4 +1,4 @@
-from secret import APP_KEY, APP_SALT
+from secret import APP_KEY, APP_SALT, GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET
 BLOG_LINK = "https://roselia.moe/blog/"
 BLOG_INFO = {
     "title": "Roselia-Blog",
