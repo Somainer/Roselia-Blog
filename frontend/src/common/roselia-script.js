@@ -40,7 +40,10 @@ function render (template, context, delim) { // A not so naive template engine.
         res = (new Function('data', funcTemplate(expr)))(context)
       }
       if (res instanceof RenderResult) {
-        return res.template
+        res = res.template
+      }
+      if (res instanceof HTMLElement) {
+        return res.outerHTML
       }
       if (_.isNumber(res) || _.isString(res)) return res
       return ''
@@ -142,7 +145,8 @@ class RoseliaScript {
     return new RenderResult(`<div id="${id}"></div>`, player)
   }
   heimu (text) {
-    return `<span class="heimu">${text}</span>`
+    const id = this.randomID()
+    return new RenderResult(`<span class="heimu" id="${id}">${text}</span>`, id)
   }
   cite (text, pid) {
     return `<a href="post?p=${pid}">${text}</a>`
@@ -191,7 +195,7 @@ class RoseliaScript {
     })
   }
 
-  importJS (url, onComplete) {
+  static importJS (url, onComplete) {
     const jsNode = document.createElement('script')
     jsNode.onload = onComplete
     jsNode.async = true
@@ -205,6 +209,9 @@ class RoseliaScript {
       return func.template
     }
     this.customFunctions[name] = func
+    if (_.isString(func) || func instanceof HTMLElement) {
+      return func
+    }
   }
 
   audio (src) {
@@ -213,7 +220,26 @@ class RoseliaScript {
   }
 
   getElement (name) {
-    return document.getElementById((name in this.functions) ? this.functions[name] : name)
+    if (name instanceof HTMLElement) {
+      name = name.id
+    }
+    if (name instanceof RenderResult) {
+      if (_.isString(name.returnValue)) name = name.returnValue
+      else {
+        name = name.template
+      }
+    }
+    if (_.isString(name)) {
+      const matchId = /id=['"]([a-zA-Z0-9-]+)['"]/.exec(name)
+      if (matchId) {
+        name = matchId[1]
+      }
+    }
+    if (name instanceof HTMLElement) {
+      name = name.id
+    }
+    const res = (name in this.functions) ? this.functions[name] : name
+    return document.getElementById(res instanceof Element ? res.id : res)
   }
 
   raw (s) {
@@ -229,8 +255,58 @@ class RoseliaScript {
     })
   }
 
+  element (name) {
+    return new Promise(resolve => {
+      this.then(_ => {
+        resolve(this.getElement(name))
+      })
+    })
+  }
+
+  createElement (type) {
+    const el = document.createElement(type)
+    el.id = this.randomID()
+    return el
+  }
+
+  setPreview (el, preview /* :{title, subtitle, img, color} */) {
+    this.element(el).then(e => {
+      e.addEventListener('mouseover', ev => {
+        ev.preventDefault()
+        this.app.preview.show = true
+        this.app.preview.attach = e
+        this.app.preview.cacheData = null
+        this.app.preview.current = this.app.postData.id;
+        ['title', 'subtitle', 'img', 'color'].forEach(attr => {
+          const value = preview[attr]
+          if (!_.isNil(value)) this.app.preview[attr] = value
+        })
+      })
+      e.addEventListener('mouseout', ev => {
+        ev.preventDefault()
+        this.app.preview.show = false
+      })
+      if (!_.isNil(preview.goTo)) {
+        e.addEventListener('click', ev => {
+          ev.preventDefault()
+          this.app.$vuetify.goTo(_.isNumber(preview.goTo) ? preview.goTo : this.getElement(preview.goTo), {offset: -200})
+        })
+      }
+    })
+  }
+
+  previewed (el, preview) {
+    this.setPreview(el, preview)
+    return el
+  }
+
+  doTo (el, fn) {
+    this.element(el).then(fn)
+    return el
+  }
+
   Y = fn => (u => u(u))(x => fn(s => x(x)(s)))
-  
+
 }
 
 export default {

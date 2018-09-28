@@ -64,10 +64,10 @@ export default {
     font-family: Consolas, "Courier New", monospace;
   }
 
-pre {
-  white-space: pre-wrap;
-  word-wrap: break-word;
-}
+  pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
 
   body {
     font-family: Seravek, 'JAF Bernino Sans', 'Myriad Pro', Myriad, 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
@@ -119,6 +119,18 @@ pre {
   span.heimu a:active {
     background: black;
     color: black !important;
+  }
+
+  
+  #materialbox-overlay {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background: #292929 !important;
+    z-index: 1000;
+    will-change: opacity;
   }
 
   .highlight .hll {

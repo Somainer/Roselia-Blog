@@ -364,18 +364,4 @@ export default {
 </script>
 
 <style scoped>
-code, pre {
-    font-family: Consolas, "Courier New", monospace;
-}
-
-#materialbox-overlay {
-  position: fixed;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  background: #292929 !important;
-  z-index: 1000;
-  will-change: opacity;
-}
 </style>
