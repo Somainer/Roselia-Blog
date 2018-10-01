@@ -69,7 +69,16 @@
         <v-layout justify-center align-center>
           <v-flex shrink>
             <!--<h1 class="display-3">Well met, {{userData.username}}!</h1>-->
-            <router-view :userData="userData" :toast="showToast"></router-view>
+            <v-alert
+              v-model="toast.show"
+              :type="toast.color"
+              transition="scale-transition"
+            >
+              {{ toast.text }}
+            </v-alert>
+            <v-slide-x-transition hide-on-leave>
+              <router-view :userData="userData" :toast="showToast"></router-view>
+            </v-slide-x-transition>
           </v-flex>
         </v-layout>
       </v-container>
@@ -87,7 +96,7 @@ const userData = (function () {
   return () => {
     if (loginData) return loginData;
     loginData = utils.getLoginData();
-    return loginData || {};
+    return loginData || null;
   };
 })();
 export default {
@@ -153,12 +162,16 @@ export default {
   },
   mounted () {
     if (!this.userData) {
-      this.showToast('Please login first', 'warning')
+      // this.showToast('Please login first', 'warning')
       return this.makeRedirect({
         name: 'login',
         params: {
           logout: true,
-          message: 'Login to manage'
+          message: 'Login to manage',
+          alert: {
+            color: 'warning',
+            text: 'Please login first'
+          }
         }
       })
     }

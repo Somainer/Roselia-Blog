@@ -19,10 +19,17 @@
     <v-container grid-list-md fluid fill-height>
       <v-layout>
         <v-flex wrap row xs12 sm10 offset-sm2>
-          <v-layout row>
+          <v-layout>
             <router-link v-for="tag in postData.tags" :to="{name: 'index', params: {tag: tag}, query: {tag: tag}}" :key="tag">
               <v-chip>{{tag}}</v-chip>
             </router-link>
+            <v-chip v-if="postData.secret" color="success" text-color="white">
+              <v-avatar>
+                <v-icon>lock</v-icon>{{postData.secret}}
+              </v-avatar>
+              Secret
+            </v-chip>
+            
           </v-layout>
           <v-flex xs10 offset xs2>
             <v-btn v-if="cachedData" color="secondary" fab small @click="$router.go(-1)">
@@ -41,6 +48,17 @@
           <v-layout>
             <v-flex :class="{sm8: hasDigest, sm10: !hasDigest}">
               <div id="content" class="flow-text responsive-img" ref="content" v-html="postData.content"></div>
+              <div class="flow-text" v-if="postData.id < 0">
+                <p>Oops, we can not show you the post.</p>
+                <p><strong>This may because:</strong></p>
+                <ol>
+                  <li>Your post ID is invalid.</li>
+                  <li>This post is secret<strong v-if="userData"> and even beyond your permission level</strong>.</li>
+                  <li v-if="userData && isTokenExpired">Your session is expired.</li>
+                  <li>Your network condition is poor.</li>
+                </ol>
+                <p><strong>All you need to do is check your input, refresh your token or try to login again.</strong></p>
+              </div>
             </v-flex>
             <v-flex v-if="hasDigest" sm2>
               <blog-digest-nav :items="postDigest" offset="500" threshold="500"></blog-digest-nav>
@@ -290,7 +308,7 @@ export default {
       return {
         img: '',
         id: -1,
-        content: '<p>There might be some problem here. Please check your input</p><p>Or maybe you know why.</p>',
+        content: ``,
         next: -1,
         prev: -1,
         secret: 0,
@@ -316,6 +334,9 @@ export default {
   computed: {
     hasDigest () {
       return this.postDigest.length > 0
+    },
+    isTokenExpired () {
+      return utils.isTokenExpired(this.userData && this.userData.token)
     }
   },
   mounted () {

@@ -4,7 +4,7 @@
     <v-app :dark="isNight">
       <v-content>
         <v-fade-transition>
-          <router-view></router-view>
+          <router-view @forceSwitchToLight="switchToLight"></router-view>
         </v-fade-transition>
 
       </v-content>
@@ -45,11 +45,21 @@ export default {
       this.$Progress.finish()
     })
   },
+  methods: {
+    switchToLight(ev) {
+      this.forceLight = !!ev
+    }
+  },
+  data(){
+    return {
+      forceLight: false
+    }
+  },
   computed: {
     isNight () {
       let hour = (new Date()).getHours()
       let morning = (hour > 6 && hour < 18)
-      return !morning
+      return !(this.forceLight || morning)
     }
   }
 }
@@ -93,7 +103,7 @@ export default {
   span.heimu {
     background: black;
     color: black;
-    transition: background 0.25s ease;
+    transition: background 0.37s ease;
   }
 
   span.heimu:hover {

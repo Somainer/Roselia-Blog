@@ -955,11 +955,13 @@ def oauth_callback(third):
         redirect(base or url_for('seo_main'))
     )
 
-
-if __name__ == '__main__':
+def run_server():
     if DEBUG:
         app.run(host='0.0.0.0', threaded=True, debug=DEBUG)
     else:
         log.info("{} ran on {}:{}".format(BLOG_INFO["title"], HOST, PORT))
         http_server = WSGIServer((HOST, PORT), app)
         http_server.serve_forever()
+
+if __name__ == '__main__':
+    run_server()

@@ -1,9 +1,13 @@
 <template>
-  <v-toolbar color="primary" class="white--text">
+  <v-toolbar
+    color="primary"
+    dark
+    scroll-off-screen
+  >
     <slot></slot>
     <v-toolbar-title>
       <router-link  class="white--text no-deco" :to="{name:'index'}">{{title}}</router-link>
-      </v-toolbar-title>
+    </v-toolbar-title>
     <v-spacer></v-spacer>
     <v-toolbar-items>
       <v-btn dark flat to="/">Index</v-btn>

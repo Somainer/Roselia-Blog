@@ -14,8 +14,23 @@
             <v-spacer></v-spacer>
           </v-toolbar>
           <v-card-text>
+            <v-alert
+              v-model="toast.show"
+              :type="toast.color"
+              transition="scale-transition"
+              dismissible
+            >
+              {{ toast.text }}
+            </v-alert>
             <h2 class="flex text--secondary">{{message}}</h2>
-            <h3 v-if="loading && !loginCode" class="display-1">Loading...</h3>
+            <div v-if="loading && !loginCode">
+              <h3 class="display-1">Please standby...</h3>
+              <v-progress-linear
+                indeterminate
+                color="accent"
+              ></v-progress-linear>
+            </div>
+            
             <v-form v-model="valid" v-if="!loading && !loginCode">
               <v-text-field v-model="username" prepend-icon="person" name="username" label="Username" type="text"
                             autofocus :rules="rules" @keyup.enter="focusPassword"></v-text-field>
@@ -53,15 +68,17 @@
             </v-layout>
           </v-card-text>
           <v-card-actions>
-            <v-btn v-if="loginCode" color="info" @click="codeLoginCleanUp">With username</v-btn>
-            <v-btn v-else color="secondary" @click="codeLogin">With access code</v-btn>
+            <div v-if="!oauthLogin.loading">
+              <v-btn v-if="loginCode" color="info" @click="codeLoginCleanUp">With username</v-btn>
+              <v-btn v-else color="secondary" @click="codeLogin">With access code</v-btn>
+            </div>
             <v-spacer></v-spacer>
             <v-btn color="primary" v-on:click="login" :loading="loading" :disabled="!valid">Login</v-btn>
           </v-card-actions>
         </v-card>
       </v-flex>
     </v-layout>
-    <toast v-bind="toast" @showChange="changeToast"></toast>
+    <toast v-bind="toast" @showChange="changeToast" v-show="false"></toast>
   </v-container>
 </template>
 
@@ -134,7 +151,7 @@ export default {
     },
     tokenLogin (token) {
       this.loading = true
-      utils.fetchJSON(utils.apiFor('login', 'token'), 'POST', {
+      return utils.fetchJSON(utils.apiFor('login', 'token'), 'POST', {
         token
       }, false).then(data => {
         if (!data.success) {
@@ -149,6 +166,7 @@ export default {
       }).catch(reason => {
         this.loading = false
         this.showToast(reason, 'error')
+        return Promise.reject(reason)
       }).finally(this.cleanUp)
     },
     getLoginCode () {
@@ -173,7 +191,9 @@ export default {
               utils.redirectTo(this.redirection)
             }
           }
-        )
+        ).catch(err => {
+          this.showToast(`Unstable network may affect remote login.`, 'warning')
+        })
       }, 3000)
       this.codeLoginCleaner = setTimeout(() => this.codeLoginCleanUp(), 60000)
     },
@@ -184,8 +204,10 @@ export default {
         this.loginCode = (Array(6).join('0') + code).slice(-6)
       }).then(_ => {
         this.codeLoginTriggers()
-      }).catch(_ => {
-        this.loginCode = 'Please retry'
+      }).catch(err => {
+        // this.loginCode = 'Please retry'
+        this.showToast(err, 'error')
+        this.codeLoginCleanUp()
       })
     },
     codeLoginCleanUp () {
@@ -211,6 +233,7 @@ export default {
         base: window.location.href.split('?')[0],
         redirect: this.redirection
       }).then(url => {
+        this.loading = true
         window.location.href = url
       }).catch(err => {
         this.oauthLogin.loading = false
@@ -238,11 +261,24 @@ export default {
         utils.redirectTo(this.redirection)
       }
     }
+    if (this.$route.params.alert) {
+      let {color, text} = this.$route.params.alert
+      this.showToast(text, color)
+    }
     addEventListener('storage', e => {
       e.key === 'loginData' && e.newValue && utils.redirectTo(this.redirection)
     })
     let token = utils.getArguments.call(this).token
-    token && this.tokenLogin(token)
+    token && this.tokenLogin(token).catch(err => {
+      this.getAdapters()
+      this.$router.replace({
+        ...this.$route,
+        query: {
+          ...this.$route.query,
+          token: undefined
+        }
+      })
+    })
     if (!token) {
       this.getAdapters()
     }

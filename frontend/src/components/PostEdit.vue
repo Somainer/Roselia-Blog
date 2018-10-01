@@ -60,9 +60,7 @@
             prepend-icon="image"
           ></v-text-field>
           <span>Content</span>
-          <v-app :dark="false">
-            <markdown-editor id="markdownEditor" ref="markdownEditor" v-model="postData.content" :highlight="true" :configs="configs"></markdown-editor>
-          </v-app>
+          <markdown-editor id="markdownEditor" ref="markdownEditor" v-model="postData.content" :highlight="true" :configs="configs"></markdown-editor>
 
           <v-card-actions>
             <v-spacer></v-spacer>
@@ -330,7 +328,7 @@ export default {
       return {
         ...this.postData,
         id: 'preview',
-        content: this.simplemde().markdown(this.postData.content)
+        content: this.markdown ? this.simplemde().markdown(this.postData.content) : this.postData.content
       }
     }
   },
@@ -378,11 +376,13 @@ export default {
     })
 
     window.addEventListener('beforeunload', e => this.saveDraft())
+    this.$emit('forceSwitchToLight', true)
   },
   beforeDestroy () {
     if (!this.doNotSave) this.saveDraft()
   },
   destroyed () {
+    this.$emit('forceSwitchToLight')
     removeEventListener('beforeunload', e => this.saveDraft())
   }
 }

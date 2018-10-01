@@ -412,30 +412,16 @@ utils.LazyLoad = (function ($) {
   return AdovecLazyLoad
 }(_))
 
-utils.setUpEvents = function (app, events) {
-  app = app || this
-  app.hooks = app.hooks || {}
-  app.events = (events && events.map(s => s.toLowerCase())) || ['load', 'unload', 'render'];
-  ['on', 'once'].forEach((cond, isOnce) => {
-    app[cond] = function (event, f, ...args) {
-      this.hooks = this.hooks || {}
-      this.hooks[event] = this.hooks[event] || []
-      return this.hooks[event].push({f, args, once: isOnce > 0})
-    }
-  })
-  app.remove = function (event, idx) {
-    this.hooks[event] && this.hooks[event].splice(idx, 1)
+utils.isTokenExpired = function (token) {
+  try {
+    token = token || this.getLoginData().token
+    let head = token.split('.')[0]
+    let exp = JSON.parse(window.atob(head)).exp
+    return exp > (new Date())
+  } catch (e) {
+    console.error(e)
+    return true
   }
-  app.trigger = function (event, ...args) {
-    if (this.hooks && this.hooks[event]) {
-      this.hooks[event].forEach((e) => e && e.f && e.f(...e.args, ...args))
-      this.hooks[event] = this.hooks[event].filter(e => !e.once)
-    }
-  };
-  ['on', 'once', 'trigger', 'remove'].forEach(t => app.events.forEach(e => {
-    app[t + e.replace(/\b\w/g, l => l.toUpperCase())] = (f, ...args) => app[t](e, f, ...args)
-  }))
-  router.afterEach(() => app.trigger('unload'))
 }
 
 utils.showToast = function (text, color = 'info') {

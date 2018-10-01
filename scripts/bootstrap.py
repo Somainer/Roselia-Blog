@@ -44,7 +44,8 @@ class CompressIMG(MultiConsumer):
             print('  '*(dep+1), "=> {} * {}".format(w, h))
             im = im.resize((w, h), Image.ANTIALIAS)
             im.save(path)
-if __name__ == '__main__':
+
+def build_assets():
     print("Start building assets...")
 
     print("Step#1 creating & copying dir:", staticPath, '=>', digestPath)
@@ -58,3 +59,6 @@ if __name__ == '__main__':
     scanner.start()
     scanner.join()
     print("Finished!")
+
+if __name__ == '__main__':
+    build_assets()

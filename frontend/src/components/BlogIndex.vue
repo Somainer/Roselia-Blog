@@ -33,6 +33,12 @@
                       <router-link v-for="tag in post.tags" :to="{name: 'index', params: {tag: tag}, query: {tag: tag}}" :key="tag">
                         <v-chip>{{tag}}</v-chip>
                       </router-link>
+                      <v-chip v-if="post.secret" color="success" text-color="white">
+                        <v-avatar>
+                          <v-icon>lock</v-icon>{{post.secret}}
+                        </v-avatar>
+                        Secret
+                      </v-chip>
                     </v-flex>
                   </v-layout>
                 </v-container>
@@ -65,6 +71,15 @@
       </v-container>
     </v-layout>
     <v-container>
+      <div class="text-xs-center">
+        <v-pagination
+          v-model="currentPage"
+          :length="pages"
+          :total-visible="7"
+          circle
+        ></v-pagination>
+      </div>
+      <!--
       <v-flex row xs12 sm10 offset-sm1>
         <v-layout>
           <v-btn color="primary" fab small v-if="prevPage !== -1" :to="{name: 'index', query: {page: prevPage}}">
@@ -78,6 +93,7 @@
           </v-btn>
         </v-layout>
       </v-flex>
+      -->
       
     </v-container>
 
@@ -198,6 +214,14 @@ export default {
   watch: {
     userData() {
       this.getPosts()
+    },
+    currentPage (page) {
+      this.$router.push({
+        ...this.$route,
+        query: {
+          page
+        }
+      })
     }
   },
   beforeRouteUpdate (to, from, next) {
