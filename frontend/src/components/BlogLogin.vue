@@ -60,7 +60,8 @@
                     :loading="oauthLogin.loading" 
                     @click="redirectOauthLogin(adapter)"
                   >
-                    {{adapter}}
+                    <v-icon v-if="$vuetify.icons.brand[adapter]">{{$vuetify.icons.brand[adapter]}}</v-icon>
+                    <span v-else>{{ adapter }}</span>
                   </v-btn>
                 </div>
               </div>

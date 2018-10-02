@@ -54,7 +54,7 @@
                 <ol>
                   <li>Your post ID is invalid.</li>
                   <li>This post is secret<strong v-if="userData"> and even beyond your permission level</strong>.</li>
-                  <li v-if="userData && isTokenExpired">Your session is expired.</li>
+                  <li v-if="userData && isTokenExpired" class="warning--text"><v-icon color="warning">warning</v-icon>Your session is expired.</li>
                   <li>Your network condition is poor.</li>
                 </ol>
                 <p><strong>All you need to do is check your input, refresh your token or try to login again.</strong></p>

@@ -68,6 +68,7 @@ export default {
 <style>
   :root {
     --theme-color: #6670ed;
+    /* --theme-color: #0288d1; */
   }
 
   code, pre {

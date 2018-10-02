@@ -12,10 +12,23 @@ import toolbar from './components/BlogToolbar'
 import footer from './components/BlogFooter'
 import VueProgressBar from 'vue-progressbar'
 import fabTop from './components/GotopButton'
-
+import '@fortawesome/fontawesome-free/css/all.css'
+import _ from 'lodash'
 
 Vue.use(Vuetify, {
-  theme: meta.theme
+  theme: meta.theme,
+  icons: {
+    brand: new Proxy({}, {
+      get (target, key) {
+        if (Reflect.has(target, key)) {
+          return Reflect.get(target, key)
+        }
+        if (_.isString(key)) {
+          return `fab fa-${key}`
+        }
+      }
+    })
+  }
 })
 
 Vue.use(VueProgressBar, {

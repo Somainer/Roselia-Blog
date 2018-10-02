@@ -75,7 +75,6 @@
         <v-pagination
           v-model="currentPage"
           :length="pages"
-          :total-visible="7"
           circle
         ></v-pagination>
       </div>
@@ -112,7 +111,7 @@ export default {
   name: 'blog-index',
   data () {
     return {
-      currentPage: 0,
+      currentPage: 1,
       prevPage: 0,
       nextPage: 0,
       pages: 0,
@@ -219,7 +218,8 @@ export default {
       this.$router.push({
         ...this.$route,
         query: {
-          page
+          ...this.$route.query,
+          page: page === 1 ? undefined : page
         }
       })
     }

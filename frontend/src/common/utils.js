@@ -416,8 +416,8 @@ utils.isTokenExpired = function (token) {
   try {
     token = token || this.getLoginData().token
     let head = token.split('.')[0]
-    let exp = JSON.parse(window.atob(head)).exp
-    return exp > (new Date())
+    let {exp} = JSON.parse(window.atob(head))
+    return exp < Math.round(+new Date() / 1000)
   } catch (e) {
     console.error(e)
     return true
