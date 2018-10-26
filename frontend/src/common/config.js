@@ -4,8 +4,8 @@ let BLOG_MOTTO = 'Do what you want to do, be who you want to be.'
 // const apiBase = '/api'
 // const apiBase = 'http://localhost:5000/api'
 // const apiBase = 'https://roselia.moe/blog/api'
-const urlPrefix = ''
-// const urlPrefix = '/blog'
+// const urlPrefix = ''
+const urlPrefix = '/blog'
 const apiBase = `${urlPrefix}/api`
 const roseliaTheme = {
   primary: '#6670ed',
