@@ -29,6 +29,12 @@
               </v-avatar>
               Secret
             </v-chip>
+            <v-chip v-if="postData.id === -1" color="warning" text-color="white">
+              <v-avatar>
+                <v-icon>error</v-icon>
+              </v-avatar>
+              404
+            </v-chip>
             
           </v-layout>
           <v-flex xs10 offset xs2>
@@ -129,7 +135,7 @@
 import utils from '../common/utils'
 import BlogDigestNav from './BlogDigestNav'
 import M from 'materialize-css'
-import RoseliaScript from '../common/roselia-script'
+import RoseliaScript from '../common/roselia-script/'
 export default {
   components: {
     BlogDigestNav
@@ -141,7 +147,7 @@ export default {
   data: () => ({
     postData: {
       img: '',
-      id: -1,
+      id: 0,
       content: '<p>Loading, please wait...</p>',
       next: -1,
       prev: -1,
@@ -314,7 +320,7 @@ export default {
         secret: 0,
         title: 'Page Not Found',
         subtitle: 'Please check your post-id. Or try to login.',
-        tags: ['404'],
+        tags: [],
         date: (new Date()).toDateString()
       }
     },

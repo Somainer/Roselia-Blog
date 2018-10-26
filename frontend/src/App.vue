@@ -52,7 +52,8 @@ export default {
   },
   data(){
     return {
-      forceLight: false
+      forceLight: false,
+      forceTitle: ''
     }
   },
   computed: {

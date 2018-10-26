@@ -104,25 +104,30 @@ export default {
   name: 'blog-user-space',
   data () {
     return {
-      userData: userData(),
+      userData: null,
       toast: {
         show: false,
         text: '',
         color: ''
       },
       drawer: null,
-      dark: app.computed.isNight(),
-      items: [
+      dark: app.computed.isNight()
+    }
+  },
+  computed: {
+    items () {
+      return [
         { icon: 'home', text: 'Home', to: {name: 'console-index'} },
         { divider: true },
-        { icon: 'add_circle', text: 'Write a new post', to: {name: 'edit'}, cond: userData().role },
+        { icon: 'add_circle', text: 'Write a new post', to: {name: 'edit'}, cond: this.userData.role },
         { icon: 'delete', text: 'Remove all drafts', click: this.removeAllDraft },
         { divider: true },
         { heading: 'Management' },
         { icon: 'lock', text: 'Change password', to: {name: 'changePassword'} },
-        { icon: 'people', text: 'Manage User', to: {name: 'userManagement'}, cond: userData().role },
+        { icon: 'people', text: 'Manage User', to: {name: 'userManagement'}, cond: this.userData.role },
         { divider: true },
-        { icon: 'refresh', text: 'Token Refresh', click: this.refreshToken, cond: userData().rftoken },
+        // { icon: 'refresh', text: 'Token Refresh', click: this.refreshToken, cond: userData().rftoken },
+        { icon: 'refresh', text: 'Token Refresh', to: {name: 'tokenRefresh'}, cond: this.userData.rftoken },
         { icon: 'verified_user', text: 'Remote Login', to: {name: 'remoteLogin'} },
         { divider: true },
         { icon: 'exit_to_app', text: 'Log Out', to: {name: 'login', params: {logout: true}} }
@@ -150,17 +155,10 @@ export default {
         storage.removeItem(k)
       })
       this.showToast('Draft Cleaned!')
-    },
-    refreshToken () {
-      utils.refreshToken().then(data => {
-        this.showToast('+1h O..O', 'success')
-      }).catch(reason => {
-        this.showToast(reason, 'error')
-        this.makeRedirect({name: 'login'})
-      })
     }
   },
   mounted () {
+    this.userData = utils.getLoginData()
     if (!this.userData) {
       // this.showToast('Please login first', 'warning')
       return this.makeRedirect({
@@ -177,6 +175,7 @@ export default {
     }
     window.addEventListener('storage', e => {
       if (e.key === 'loginData') {
+        console.log(e)
         this.userData = utils.getLoginData()
       }
     })

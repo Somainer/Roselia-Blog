@@ -1,5 +1,6 @@
 import functools
-from flask import request
+from flask import request, jsonify, make_response
+from config import DEBUG
 from tokenProcessor import TokenProcessor
 
 token_processor = TokenProcessor()
@@ -80,3 +81,17 @@ def make_option_dict(base=None, **kwargs):
     return dict(base, **{
         k: v for k, v in kwargs.items() if v is not None
     })
+
+
+def to_json(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        response = make_response(jsonify(func(*args, **kwargs)))
+        if DEBUG:
+            response.headers['Access-Control-Allow-Origin'] = '*'
+            response.headers['Access-Control-Allow-Methods'] = 'POST'
+            response.headers['Access-Control-Allow-Headers'] = 'x-requested-with,content-type'
+        return response
+        # return json.dumps(func(*args, **kwargs))
+
+    return wrapper

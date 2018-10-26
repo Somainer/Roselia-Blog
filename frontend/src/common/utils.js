@@ -412,16 +412,19 @@ utils.LazyLoad = (function ($) {
   return AdovecLazyLoad
 }(_))
 
-utils.isTokenExpired = function (token) {
+utils.getTokenExpiryTime = function (token) {
   try {
-    token = token || this.getLoginData().token
     let head = token.split('.')[0]
     let {exp} = JSON.parse(window.atob(head))
-    return exp < Math.round(+new Date() / 1000)
+    return new Date(exp * 1000)
   } catch (e) {
     console.error(e)
-    return true
+    return new Date()
   }
+}
+
+utils.isTokenExpired = function (token) {
+  return utils.getTokenExpiryTime(token || this.getLoginData().token) < new Date()
 }
 
 utils.showToast = function (text, color = 'info') {

@@ -60,7 +60,9 @@
             prepend-icon="image"
           ></v-text-field>
           <span>Content</span>
-          <markdown-editor id="markdownEditor" ref="markdownEditor" v-model="postData.content" :highlight="true" :configs="configs"></markdown-editor>
+          <markdown-editor
+            @keyup.ctrl.s.prevent="saveDraft"
+           id="markdownEditor" ref="markdownEditor" v-model="postData.content" :highlight="true" :configs="configs"></markdown-editor>
 
           <v-card-actions>
             <v-spacer></v-spacer>
@@ -120,7 +122,7 @@
             @click="deletePost"
             :loading="loading"
           >
-            Yes, delete
+            Yes, delete<v-icon>delete</v-icon>
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -137,6 +139,7 @@ import utils from '../common/utils'
 import BlogToolbar from './BlogToolbar'
 import hljs from 'highlight.js'
 import markdownEditor from 'vue-simplemde/src/markdown-editor'
+import SimpleMDE from 'simplemde'
 import 'simplemde/dist/simplemde.min.css'
 import 'github-markdown-css'
 import 'highlight.js/styles/xcode.css'
@@ -168,7 +171,8 @@ export default {
     userData: utils.getLoginData(),
     loading: false,
     configs: {
-      spellChecker: false
+      spellChecker: false,
+      hideIcons: ['guide']
     },
     uploadImages: [],
     doNotSave: false

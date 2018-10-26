@@ -12,13 +12,15 @@ import time
 import os
 from config import BLOG_INFO, BLOG_LINK, DEBUG, HOST, PORT, UPLOAD_DIR
 from ImageConverter import ImageConverter
-from middleware import verify_token, ReverseProxied, make_option_dict
+from middleware import verify_token, ReverseProxied, make_option_dict, to_json
 from urllib.parse import quote
+
+from external_views import register_views
 
 from gevent import monkey
 from gevent.pywsgi import WSGIServer
 
-monkey.patch_all()
+# monkey.patch_all()
 
 app = Flask(__name__, static_folder='../', static_url_path='')
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
@@ -27,20 +29,7 @@ ppl = PipeLine.PostManager()
 acm = PipeLine.ManagerAccount()
 token_processor = TokenProcessor()
 auth_login = AuthLogin.AuthLogin()
-
-
-def to_json(func):
-    @functools.wraps(func)
-    def wrapper(*args, **kwargs):
-        response = make_response(jsonify(func(*args, **kwargs)))
-        if DEBUG:
-            response.headers['Access-Control-Allow-Origin'] = '*'
-            response.headers['Access-Control-Allow-Methods'] = 'POST'
-            response.headers['Access-Control-Allow-Headers'] = 'x-requested-with,content-type'
-        return response
-        # return json.dumps(func(*args, **kwargs))
-
-    return wrapper
+register_views(app)
 
 
 def log_time(item):

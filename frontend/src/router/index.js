@@ -14,6 +14,7 @@ import changePW from '../components/console/ChangePassword'
 import RemoteLogin from '../components/console/RemoteLogin'
 import userManagement from '../components/console/UserManagement'
 import ConsoleIndex from '../components/console/ConsoleIndex'
+import TokenRefresh from '../components/console/TokenRefresh'
 
 Vue.use(Router)
 
@@ -78,6 +79,11 @@ export default new Router({
           path: 'user-management',
           name: 'userManagement',
           component: userManagement
+        },
+        {
+          path: 'token-refresh',
+          name: 'tokenRefresh',
+          component: TokenRefresh
         },
         {
           path: '/',

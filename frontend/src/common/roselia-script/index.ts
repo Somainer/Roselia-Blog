@@ -1,5 +1,18 @@
-import _ from 'lodash'
-import config from './config'
+import * as _ from 'lodash'
+import config from '../config'
+import utils from '../utils'
+import axios from '../ajax-bar-axios'
+import {
+  PreviewObject, 
+  RenderResult, 
+  MusicMetaObject,
+  RSElementSelector
+} from './script-types'
+declare global {
+  interface Window {
+    APlayer: any
+  }
+}
 function ensureAPlayer(onload) {
   if (!window.APlayer) {
     let playerNode = document.createElement('script')
@@ -8,6 +21,7 @@ function ensureAPlayer(onload) {
     playerStyle.href = 'https://cdn.bootcss.com/aplayer/1.10.1/APlayer.min.css'
     playerNode.async = true
     playerNode.onload = onload || null
+
     playerNode.src = 'https://cdn.bootcss.com/aplayer/1.10.1/APlayer.min.js'
     document.head.appendChild(playerStyle)
     document.body.appendChild(playerNode)
@@ -19,23 +33,22 @@ function unescapeToHTML (str) {
   return d.innerText || d.textContent
 }
 
-class RenderResult {
-  constructor (template, ret) {
-    this.template = template
-    this.returnValue = ret
-  }
-}
-
 function render (template, context, delim) { // A not so naive template engine.
   const funcTemplate = expr => `with(data || {}) { with(data.functions) {return (${expr});}}`
   return template.replace(new RegExp((delim || ['{{', '}}']).join('\\s*?(([\\s\\S]+?))\\s*?'), 'gm'), (_total, expr) => {
     try {
       const bigC = /([a-zA-Z_$]+[a-zA-Z_0-9]*){([\s\S]+)}/.exec(expr)
       let res
+      let isSingleCall = false
       if (bigC) {
         let [_inp, fn, ctx] = bigC
-        res = (context[fn] || context.functions[fn])(unescapeToHTML(ctx))
-      } else {
+        const func = (context[fn] || context.functions[fn])
+        if (_.isFunction(func)) {
+          res = func(unescapeToHTML(ctx))
+          isSingleCall = true
+        }
+      }
+      if (!isSingleCall) {
         expr = unescapeToHTML(expr)
         res = (new Function('data', funcTemplate(expr)))(context)
       }
@@ -55,7 +68,7 @@ function render (template, context, delim) { // A not so naive template engine.
   })
 }
 
-function selfish (target, forbid) {
+function selfish (target, forbid?) {
   const cache = new WeakMap()
   if (forbid) {
     const err = key => new Proxy({}, {
@@ -80,6 +93,8 @@ function selfish (target, forbid) {
   return new Proxy(target, handler)
 }
 class RoseliaRenderer {
+  app: any
+  context: RoseliaScript
   constructor (app) {
     this.app = app
     this.context = selfish(new RoseliaScript(app), [
@@ -96,7 +111,13 @@ class RoseliaRenderer {
     // return render(template, this.context, ['(?:Roselia|roselia|r|R){{', '}}'])
   }
 }
+
+
 class RoseliaScript {
+  app: any
+  customFunctions: object
+  functions: object
+
   constructor (app) {
     this.app = app
     this.customFunctions = {app: null}
@@ -111,7 +132,7 @@ class RoseliaScript {
     this.app.$nextTick(f)
   }
 
-  music (meta, autoplay = false, onPlayerReady = null) {
+  music (meta: MusicMetaObject | Array<MusicMetaObject>, autoplay = false, onPlayerReady = null) {
     ensureAPlayer(() => this.app.$emit('aPlayerLoaded'))
     let id = this.randomID()
     let player
@@ -130,7 +151,7 @@ class RoseliaScript {
           audio: meta
         })
         player.on('loadstart', () => {
-          Array.from(element.getElementsByClassName('aplayer-title')).forEach(ev => {
+          Array.from(element.getElementsByClassName('aplayer-title')).forEach((ev: HTMLElement) => {
             ev.style.color = config.theme.secondary
           })
           onPlayerReady && onPlayerReady(player)
@@ -158,7 +179,7 @@ class RoseliaScript {
     return `<a href="post?p=${pid}">${text}</a>`
   }
 
-  randomID (length) {
+  randomID (length?) {
     return Number(Math.random().toString().substring(3, length) + Date.now()).toString(36)
   }
 
@@ -170,9 +191,9 @@ class RoseliaScript {
     this.app.$once('postUnload', fn)
   }
 
-  btn (text, onClick, externalClasses = '') {
+  btn (text, onClick, externalClasses: Array<String>|String = '') {
     const id = this.randomID()
-    if (_.isArray(externalClasses)) externalClasses = externalClasses.join(' ')
+    if (externalClasses instanceof Array) externalClasses = externalClasses.join(' ')
     onClick && this.then(() => {
       document.getElementById(id).addEventListener('click', onClick)
     })
@@ -201,7 +222,7 @@ class RoseliaScript {
     })
   }
 
-  static importJS (url, onComplete) {
+  static importJS (url, onComplete?) {
     const jsNode = document.createElement('script')
     jsNode.onload = onComplete
     jsNode.async = true
@@ -220,12 +241,12 @@ class RoseliaScript {
     }
   }
 
-  audio (src) {
+  audio (src: string) {
     const id = this.randomID()
     return new RenderResult(`<audio id='${id}' src='${src}' hidden='true'>`, id)
   }
 
-  getElement (name) {
+  getElement (name: RSElementSelector) {
     if (name instanceof HTMLElement) {
       name = name.id
     }
@@ -269,14 +290,16 @@ class RoseliaScript {
     })
   }
 
-  createElement (type) {
+  createElement (type, extend) {
     const el = document.createElement(type)
     el.id = this.randomID()
+    extend && this.element(el).then(e => {
+      _.assignIn(e, extend)
+    })
     return el
   }
-
-  setPreview (el, preview /* :{title, subtitle, img, color} */) {
-    this.element(el).then(e => {
+  setPreview (el, preview: PreviewObject /* :{title, subtitle, img, color} */) {
+    this.element(el).then((e: HTMLElement) => {
       e.addEventListener('mouseover', ev => {
         ev.preventDefault()
         this.app.preview.show = true
@@ -295,7 +318,11 @@ class RoseliaScript {
       if (!_.isNil(preview.goTo)) {
         e.addEventListener('click', ev => {
           ev.preventDefault()
-          this.app.$vuetify.goTo(_.isNumber(preview.goTo) ? preview.goTo : this.getElement(preview.goTo), {offset: -200})
+          this.app.$vuetify.goTo(_.isNumber(preview.goTo) ? preview.goTo : this.getElement(<any>preview.goTo), {offset: -200}).catch(reason => {
+            if(_.isString(preview.goTo)) location.href = preview.goTo
+            else this.app.$router.push(preview.goTo)
+            console.error(reason)
+          })
         })
       }
     })
@@ -311,8 +338,25 @@ class RoseliaScript {
     return el
   }
 
+  icon (icn, externalClasses: Array<String>|String = '') {
+    // if (_.isArray(externalClasses)) externalClasses = externalClasses.join(' ')
+    if (externalClasses instanceof Array) externalClasses = externalClasses.join(' ')
+    if (icn.startsWith('fa')) {
+      const [fa, txt] = icn.split('-')
+      return `<i aria-hidden="true" class="v-icon ${fa} fa-${txt} ${externalClasses}"></i>`
+    }
+    return `<i aria-hidden="true" class="v-icon material-icons ${externalClasses}">${icn}</i>`
+  }
+
   Y = fn => (u => u(u))(x => fn(s => x(x)(s)))
 
+  fetchJSON = utils.fetchJSON.bind(utils)
+  fetchJSONWithSuccess = utils.fetchJSONWithSuccess.bind(utils)
+  request = {
+    get (url, data) {
+      return axios.get(url, data).then(x => x.data)
+    }
+  }
 }
 
 export default {

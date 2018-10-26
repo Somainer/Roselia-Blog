@@ -24,8 +24,8 @@
           <v-flex v-for="post in posts" xs12 sm8 offset-sm2 :key="post.id">
             <v-card hover :to="{name: 'post', params: {p: post.id}, query: {p: post.id}}">
               <v-img v-if="post.img"
-                            :src="post.img"
-                            ripple="true"
+                    :src="post.img"
+                    ripple="true"
               >
                 <v-container fill-height fluid>
                   <v-layout align-end fill-height>
@@ -98,6 +98,7 @@
 
   <toast v-bind="toast" @showChange="changeToast"></toast>
     <blog-footer></blog-footer>
+    <div v-wechat-title="windowTitle"></div>
   </div>
 
 </template>
@@ -120,7 +121,8 @@ export default {
       posts: [],
       meta,
       realTitle: '',
-      realSubtitle: ''
+      realSubtitle: '',
+      windowTitle: ''
     }
   },
   methods: {
@@ -167,16 +169,15 @@ export default {
         limit: 6
       }
       if (tag) {
-        document.title = `${this.meta.title} - Tag: ${tag}`
+        this.windowTitle = `${this.meta.title} - Tag: ${tag}`
         this.realTitle = tag
         this.realSubtitle = `Posts for tag: ${tag}`
         fetchData.tag = tag
       } else {
         this.realTitle = ''
         this.realSubtitle = ''
-        document.title = `${this.meta.title} - #${page}`
+        this.windowTitle = `${this.meta.title} - #${page}`
       }
-
       utils.fetchJSON(utils.apiFor('posts'), 'GET', fetchData).then(data => {
         if (!data.valid && this.userData && !tried) {
           return utils.refreshToken().then(userData => {
@@ -209,6 +210,9 @@ export default {
         this.userData = utils.getLoginData()
       }
     })
+  },
+  computed: {
+    
   },
   watch: {
     userData() {
