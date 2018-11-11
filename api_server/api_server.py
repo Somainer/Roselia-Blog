@@ -60,6 +60,15 @@ if DEBUG:
     def npm():
         return redirect('http://localhost:8080/__webpack_hmr')
 
+    @app.route('/<string:path>.js')
+    def stjs(path):
+        import requests
+        response = make_response(requests.get(f'http://localhost:8080/{path}.js').content)
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        response.headers['Access-Control-Allow-Methods'] = 'POST'
+        response.headers['Access-Control-Allow-Headers'] = 'x-requested-with,content-type'
+        return response
+
 
     # @app.route('/static/fonts/<string:path>')
     def nppm(path):
@@ -71,7 +80,7 @@ if DEBUG:
         return response
 
 static_urls = [
-    'login', 'userspace', 'me', 'edit', 'add', 'hello'
+    'login', 'userspace', 'me', 'edit', 'add', 'hello', 'timeline'
 ]
 
 if DEBUG:

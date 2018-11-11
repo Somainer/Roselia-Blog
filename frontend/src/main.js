@@ -14,6 +14,7 @@ import VueProgressBar from 'vue-progressbar'
 import fabTop from './components/GotopButton'
 import '@fortawesome/fontawesome-free/css/all.css'
 import _ from 'lodash'
+import { ObserveVisibility } from 'vue-observe-visibility'
 
 Vue.use(Vuetify, {
   theme: meta.theme,
@@ -36,6 +37,8 @@ Vue.use(VueProgressBar, {
   failedColor: meta.theme.error,
   thickness: '4px'
 })
+
+Vue.directive('observe-visibility', ObserveVisibility)
 
 Vue.component('toast', toast)
 Vue.component('nav-bar', toolbar)

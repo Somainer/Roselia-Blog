@@ -3,7 +3,7 @@
     <div v-wechat-title="$route.meta.title"></div>
     <v-app :dark="isNight">
       <v-content>
-        <v-fade-transition>
+        <v-fade-transition hide-on-leave>
           <router-view @forceSwitchToLight="switchToLight"></router-view>
         </v-fade-transition>
 

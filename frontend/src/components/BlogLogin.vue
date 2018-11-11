@@ -23,32 +23,42 @@
               {{ toast.text }}
             </v-alert>
             <h2 class="flex text--secondary">{{message}}</h2>
-            <div v-if="loading && !loginCode">
-              <h3 class="display-1">Please standby...</h3>
-              <v-progress-linear
-                indeterminate
-                color="accent"
-              ></v-progress-linear>
-            </div>
             
-            <v-form v-model="valid" v-if="!loading && !loginCode">
-              <v-text-field v-model="username" prepend-icon="person" name="username" label="Username" type="text"
-                            autofocus :rules="rules" @keyup.enter="focusPassword"></v-text-field>
-              <v-text-field v-model="password" id="password" prepend-icon="lock" name="password" label="Password"
-                            type="password" :rules="rules" @keyup.enter="login" ref="passWord"></v-text-field>
-            </v-form>
-            <v-container v-if="loginCode">
-              <v-layout align-center justify-center>
-                <div v-if="scannedUsername">
-                  <h6 class="display-1">Welcome, please confirm:</h6>
-                  <h1 class="info--text display-3">{{scannedUsername}}</h1>
+            <v-window :value="currentLayer">
+              <v-window-item :value="2">
+                <div v-if="loading && !loginCode">
+                  <h3 class="display-1">Please standby...</h3>
+                  <v-progress-linear
+                    indeterminate
+                    color="accent"
+                  ></v-progress-linear>
                 </div>
-                <div v-else>
-                  <h6 class="display-1">Your login code:</h6>
-                  <h1 class="primary--text display-3">{{loginCode}}</h1>
-                </div>
-              </v-layout>
-            </v-container>
+              </v-window-item>
+              <v-window-item :value="0">
+                <v-form v-model="valid" v-if="!loading && !loginCode">
+                  <v-text-field v-model="username" prepend-icon="person" name="username" label="Username" type="text"
+                                autofocus :rules="rules" @keyup.enter="focusPassword"></v-text-field>
+                  <v-text-field v-model="password" id="password" prepend-icon="lock" name="password" label="Password"
+                                type="password" :rules="rules" @keyup.enter="login" ref="passWord"></v-text-field>
+                </v-form>
+              </v-window-item>
+              <v-window-item :value="1">
+                <v-container v-if="loginCode">
+                  <v-layout align-center justify-center>
+                    <div v-if="scannedUsername">
+                      <h6 class="display-1">Welcome, please confirm:</h6>
+                      <h1 class="info--text display-3">{{scannedUsername}}</h1>
+                    </div>
+                    <div v-else>
+                      <h6 class="display-1">Your login code:</h6>
+                      <h1 class="primary--text display-3">{{loginCode}}</h1>
+                    </div>
+                  </v-layout>
+                </v-container>
+              </v-window-item>
+            </v-window>
+            
+            
             <v-layout align-center justify-center v-if="!loading && hasOauthAdapter">
               <h4>Login using</h4>
               <div>
@@ -251,6 +261,10 @@ export default {
     },
     hasOauthAdapter () {
       return this.oauthLogin.adapters.length > 0
+    },
+    currentLayer () {
+      const state = (!!this.loading << 1) | !!this.loginCode
+      return (state & 1) || (state & 2)
     }
   },
   mounted () {

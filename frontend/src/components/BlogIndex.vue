@@ -105,7 +105,7 @@
 
 <script>
 import utils from '../common/utils'
-import router from '../router/index'
+// import router from '../router/index'
 import meta from '../common/config'
 
 export default {

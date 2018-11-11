@@ -15,6 +15,7 @@ import RemoteLogin from '../components/console/RemoteLogin'
 import userManagement from '../components/console/UserManagement'
 import ConsoleIndex from '../components/console/ConsoleIndex'
 import TokenRefresh from '../components/console/TokenRefresh'
+import Timeline from '../components/BlogTimeline'
 
 Vue.use(Router)
 
@@ -91,6 +92,14 @@ export default new Router({
           component: ConsoleIndex
         }
       ]
+    },
+    {
+      path: '/timeline',
+      name: 'timeline',
+      component: Timeline,
+      meta: {
+        title: 'Timeline'
+      }
     },
     {
       path: '*',
