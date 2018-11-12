@@ -1,7 +1,6 @@
 .idea/*
 *.pyc
-api_server/log.txt
-api_server/*.db
 static/*
 scripts/node_modules/*
-log.txt
+*.db
+*.txt

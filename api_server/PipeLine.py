@@ -115,6 +115,16 @@ class ManagerAccount:
             cursor.close()
         return data[0] == 0
 
+    def get_user_meta(self, username):
+        with sqlite3.connect(self.DBName) as connection:
+            cursor = connection.cursor()
+            cursor.execute("SELECT username, role FROM {} where lower(username)=lower(?)".format(self.table_name), (username,))
+            data = cursor.fetchone()
+            cursor.close()
+        if not data:
+            return False, None
+        return True, data[0], data[1]
+
 class PostManager:
     def __init__(self):
         self.DB_name = DB_POST

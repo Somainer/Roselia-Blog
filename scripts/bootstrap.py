@@ -44,7 +44,8 @@ class CompressIMG(MultiConsumer):
             print('  '*(dep+1), "=> {} * {}".format(w, h))
             im = im.resize((w, h), Image.ANTIALIAS)
             im.save(path)
-if __name__ == '__main__':
+
+def build_assets():
     print("Start building assets...")
 
     print("Step#1 creating & copying dir:", staticPath, '=>', digestPath)
@@ -56,15 +57,8 @@ if __name__ == '__main__':
     print("Step#2 compressing images...")
     scanner = ScanIMG(CompressIMG)
     scanner.start()
-            
-    print("Step#3 Setting up CSS StyleSheets...")
-    for fs in renderFiles:
-        with open(fs, "r") as f:
-            content = f.read()
-        content = re.sub(r"{{\s*(.*?)\s*}}", lambda x: REPLACEMENT.get(x.group(1), x.group(0)), content)
-        with open(fs, "w") as f:
-            f.write(content)
-    print("Step#4 compressing javascripts...")
-    os.system("node build-assets.js -s {} -d {}".format(digestPath, digestPath))
     scanner.join()
     print("Finished!")
+
+if __name__ == '__main__':
+    build_assets()
