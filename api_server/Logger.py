@@ -1,5 +1,6 @@
 import os
 import datetime
+from config import DEBUG
 LEVEL_DEBUG = 1
 LEVEL_VERBOSE = LEVEL_DEBUG + 1
 LEVEL_WARNING = LEVEL_VERBOSE + 1
@@ -71,4 +72,4 @@ class Log:
                 self.add_time('[{}] '.format(item) + self.format_str(*args, **kwargs)))
         return prt
 
-log = Log('log.txt', std_out=True)
+log = Log('log.txt', level=LEVEL_DEBUG if DEBUG else LEVEL_VERBOSE, std_out=True)

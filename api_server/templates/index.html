@@ -2,7 +2,18 @@
 <html lang="en" xmlns:v-bind="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="UTF-8">
-    <title class="blog-title">Roselia-Blog</title>
+    <title class="blog-title">{{info.title}}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta name="apple-mobile-web-app-title" content="Roselia Blog">
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <link rel="apple-touch-icon" href="favicon.ico"/>
+    <meta name="theme-color" content="#7c4dff">
+    <meta name="description" content="{{ info.title }} - {{ info.motto }}">
+    <link rel="stylesheet" href="https://cdn.bootcss.com/materialize/0.100.1/css/materialize.min.css">
+    <link href="static/css/material_icons.css" type="text/css" rel="stylesheet">
+    <link href="static/css/roselia.css" rel="stylesheet" type="text/css">
+    
 </head>
 <body>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
@@ -10,24 +21,24 @@
     <div class="nav-wrapper">
         <a href="#" data-activates="mobile-list" class="button-collapse"><i class="material-icons">menu</i> </a>
         <div class="container">
-            <a href="./" class="brand-logo blog-title">Roselia-Blog</a>
+            <a href="./" class="brand-logo blog-title">{{info.title}}</a>
             <ul class="left hide-on-med-and-down">
 
             </ul>
             <ul id="nav-mobile" class="right hide-on-med-and-down">
                 <li><a href="/">Index</a> </li>
                 {% if userData %}
-                <li><a href="./login.html" class="username">{{ userData.username }}</a> </li>
+                <li><a href="./login" class="username">{{ userData.username }}</a> </li>
                 {% else %}
-                <li><a href="./login.html" class="username">Login</a> </li>
+                <li><a href="./login" class="username">Login</a> </li>
                 {% endif %}
             </ul>
             <ul class="side-nav" id="mobile-list">
                 <li><a href="/">Index</a> </li>
                 {% if userData %}
-                <li><a href="./login.html" class="username">{{ userData.username }}</a> </li>
+                <li><a href="./login" class="username">{{ userData.username }}</a> </li>
                 {% else %}
-                <li><a href="./login.html" class="username">Login</a> </li>
+                <li><a href="./login" class="username">Login</a> </li>
                 {% endif %}
             </ul>
         </div>
@@ -44,10 +55,10 @@
                 <p class="header col s12 light blog-motto" id="sub-title">Posts for tag: {{ tag }}</p>
             </div>
             {% else %}
-            <h1 class="header center blog-text left blog-title" id="main-title">Roselia</h1>
+            <h1 class="header center blog-text left blog-title" id="main-title">{{info.title}}</h1>
             <br>
             <div class="row">
-                <p class="header col s12 light blog-motto" id="sub-title">Do what you want to do, be who you want to be.</p>
+                <p class="header col s12 light blog-motto" id="sub-title">{{info.motto}}</p>
             </div>
             {% endif %}
             <br><br>
@@ -59,19 +70,28 @@
 <div class="container">
     <div class="section">
         <div id="content" class="row">
-            <div v-if="userData && userData.role" class="fixed-action-btn horizontal">
-                <a class="btn-floating btn-large blog-color waves-effect" href="edit.html">
-                  <i class="large material-icons">mode_edit</i>
+            <div v-if="app.userData && app.userData.role" class="fixed-action-btn">
+                <a class="btn-floating btn-large blog-color waves-effect" href="edit">
+                  <i class="large material-icons">add</i>
+                </a>
+                <ul>
+                    <li><a class="btn-floating red" onclick="utils.deleteDraft();Materialize.toast('Draft cleaned.', 3000)"><i class="material-icons">delete</i></a></li>
+                    <li><a class="btn-floating blog-color" onclick="$('html,body').animate({scrollTop: 0})"><i class="material-icons">keyboard_arrow_up</i></a></li>
+                </ul>
+            </div>
+            <div v-else class="fixed-action-btn gotop">
+                <a class="btn-floating btn-large blog-color waves-effect" href="#!" onclick="$('html,body').animate({scrollTop: 0})">
+                  <i class="large material-icons">keyboard_arrow_up</i>
                 </a>
             </div>
-            <ul>
+            <ul v-if="app.preloaded">
                 {% for post in posts %}
                 <li>
-                    {% set link = 'post/{}'.format(post.id) %}
+                    {% set link = 'post?p={}'.format(post.id) %}
                     <div class="card" id="post-{{post.id}}">
                         <div class="card-image waves-effect waves-block waves-light">
                             <a href="{{ link }}">
-                                <img src="{{post.img if post.img else 'static/img/st.jpg'}}">
+                                <img src="{{post.img if post.img else 'static/img/observe.jpg'}}">
                             </a>
                             <div class="card-title col s12" id="tags">
                                 {% for tag in post.tags %}
@@ -82,20 +102,20 @@
                             </div>
                         </div>
                         <a href="{{ link }}">
-                        <div class="card-content grey-text text-darken-4">
+                        <div class="card-content" style="color:#212121">
                             <p class="right">{{ post.date }}</p>
                             <span class="card-title">{{ post.title }}</span>
                             <p>{{ post.subtitle }}</p>
                         </div>
                         </a>
-                        {% if userData and userData.role %}}
+                        {% if userData and userData.role %}
                         <div v-if="userData && userData.role" class="card-action right-align">
                             <a href="#modal-{{post.id}}" class="btn waves-effect red modal-trigger">delete</a>
-                            <a href="./edit.html?post={{post.id}}" class="btn waves-effect blog-color">Edit</a>
+                            <a href="./edit?post={{post.id}}" class="btn waves-effect blog-color">Edit</a>
                         </div>
                         {% endif %}
                     </div>
-                    {% if userData and userData.role %}}
+                    {% if userData and userData.role %}
                     <div v-if="userData && userData.role" id="modal-{{ post.id }}" class="modal">
                         <div class="modal-content">
                             <h4>Are you sure?</h4>
@@ -111,6 +131,60 @@
                 </li>
                 {% endfor %}
             </ul>
+            <ul v-else>
+                <li v-for="post in app.postData">
+                    <div class="card" v-bind:id="'post-' + post.id">
+                        <div v-if="post.img" class="card-image waves-effect waves-block waves-light">
+                            <a v-bind:href="('post?p='+post.id)">
+                                <img v-bind:src="post.img || 'static/img/st.jpg'">
+                            </a>
+                            <div class="card-title col s12" id="tags">
+                                <a v-for="tag in post.tags" v-bind:href="get_url_by_tag(tag)">
+                                    <div class="chip">{{"{{ tag }}"}}</div>
+                                </a>
+                            </div>
+                        </div>
+                        <a v-bind:href="('post?p='+post.id)">
+                        <div class="card-content" style="color:#212121">
+                            <p class="right">{{"{{ post.date }}"}}</p>
+                            <span class="card-title">{{"{{ post.title }}"}}</span>
+                            <p>{{"{{ post.subtitle }}"}}</p>
+                        </div>
+                        </a>
+                        <div v-if="app.userData && app.userData.role" class="card-action right-align">
+                            <button v-bind:onclick="'app.openModal('+post.id+')'" v-if="app.userData.role" class="btn waves-effect red"><i class="material-icons">delete</i></button>
+                            <a v-bind:href="('edit?post='+post.id)" class="btn waves-effect blog-color"><i class="material-icons">mode_edit</i></a>
+                        </div>
+                    </div>
+
+                    <div v-if="app.userData && app.userData.role" v-bind:id="'modal-'+post.id" class="modal">
+                        <div class="modal-content">
+                            <h4>Are you sure?</h4>
+                            <p>You are deleting: {{"{{ post.title }}"}}</p>
+                            <p>This post will be deleted, and can NOT be undone.</p>
+                        </div>
+                        <div class="modal-footer">
+                            <a href="#!" class=" modal-action modal-close waves-effect waves-purple btn-flat no-delete">No</a>
+                            <button v-bind:onclick="`app.deletePost(${post.id})`" class=" modal-action modal-close waves-effect waves-red btn-flat red-text">Yes</button>
+                        </div>
+                    </div>
+
+                </li>
+            </ul>
+            <div v-if="app.preloaded" id="load-new-seo" class="center">
+                {% if pages.current > 1 %}
+                <a id="next-btn" href="./?page={{ pages.current - 1 }}" onclick="app.shiftPage(-1);return false" class="btn waves-light waves-effect blog-color left"><i class="material-icons">chevron_left</i></a>
+                {% endif %}
+                <span>Page: {{ pages.current }} of {{ pages.pages }}</span>
+                {% if pages.current < pages.pages %}
+                <a id="prev-btn" href="./?page={{ pages.current + 1 }}" onclick="app.shiftPage(1);return false" class="btn waves-light waves-effect blog-color right"><i class="material-icons">chevron_right</i></a>
+                {% endif %}
+            </div>
+            <div v-if="(!app.preloaded) && app.pages" id="load-new" class="center">
+                <a id="next-btn" v-if="app.prevPage!==-1" v-bind:href="`./?page=${app.prevPage}`" onclick="app.shiftPage(-1);return false" class="btn waves-light waves-effect blog-color left"><i class="material-icons">chevron_left</i></a>
+                <span>Page: {{"{{ app.current }}"}} of {{"{{ app.pages }}"}}</span>
+                <a id="prev-btn" v-if="app.nextPage!==-1" v-bind:href="`./?page=${app.nextPage}`" onclick="app.shiftPage(1);return false" class="btn waves-light waves-effect blog-color right"><i class="material-icons">chevron_right</i></a>
+            </div>
         </div>
 </div>
 
@@ -134,21 +208,26 @@
 </footer>
 
 <script defer src="static/js/jquery-3.2.1.min.js"></script>
-<link rel="stylesheet" href="https://cdn.bootcss.com/materialize/0.100.1/css/materialize.min.css">
 <script defer src="https://cdn.bootcss.com/materialize/0.100.1/js/materialize.min.js"></script>
 <script defer src="static/js/vue.min.js"></script>
-<link href="static/css/material_icons.css" type="text/css" rel="stylesheet">
-<link href="static/css/roselia.css" rel="stylesheet" type="text/css">
-<script defer src="./static/js/blog.seo.js"></script>
+<script defer src="./static/js/adovec-prog.js"></script>
+<script defer src="./static/js/utils.js"></script>
+<script defer src="./static/js/blog.js"></script>
 <script>
     {% if userData %}
     let userData = {
-        username: {{ userData.username }},
+        username: "{{ userData.username }}",
         role: {{ userData.role }},
-        token: {{ userData.token }}
+        token: "{{ userData.token }}"
     };
     window.localStorage.loginData = JSON.stringify(userData);
     {% endif %}
+    window.ROSELIA_CONFIG = {
+        preloaded: true,
+        pages: {{pages.pages}},
+        total: {{pages.total}},
+        current: {{pages.current}}
+    };
 </script>
 <!--
 <script defer src="static/js/utils.js"></script>

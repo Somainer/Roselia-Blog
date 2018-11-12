@@ -3,15 +3,16 @@ import hashlib
 import os
 import datetime
 import time
-import markdown
 from Logger import log
+from config import DB_POST, DB_USER
 
+from CodeHighLighter import markdown
 
 class ManagerAccount:
     def __init__(self):
         self.Prefix = "wsp"
         self.Suffix = "9mm1WSp"
-        self.DBName = 'User.db'
+        self.DBName = DB_USER
         self.table_name = 'Users'
         self.check_existence()
 
@@ -106,9 +107,27 @@ class ManagerAccount:
             return True, data[3]
         return False, -1
 
+    def is_empty(self):
+        with sqlite3.connect(self.DBName) as connection:
+            cursor = connection.cursor()
+            cursor.execute("SELECT count(*) FROM {}".format(self.table_name))
+            data = cursor.fetchone()
+            cursor.close()
+        return data[0] == 0
+
+    def get_user_meta(self, username):
+        with sqlite3.connect(self.DBName) as connection:
+            cursor = connection.cursor()
+            cursor.execute("SELECT username, role FROM {} where lower(username)=lower(?)".format(self.table_name), (username,))
+            data = cursor.fetchone()
+            cursor.close()
+        if not data:
+            return False, None
+        return True, data[0], data[1]
+
 class PostManager:
     def __init__(self):
-        self.DB_name = 'Post.db'
+        self.DB_name = DB_POST
         self.table_name = 'Posts'
         self.keys = [
             'title',
@@ -116,8 +135,9 @@ class PostManager:
             'content',
             'time',
             'tags',
-            'img', 'secret'
+            'img', 'secret', 'md_content'
         ]
+        self.brief_keys = {'id', 'title', 'subtitle', 'date', 'tags', 'img', 'secret', 'time'}
         self.check_existence()
 
     def check_existence(self):
@@ -134,7 +154,8 @@ class PostManager:
                 r'time integer, ' +
                 r'tags text,' +
                 r'img text,' +
-                r'secret integer)')
+                r'secret integer,'
+                r'md_content text)')
             cursor.close()
             connection.commit()
 
@@ -148,7 +169,7 @@ class PostManager:
         return data_dict
 
     def brief_dict(self, tup):
-        data_dict = {k: v for k, v in zip(['id'] + self.keys, tup)}
+        data_dict = {k: v for k, v in zip(['id'] + self.keys, tup) if k in self.brief_keys}
         data_dict['tags'] = eval(data_dict.get('tags', '[]'))
         time_sp = data_dict['time']
         data_dict['date'] = datetime.datetime.fromtimestamp(time_sp).strftime('%b %d, %Y')
@@ -171,7 +192,7 @@ class PostManager:
             cursor.close()
             connection.commit()
 
-    def find_post(self, pid):
+    def find_post(self, pid, need_md=False):
         with sqlite3.connect(self.DB_name) as connection:
             cursor = connection.cursor()
             cursor.execute('select * from {} WHERE id=?'.format(self.table_name), (pid,))
@@ -180,7 +201,26 @@ class PostManager:
         if not data:
             return None
         data_dict = self.tuple_to_dict(data)
-
+        md = data_dict.get('md_content', '')
+        data_dict.pop('md_content')
+        if need_md and len(md):
+            data_dict['content'] = md
+        return data_dict
+    
+    def find_post_by_title(self, title, need_md=False):
+        title = title.replace('-', ' ')
+        with sqlite3.connect(self.DB_name) as connection:
+            cursor = connection.cursor()
+            cursor.execute('select * from {} WHERE lower(title)=lower(?)'.format(self.table_name), (title,))
+            data = cursor.fetchone()
+            cursor.close()
+        if not data:
+            return None
+        data_dict = self.tuple_to_dict(data)
+        md = data_dict.get('md_content', '')
+        data_dict.pop('md_content')
+        if need_md and len(md):
+            data_dict['content'] = md
         return data_dict
 
     def get_prev(self, pid, level=0):
@@ -199,9 +239,13 @@ class PostManager:
         if not isinstance(post, dict):
             return False
         keys = self.keys
-        if not all(i in keys for i in post.keys()): return False
+        # if not all(i in keys for i in post.keys()): return False
+        post = {
+            k: v for k, v in post.items() if k in self.keys
+        }
         if fmt_md:
-            post['content'] = markdown.markdown(post['content'])
+            post['md_content'] = post['content']
+            post['content'] = markdown(post['content'])
         cnv_dict = {
             'title': post.get('title', 'Untitled'),
             'subtitle': post.get('subtitle', ''),
@@ -209,10 +253,11 @@ class PostManager:
             'time': int(datetime.datetime.now().timestamp()),
             'tags': str(post.get('tags', [])),
             'img': post.get('img', ''),
-            'secret': int(post.get('secret', 0))
+            'secret': int(post.get('secret', 0)),
+            'md_content': post.get('md_content', '')
         }
         arg_list = ['{}'.format(cnv_dict[k]) for k in keys]
-        print(','.join(arg_list))
+        #print(','.join(arg_list))
         with sqlite3.connect(self.DB_name) as connection:
             cursor = connection.cursor()
             cursor.execute('insert into {}({}) VALUES ({})'
@@ -224,12 +269,16 @@ class PostManager:
 
     def edit_post(self, pid, post, fmt_md=False):
         if not isinstance(post, dict): return False
-        if not all(k in self.keys for k in post.keys()): return False
-        print("Format_MD:", fmt_md)
+        # if not all(k in self.keys for k in post.keys()): return False
+        # print("Format_MD:", fmt_md)
         if fmt_md and post.get('content'):
-            post['content'] = markdown.markdown(post['content'])
+            post['md_content'] = post['content']
+            post['content'] = markdown(post['content'])
         if isinstance(post.get('tags', []), list):
             post['tags'] = str(post.get('tags', []))
+        post = {
+            k: v for k, v in post.items() if k in self.keys
+        }
         edit_str = ','.join('{}=?'.format(k) for k in post.keys())
         with sqlite3.connect(self.DB_name) as connection:
             cursor = connection.cursor()

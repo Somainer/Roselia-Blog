@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <link rel="shortcut icon" href="/favicon.ico">
+    <title>Roselia-Blog</title>
+    <style>
+      #re-birth-day {
+        position: fixed;
+        left: 0;
+        top: 0;
+        display: flex;
+        height: 100vh;
+        width: 100vw;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: #f0f0f0;
+        animation: breathe 2000ms ease-in-out infinite alternate;
+      }
+  
+      #re-birth-day > img {
+        max-width: 15%;
+      }
+  
+      #re-birth-day > p {
+        font-size: 24px;
+        color: #bbb;
+        margin-top: 16px;
+      }
+      @keyframes breathe {
+        0% {
+          opacity: 0;
+        }
+  
+        100% {
+          opacity: 1;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <div id="re-birth-day">
+        <img src="src/assets/logo.png">
+        <!-- <img src="https://mohuety.com/favicon.png"> -->
+        <p>Roselia-Blog</p>
+      </div>
+    </div>
+  </body>
+</html>

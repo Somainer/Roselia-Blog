@@ -1,2 +1,6 @@
 .idea/*
 *.pyc
+static/*
+scripts/node_modules/*
+*.db
+*.txt
