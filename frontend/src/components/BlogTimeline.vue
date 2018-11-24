@@ -3,7 +3,7 @@
     <nav-bar :userData="userData" :route="this.$route.fullPath"></nav-bar>
     <v-parallax
       dark
-      src="static/img/bg_n0.png"
+      :src="config.images.timelineBannerImage"
     >
       <v-layout
         align-center

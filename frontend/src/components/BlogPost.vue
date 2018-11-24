@@ -4,7 +4,7 @@
     <v-parallax
       id="main-pic"
       dark
-      :src="postData.img || 'static/img/nest.png'"
+      :src="postData.img || config.images.postBannerImage"
     >
       <v-layout
         align-center
@@ -53,7 +53,10 @@
           </v-flex>
           <v-layout>
             <v-flex :class="{sm8: hasDigest, sm10: !hasDigest}">
-              <div id="content" class="flow-text responsive-img" ref="content" v-html="postData.content"></div>
+              <div id="content" class="flow-text responsive-img" ref="content">
+                <div v-if="rsRendered" ref="rhodonite"></div>
+                <div v-else v-html="postData.content"></div>
+              </div>
               <div class="flow-text" v-if="postData.id < 0">
                 <p>Oops, we can not show you the post.</p>
                 <p><strong>This may because:</strong></p>
@@ -173,7 +176,8 @@ export default {
     },
     cachedData: false,
     renderer: null,
-    toast: utils.getToastOption()
+    toast: utils.getToastOption(),
+    rsRendered: false
   }),
   methods: {
     showToast: utils.showToast,
@@ -202,107 +206,139 @@ export default {
       utils.fetchJSON(utils.apiFor('post', p)).then(data => {
         if (!data) return Promise.reject(ReferenceError('NPE'))
         this.postData = data
-        this.processContent()
+        return this.processContent()
       }).catch(_ => {
         this.postData = this.notFoundData()
       })
     },
     processContent () {
-      this.postData.content = this.renderer.render(this.postData.content)
-      this.$nextTick(_ => {
-          // utils.setHeimu()
-          utils.colorUtils.apply({selector: '#main-pic img', text: '#title,#subtitle,#date,.digest-nav-el,#digest-nav', changeText: true})
-          const postImages = this.$refs.content.querySelectorAll('img')
-          Array.from(postImages).forEach(e => {
-            e.classList.add('responsive-img')
-          })
-          M.Materialbox.init(postImages)
-          this.setDigest()
-          let pattern = new RegExp(`${location.host}/.*\\?p=(\\d+)`);
-          Array.from(this.$refs.content.querySelectorAll('a')).filter(e => e.href && e.host === location.host).forEach(ev => {
-            let link = ev.href;
-            let matchResult = pattern.exec(link)
-            if (matchResult) {
-              let p = matchResult[1];
-              const isFootNotes = ev.hash // && p === this.getPostNum()
-              
-              ev.addEventListener('click', e => {
-                e.preventDefault()
-                if(isFootNotes) {
-                  this.$vuetify.goTo(document.getElementById(ev.hash.substring(1)), {offset: -200})
-                  return
-                }
-                // e.stopImmediatePropagation()
-                // console.log(this.preview);
-                // console.log('data->', this.preview.current == p && !this.preview.loading && this.preview.cacheData || undefined)
-                
-                this.$router.push({
-                  name: 'post',
-                  query: {
-                    p
-                  },
-                  params: {
-                    data: this.preview.current == p && !this.preview.loading && this.preview.cacheData || undefined
-                  }
-                })
-                
-              }, true)
+      // this.postData.content = this.renderer.render(this.postData.content)
+      // this.$nextTick(_ => {
+      //   this.afterContentMounted()
+      // })
 
-              ev.addEventListener('mouseover', e => {
-                // this.preview.origin = `${ev.offsetHeight} ${ev.offsetTop}`
-                this.preview.show = true;
-                this.preview.attach = ev
-                if (isFootNotes) {
-                  this.preview.cacheData = null
-                  this.preview.current = p
-                  let dom = document.getElementById(ev.hash.substring(1))
-                  this.preview.title = dom.innerText
-                  this.preview.img = ''
-                  if(ev.hash.indexOf('ref') !== -1) this.preview.subtitle = dom.parentElement.innerText
-                  else this.preview.subtitle = ''
-                  return
-                }
-                if (this.preview.current === p && !this.preview.loading && this.preview.cacheData) {
-                  this.preview.current = p;
-                  // this.preview.loading = true
-                  // console.log(this.preview)
-                  return
-                }
-                this.preview.current = p;
-                this.preview.loading = true
-                this.preview.img = ''
-                utils.fetchJSON(utils.apiFor('post', p)).then(data => {
-                  if(!data){
-                    // this.preview.show = false
-                    this.preview.loading = false
-                    this.preview.title = 'Oops! :('
-                    this.preview.subtitle = 'This is a secret'
-                    this.preview.img = ''
-                    return
-                  }
-                  this.preview.cacheData = data
-                  this.preview.loading = false
-                  this.preview.title = data.title
-                  this.preview.subtitle = data.subtitle
-                  this.preview.img = data.img
-                }).catch(reason => {
-                  this.preview.loading = false
-                  this.preview.cacheData = null
-                  this.preview.title = ':('
-                  this.preview.subtitle = reason.message
-                  this.preview.img = ''
-                })
-              });
-              ev.addEventListener('mouseout', e => {
-                this.preview.show = false;
-              })
+      this.renderer.renderAsync(this.postData.content).then(template => {
+        this.postData.content = template
+        this.$nextTick(() => this.renderer.injectEvents())
+      }).then(() => this.$nextTick(async () => this.afterContentMounted()))
+      // this.rsRendered = false
+      // this.renderer.renderVueAsync(this.postData.content).then(v => {
+        
+      //   this.rsRendered = true
+      //   this.$nextTick(() => {
+      //     // const div = document.createElement('div')
+      //     v.$mount("#rhodonite")
+      //     // this.$refs.rhodonite.appendChild(div)
+      //     this.$nextTick(() => this.renderer.injectEvents())
+      //   })
+      //   this.$once('postUnload', () => v.$destroy())
+      //   return v
+      // }).then(v => {
+      //   v.$nextTick(_ => {
+      //     this.afterContentMounted()
+      //   })
+      // })
+    },
+    afterContentMounted() {
+      // utils.setHeimu()
+      // utils.colorUtils.apply({selector: '#main-pic img', text: '#title,#subtitle,#date,.digest-nav-el,#digest-nav', changeText: true})
+      const postImages = this.$refs.content.querySelectorAll('img')
+      Array.from(postImages).forEach(e => {
+        e.classList.add('responsive-img')
+      })
+      M.Materialbox.init(postImages)
+      this.setDigest()
+      let pattern = new RegExp(`${location.host}/.*\\?p=(\\d+)`);
+      Array.from(this.$refs.content.querySelectorAll('a')).filter(e => e.href && e.host === location.host).forEach(async ev => {
+        let link = ev.href;
+        let matchResult = pattern.exec(link)
+        if (matchResult) {
+          let p = matchResult[1];
+          const isFootNotes = ev.hash // && p === this.getPostNum()
+          
+          ev.addEventListener('click', e => {
+            e.preventDefault()
+            if(isFootNotes) {
+              this.$vuetify.goTo(document.getElementById(ev.hash.substring(1)), {offset: -200})
+              return
             }
+            // e.stopImmediatePropagation()
+            // console.log(this.preview);
+            // console.log('data->', this.preview.current == p && !this.preview.loading && this.preview.cacheData || undefined)
             
+            this.$router.push({
+              name: 'post',
+              query: {
+                p
+              },
+              params: {
+                data: this.preview.current == p && !this.preview.loading && this.preview.cacheData || undefined
+              }
+            })
             
+          }, true)
+
+          ev.addEventListener('mouseover', async e => {
+            // this.preview.origin = `${ev.offsetHeight} ${ev.offsetTop}`
+            this.preview.show = true;
+            this.preview.attach = ev
+            if (isFootNotes) {
+              this.preview.cacheData = null
+              this.preview.current = p
+              let dom = document.getElementById(ev.hash.substring(1))
+              this.preview.title = dom.innerText
+              this.preview.img = ''
+              if(ev.hash.indexOf('ref') !== -1) this.preview.subtitle = dom.parentElement.innerText
+              else this.preview.subtitle = ''
+              return
+            }
+            if (this.preview.current === p && !this.preview.loading && this.preview.cacheData) {
+              this.preview.current = p;
+              // this.preview.loading = true
+              // console.log(this.preview)
+              return
+            }
+            this.preview.current = p;
+            this.preview.loading = true
+            this.preview.img = ''
+            utils.fetchJSON(utils.apiFor('post', p)).then(data => {
+              if(!data){
+                // this.preview.show = false
+                this.preview.loading = false
+                this.preview.title = 'Oops! :('
+                this.preview.subtitle = 'This is a secret'
+                this.preview.img = ''
+                return
+              }
+              this.preview.cacheData = data
+              this.preview.loading = false
+              this.preview.title = data.title
+              this.preview.subtitle = data.subtitle
+              this.preview.img = data.img
+            }).catch(reason => {
+              this.preview.loading = false
+              this.preview.cacheData = null
+              this.preview.title = ':('
+              this.preview.subtitle = reason.message
+              this.preview.img = ''
+            })
           });
-          this.renderWithMathJax()
-          this.$emit('postLoaded')
-        })
+          ev.addEventListener('mouseout', e => {
+            this.preview.show = false;
+          })
+        }
+        
+        
+      });
+      this.highlightLanguage()
+      this.renderWithMathJax()
+      this.$emit('postLoaded')
+    },
+    highlightLanguage () {
+      if (window.hljs) {
+        window.hljs.initHighlighting.called = false
+        window.hljs.initHighlighting()
+      }
     },
     renderWithMathJax () {
       if(window.MathJax) window.MathJax.Hub.Queue(["Typeset", window.MathJax.Hub, "output"]);
@@ -354,7 +390,7 @@ export default {
       }
     })
     // console.log(RoseliaScript)
-    this.renderer = RoseliaScript.createRenderer(this)
+    // this.renderer = RoseliaScript.createRenderer(this)
     if (!window.MathJax) {
       let mathNode = document.createElement('script')
       mathNode.async = true

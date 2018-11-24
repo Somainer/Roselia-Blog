@@ -27,6 +27,7 @@
     "vue": "^2.5.2",
     "vue-observe-visibility": "^0.4.3",
     "vue-progressbar": "^0.7.5",
+    "vue-property-decorator": "^7.2.0",
     "vue-router": "^3.0.1",
     "vue-simplemde": "^0.4.8",
     "vue-wechat-title": "^2.0.4",

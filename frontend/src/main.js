@@ -16,6 +16,8 @@ import '@fortawesome/fontawesome-free/css/all.css'
 import _ from 'lodash'
 import { ObserveVisibility } from 'vue-observe-visibility'
 
+Vue.prototype.config = meta
+
 Vue.use(Vuetify, {
   theme: meta.theme,
   icons: {

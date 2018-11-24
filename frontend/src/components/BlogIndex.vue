@@ -3,7 +3,7 @@
     <nav-bar :userData="userData" :route="this.$route.fullPath"></nav-bar>
     <v-parallax
       dark
-      src="static/img/bg_n3.jpg"
+      :src="meta.images.indexBannerImage"
     >
       <v-layout
         align-center
@@ -25,6 +25,7 @@
             <v-card hover :to="{name: 'post', params: {p: post.id}, query: {p: post.id}}">
               <v-img v-if="post.img"
                     :src="post.img"
+                    :lazy-src="meta.images.lazyloadBannerImage"
                     ripple="true"
               >
                 <v-container fill-height fluid>
