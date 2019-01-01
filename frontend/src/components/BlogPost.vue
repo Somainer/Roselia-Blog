@@ -249,7 +249,8 @@ export default {
       M.Materialbox.init(postImages)
       this.setDigest()
       let pattern = new RegExp(`${location.host}/.*\\?p=(\\d+)`);
-      Array.from(this.$refs.content.querySelectorAll('a')).filter(e => e.href && e.host === location.host).forEach(async ev => {
+      const links = Array.from(this.$refs.content.querySelectorAll('a')).filter(e => !!e.href);
+      links.filter(e => e.host === location.host).forEach(async ev => {
         let link = ev.href;
         let matchResult = pattern.exec(link)
         if (matchResult) {
@@ -330,6 +331,18 @@ export default {
         
         
       });
+      const personalHosts = [
+        'mohuety.com', 'roselia.moe', 'roselia.xyz', 'lisa.moe', 'roselia.app'
+      ].map(x => new RegExp(x))
+      links.filter(x => x.host !== location.host && !personalHosts.some(y => y.exec(x.host))).forEach(async e => {
+        e.addEventListener('click', ev => {
+          this.renderer.context.askForAccess(e.host, `This link wish to visit an unknown host ${e.host}`,
+           `The link is ${e.href} please make sure it is safe.`).then(() => {
+            window.open(e.href)
+          })
+          ev.preventDefault()
+        })
+      })
       this.highlightLanguage()
       this.renderWithMathJax()
       this.$emit('postLoaded')

@@ -283,7 +283,7 @@ class RoseliaScript {
     })
   }
 
-  static importJS (url, onComplete?) {
+  importJS (url, onComplete?) {
     const jsNode = document.createElement('script')
     jsNode.onload = onComplete
     jsNode.async = true

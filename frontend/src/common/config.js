@@ -33,9 +33,9 @@ export default {
   enableRoseliaScript: true,
   urlPrefix,
   images: {
-    indexBannerImage: 'static/img/bg_n3.jpg',
-    postBannerImage: 'static/img/nest.png',
+    indexBannerImage: '/static/img/bg_n3.jpg',
+    postBannerImage: '/static/img/nest.png',
     lazyloadImage: '/static/img/observe.jpg',
-    timelineBannerImage: 'static/img/bg_n0.png'
+    timelineBannerImage: '/static/img/bg_n0.png'
   }
 }

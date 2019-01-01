@@ -134,7 +134,7 @@ class RoseliaLyric(Singleton):
         original = lyric['original']
         translate = lyric['translate']
         original_dict = parse_lyric(original)
-        translate_dict = parse_lyric(translate)
+        translate_dict = parse_lyric(translate) if translate else None
         # print_formated(original_dict)
         # print_formated(translate_dict)
         return merge_lrc(original_dict, translate_dict)

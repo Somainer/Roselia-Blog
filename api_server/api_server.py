@@ -30,6 +30,9 @@ acm = PipeLine.ManagerAccount()
 token_processor = TokenProcessor()
 auth_login = AuthLogin.AuthLogin()
 register_views(app)
+# from models.all import database
+
+# database.set_app(app).inject()
 
 
 def log_time(item):
@@ -59,6 +62,7 @@ if DEBUG:
     @app.route('/__webpack_hmr')
     def npm():
         return redirect('http://localhost:8080/__webpack_hmr')
+
 
     @app.route('/<string:path>.js')
     def stjs(path):
@@ -168,7 +172,7 @@ def getpostpage():
     else:
         post_data = {
             'title': 'Page Not Found',
-            'subtitle': "Please check your post-id. Or try to <a href='../login.html' onclick='utils.setRedirect(utils.getAbsPath())'" + ">Login</a>",
+            'subtitle': "Please check your post-id. Or try to <a href='../login' onclick='utils.setRedirect(utils.getAbsPath())'" + ">Login</a>",
             'date': datetime.datetime.now().strftime('%B %d, %Y'),
             'tags': ['404'],
             'content': '<p>There might be some problem here. Please check your input.</p>',
@@ -931,7 +935,8 @@ def get_oauth_url(third):
         }
     return {
         'success': True,
-        'result': adp.get_uri() + '&redirect_uri=' + BLOG_LINK[:-1] + quote(url_for('oauth_callback', third=third, base=base, redirect=redirection))
+        'result': adp.get_uri() + '&redirect_uri=' + BLOG_LINK[:-1] + quote(
+            url_for('oauth_callback', third=third, base=base, redirect=redirection))
     }
 
 
@@ -953,6 +958,7 @@ def oauth_callback(third):
         redirect(base or url_for('seo_main'))
     )
 
+
 def run_server():
     if DEBUG:
         app.run(host='0.0.0.0', threaded=True, debug=DEBUG)
@@ -960,6 +966,7 @@ def run_server():
         log.info("{} ran on {}:{}".format(BLOG_INFO["title"], HOST, PORT))
         http_server = WSGIServer((HOST, PORT), app)
         http_server.serve_forever()
+
 
 if __name__ == '__main__':
     run_server()
