@@ -16,6 +16,7 @@ import userManagement from '../components/console/UserManagement'
 import ConsoleIndex from '../components/console/ConsoleIndex'
 import TokenRefresh from '../components/console/TokenRefresh'
 import Timeline from '../components/BlogTimeline'
+import SetNickname from '../components/console/SetNickname'
 
 Vue.use(Router)
 
@@ -49,7 +50,14 @@ export default new Router({
     {
       path: '/post',
       name: 'post',
-      component: BlogPost
+      component: BlogPost,
+      children: [
+        {
+          path: ':postLink',
+          name: 'postWithEternalLink',
+          component: BlogPost
+        }
+      ]
     },
     {
       path: '/edit',
@@ -85,6 +93,11 @@ export default new Router({
           path: 'token-refresh',
           name: 'tokenRefresh',
           component: TokenRefresh
+        },
+        {
+          path: 'set-nickname',
+          name: 'setNickname',
+          component: SetNickname
         },
         {
           path: '/',

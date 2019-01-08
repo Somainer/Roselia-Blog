@@ -11,14 +11,17 @@
   <link rel="apple-touch-icon" href="favicon.ico"/>
   <meta name="theme-color" content="#6670ed">
   <meta name="description" content="{{ post.title }} - {{ post.subtitle }}">
-  <link href="/static/css/app.f47cdce0e79f20aabcafb13d7278369b.css" rel="stylesheet">
-  
+  <link rel="shortcut icon" href=/favicon.ico> <link href="https://fonts.cat.net/css?family=Roboto:100,300,400,500,700,900|Material+Icons"
+    rel=stylesheet>
+  <link rel=manifest href=/manifest.json>
+  <link href=/static/css/chunk-vendors.575cc592.css rel=stylesheet>
+  <link href=/static/css/app.550f5b3c.css rel=stylesheet>
 </head>
 
 <body>
-  <div id="app">
+  <div id="black-shout">
     <div></div>
-    <div data-app="true" class="application" id="app">
+    <div>
       <div class="application--wrap">
         <main class="v-content" data-booted="true" style="padding: 0px;">
           <div class="v-content__wrap">
@@ -40,6 +43,7 @@
                     <h1 data-v-c8479e4c="" id="title" class="display-2 font-weight-thin mb-3">{{ post.title }}</h1>
                     <h4 data-v-c8479e4c="" id="subtitle" class="subheading">{{ post.subtitle }}</h4>
                     <h4 data-v-c8479e4c="" id="date" class="subheading">{{ post.date }}</h4>
+                    <h4 class="subheading">{{ post.author.nickname }}</h4>
                   </div>
                 </div>
               </div>
@@ -104,9 +108,8 @@
       </div>
     </div>
   </div>
-  <script type="text/javascript" src="/static/js/manifest.2ae2e69a05c33dfc65f8.js" defer></script>
-  <script type="text/javascript" src="/static/js/vendor.5412e75c6f8c25ea2d9d.js" defer></script>
-  <script type="text/javascript" src="/static/js/app.4bd260bfe34b06e6600f.js" defer></script>
+  <script src=/static/js/chunk-vendors.f9a53428.js> </script>
+  <script src=/static/js/app.9c8ff30b.js> </script>
 </body>
 
 </html>

@@ -10,10 +10,12 @@
         align-center
         column
         justify-center
+        :class="titleClass"
       >
         <h1 id="title" class="display-2 font-weight-thin mb-3">{{postData.title}}</h1>
         <h4 id="subtitle" class="subheading">{{postData.subtitle}}</h4>
-        <h4 id="date" class="subheading">{{postData.date}}</h4>
+        <h4 id="date" class="subheading">{{formatDate(postData.created) || postData.date}}</h4>
+        <h4 id="author" class="subheading">{{postData.author.nickname}}</h4>
       </v-layout>
     </v-parallax>
     <v-container grid-list-md fluid fill-height>
@@ -35,13 +37,19 @@
               </v-avatar>
               404
             </v-chip>
+            <v-chip v-if="postData.hidden" color="grey" text-color="white">
+              <v-avatar>
+                <v-icon>visibility_off</v-icon>
+              </v-avatar>
+              Hidden
+            </v-chip>
             
           </v-layout>
           <v-flex xs10 offset xs2>
             <v-btn v-if="cachedData" color="secondary" fab small @click="$router.go(-1)">
               <v-icon>arrow_back</v-icon>
             </v-btn>
-            <v-layout v-if="postData.id !== 'preview' && postData.id !== -1 && userData && userData.role  && userData.role + 1 >= postData.secret">
+            <v-layout v-if="postData.id !== 'preview' && postData.id !== -1 && isEditable">
               <v-spacer></v-spacer>
               <v-btn color="error" fab small :to="{name: 'edit', params: {deletePost: true, title: postData.title}, query: {post: postData.id}}">
                 <v-icon>delete</v-icon>
@@ -78,11 +86,16 @@
           <div v-wechat-title="postData.title"></div>
         </v-flex>
 
-
       </v-layout>
 
     </v-container>
 
+    <v-container>
+      <div class="text-xs-center">
+        <h4 class="subheading grey--text">Last edit at: {{formatDate(postData.lastEdit, true)}}</h4>
+      </div>
+      <blog-comments v-if="isPostFound" :userData="userData" :postData="postData" :toast="showToast"></blog-comments>
+    </v-container>
     <v-container>
       <v-flex row xs12 sm10 offset-sm1>
         <v-layout>
@@ -139,9 +152,12 @@ import utils from '../common/utils'
 import BlogDigestNav from './BlogDigestNav'
 import M from 'materialize-css'
 import RoseliaScript from '../common/roselia-script/'
+import {mapToCamelCase} from '../common/helpers'
+import BlogComments from './comments'
 export default {
   components: {
-    BlogDigestNav
+    BlogDigestNav,
+    BlogComments
   },
   name: 'blog-post',
   props: {
@@ -151,7 +167,12 @@ export default {
     postData: {
       img: '',
       id: 0,
+      displayId: '',
       content: '<p>Loading, please wait...</p>',
+      author: {
+        nickname: ''
+      },
+      darkTitle: false,
       next: -1,
       prev: -1,
       secret: 0,
@@ -185,6 +206,9 @@ export default {
       this.toast.show = show
     },
     getArguments: utils.getArguments,
+    formatDate(date, withTime=false) {
+      return utils.formatDate(date, withTime)
+    },
     loadContent (p, context) {
       p = p || this.getPostNum()
       context = context || this.$route
@@ -198,14 +222,18 @@ export default {
           return
         }
       }
+      const useLink = context && context.params.postLink
+      if (useLink) {
+        p = context.params.postLink
+      }
       this.cachedData = false
       if (p === -1) {
         this.postData = this.notFoundData()
         return
       }
-      utils.fetchJSON(utils.apiFor('post', p)).then(data => {
+      utils.fetchJSON(utils.apiFor(useLink ? 'post-link' : 'post', p)).then(data => {
         if (!data) return Promise.reject(ReferenceError('NPE'))
-        this.postData = data
+        this.postData = mapToCamelCase(data)
         return this.processContent()
       }).catch(_ => {
         this.postData = this.notFoundData()
@@ -216,6 +244,15 @@ export default {
       // this.$nextTick(_ => {
       //   this.afterContentMounted()
       // })
+      if(this.$route.query.p && this.postData.displayId) {
+        this.$router.replace({
+          name: 'postWithEternalLink',
+          params: {
+            postLink: this.postData.displayId,
+            doNotLoad: true
+          }
+        })
+      }
 
       this.renderer.renderAsync(this.postData.content).then(template => {
         this.postData.content = template
@@ -369,8 +406,13 @@ export default {
         secret: 0,
         title: 'Page Not Found',
         subtitle: 'Please check your post-id. Or try to login.',
+        author: {
+          nickname: ''
+        },
+        darkTitle: false,
         tags: [],
-        date: (new Date()).toDateString()
+        created: new Date,
+        lastEdit: new Date
       }
     },
     setDigest () {
@@ -392,6 +434,16 @@ export default {
     },
     isTokenExpired () {
       return utils.isTokenExpired(this.userData && this.userData.token)
+    },
+    titleClass () {
+      return `${['white', 'black'][+this.postData.darkTitle]}--text`
+    },
+    isEditable() {
+      if (!this.postData.author || !this.userData) return false
+      return this.userData.role >= this.postData.author.role
+    },
+    isPostFound() {
+      return this.postData.id > 0
     }
   },
   mounted () {
@@ -416,7 +468,8 @@ export default {
     }
   },
   beforeRouteUpdate (to, from, next) {
-    if (to.query.p === from.query.p) return next()
+    if(to.params.doNotLoad) return next()
+    if (to.query.p === from.query.p && to.params.postLink == from.params.postLink) return next()
     this.$vuetify.goTo(0)
     this.$emit('postUnload')
     this.loadContent(to.query.p, to)

@@ -25,11 +25,13 @@ const mohuetyTheme = {
   info: '#95CAEE',
   success: '#61BF99'
 }
+
 export default {
   title: BLOG_TITLE,
   motto: BLOG_MOTTO,
   apiBase: apiBase,
   theme: roseliaTheme,
+  // theme: mohuetyTheme,
   enableRoseliaScript: true,
   urlPrefix,
   images: {

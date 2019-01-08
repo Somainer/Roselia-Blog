@@ -26,8 +26,10 @@
 </template>
 
 <script>
+import directives from 'vuetify/lib/directives'
 export default {
   name: 'gotop-button',
+  directives,
   data: function () {
     return {
       height: 0,

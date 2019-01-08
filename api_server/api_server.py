@@ -1,4 +1,3 @@
-import PipeLine
 from flask import Flask, request, send_from_directory, jsonify, render_template, redirect, url_for, abort, make_response
 from werkzeug.utils import secure_filename
 import json
@@ -16,8 +15,11 @@ from middleware import verify_token, ReverseProxied, make_option_dict, to_json
 from urllib.parse import quote
 
 from external_views import register_views
+from models.all import database
+from controller.UserManager import UserManager
+from controller.PostManager import PostManager
 
-from gevent import monkey
+# from gevent import monkey
 from gevent.pywsgi import WSGIServer
 
 # monkey.patch_all()
@@ -25,14 +27,15 @@ from gevent.pywsgi import WSGIServer
 app = Flask(__name__, static_folder='../', static_url_path='')
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 app.wsgi_app = ReverseProxied(app.wsgi_app)
-ppl = PipeLine.PostManager()
-acm = PipeLine.ManagerAccount()
+# ppl = PipeLine.PostManager()
+ppl = PostManager()
+# acm = PipeLine.ManagerAccount()
+acm = UserManager
 token_processor = TokenProcessor()
 auth_login = AuthLogin.AuthLogin()
 register_views(app)
-# from models.all import database
 
-# database.set_app(app).inject()
+database.set_app(app).inject()
 
 
 def log_time(item):
@@ -74,10 +77,19 @@ if DEBUG:
         return response
 
 
-    # @app.route('/static/fonts/<string:path>')
+    @app.route('/static/fonts/<string:path>')
     def nppm(path):
         import requests
         response = make_response(requests.get('http://localhost:8080/static/fonts/' + path).content)
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        response.headers['Access-Control-Allow-Methods'] = 'POST'
+        response.headers['Access-Control-Allow-Headers'] = 'x-requested-with,content-type'
+        return response
+
+    @app.route('/fonts/<string:path>')
+    def npm_font(path):
+        import requests
+        response = make_response(requests.get('http://localhost:8080/fonts/' + path).content)
         response.headers['Access-Control-Allow-Origin'] = '*'
         response.headers['Access-Control-Allow-Methods'] = 'POST'
         response.headers['Access-Control-Allow-Headers'] = 'x-requested-with,content-type'
@@ -90,6 +102,7 @@ static_urls = [
 if DEBUG:
     static_urls.append('/')
     static_urls.append('post')
+    static_urls.append('post/<string:post>')
 
 
     def new_index(*args, **kwargs):
@@ -97,7 +110,7 @@ if DEBUG:
 
 else:
     def new_index(*args, **kwargs):
-        return render_template('index_vue.html')
+        return render_template('index_vue.html', info=BLOG_INFO, posts=[], pages={'total': 0, "current": 1, "pages": 1})
 
 for u in static_urls:
     app.route('/' + u)(new_index)
@@ -128,18 +141,14 @@ def seo_main():
     if not logged_in:
         data = {'role': 0}
     tag = request.args.get('tag')
+    catalog = request.args.get('catalog')
     page = request.args.get('page', 1, int)
     limit = request.args.get('limit', 6, int)
     offset = (page - 1) * limit
     level = logged_in + data['role']
-    if tag:
-        posts = [i for i in ppl.get_all_brief() if tag.lower() in map(str.lower, i['tags'])]
-        total = len(posts)
-        pages = 1
-    else:
-        posts = ppl.get_posts(offset, limit, level)
-        total = ppl.get_count(level)
-        pages = total // limit + (total % limit > 0)
+    posts = ppl.get_posts(offset, limit, level, tag, catalog)
+    total = ppl.get_count(level)
+    pages = total // limit + (total % limit > 0)
     user_data = {'username': data['username'], 'role': data['role'], 'token': token} if logged_in else None
     tag = tag.capitalize() if tag else None
     return render_template('index_vue.html', posts=posts, userData=user_data, tag=tag, info=BLOG_INFO,
@@ -152,8 +161,9 @@ def edit_page():
 
 
 @app.route('/post')
-def getpostpage():
-    p = request.args.get("p", -1, int)
+@app.route('/post/<string:p>')
+def getpostpage(p=None):
+    p = p or request.args.get("p", -1, int)
     logged_in = True
     data = None
     token = request.args.get('token')
@@ -165,14 +175,16 @@ def getpostpage():
         logged_in = state
     if not logged_in:
         data = {'role': 0}
-    post = ppl.find_post(p) if p >= 0 else None
+    post = ppl.find_post(p)
+    if post:
+        p = post['id']
     level = logged_in + data['role']
     if post and level >= post['secret']:
         post_data = dict(post, prev=ppl.get_prev(p, level), next=ppl.get_next(p, level))
     else:
         post_data = {
             'title': 'Page Not Found',
-            'subtitle': "Please check your post-id. Or try to <a href='../login' onclick='utils.setRedirect(utils.getAbsPath())'" + ">Login</a>",
+            'subtitle': "Please check your post-id. Or try to Login.",
             'date': datetime.datetime.now().strftime('%B %d, %Y'),
             'tags': ['404'],
             'content': '<p>There might be some problem here. Please check your input.</p>',
@@ -291,7 +303,7 @@ def change_password():
             'success': False, 'msg': 'Missing Username or Password'
         }
     if stat:
-        status = acm.force_change_password(username, new_password, data.get('su', 0))
+        status = acm.force_set_password(username, new_password, data.get('su', 0))
     else:
         status = acm.change_password(username, old_password, new_password)
     if status:
@@ -422,14 +434,17 @@ def tag_post(t):
         logged_in = state
     if not logged_in:
         data = {'role': 0}
-    posts = sorted([i for i in ppl.get_all_brief() if (logged_in + data['role'] >= i['secret']) and
-                    t.lower() in map(str.lower, i['tags'])],
-                   key=lambda x: x['id'])
+    page = request.args.get('page', 1, int)
+    limit = request.args.get('limit', 6, int)
+    offset = (page - 1) * limit
+    posts = ppl.get_posts(offset, limit, level=logged_in + data['role'], tag=t)
+
     user_data = {'username': data['username'], 'role': data['role'], 'token': token} if logged_in else None
     return render_template('index.html', posts=posts, userData=user_data, tag=t.capitalize(), info=BLOG_INFO)
 
 
 @app.route('/api/post/<int:p>')
+@app.route('/api/post-link/<string:p>')
 @to_json
 def get_post(p):
     logged_in = True
@@ -447,7 +462,7 @@ def get_post(p):
     post = ppl.find_post(p, need_markdown)
     level = logged_in + data['role']
     if post:
-        return dict(post, prev=ppl.get_prev(p, level), next=ppl.get_next(p, level)) if level >= post['secret'] else None
+        return dict(post, prev=ppl.get_prev(post['id'], level), next=ppl.get_next(post['id'], level)) if level >= post['secret'] else None
     return None
 
 
@@ -469,17 +484,11 @@ def all_post():
     page = request.args.get('page', 1, int)
     limit = request.args.get('limit', 20, int)
     tag = request.args.get('tag')
+    catalog = request.args.get('catalog')
     offset = (page - 1) * limit
-    if tag:
-        posts = sorted([i for i in ppl.get_all_brief() if (level >= i['secret']) and
-                        tag.lower() in map(str.lower, i['tags'])],
-                       key=lambda x: x['id'])
-        total = len(posts)
-        pages = 1
-    else:
-        posts = ppl.get_posts(offset, limit, level)
-        total = ppl.get_count(level)
-        pages = total // limit + (total % limit > 0)
+    total = ppl.get_count(level)
+    pages = total // limit + (total % limit > 0)
+    posts = ppl.get_posts(offset, limit, level, tag, catalog)
     return {
         'data': posts, 'total': total, 'pages': pages, 'valid': logged_in
     }
@@ -573,7 +582,7 @@ def delete_post():
         return {
             'success': False, 'msg': 'role error'
         }
-    ppl.remove_post(pid)
+    ppl.remove_post(pid, info.get('role'))
     log.v("Post deleted.", pid=pid)
     return {
         'success': True
@@ -604,9 +613,9 @@ def add_edit_post():
             'success': False, 'msg': 'role error'
         }
     if not pid:
-        state = ppl.add_post(data, markdown)
+        state = ppl.add_post(data, info['username'], markdown)
     else:
-        state = ppl.edit_post(pid, data, markdown)
+        state = ppl.edit_post(pid, data, info.get('role', 0), markdown)
     return {
         'success': state
     }
@@ -659,8 +668,8 @@ def rss_feed():
         logged_in = state
     if not logged_in:
         data = {'role': 0}
-    data = sorted([i for k, i in ppl.get_all().items() if logged_in + data['role'] >= i['secret']],
-                  key=lambda x: x['id'])
+    level = logged_in + data['role']
+    data = ppl.get_all_posts(level)
     rss = PyRSS2Gen.RSS2(
         title="Roselia-Blog",
         link=BLOG_LINK,
@@ -670,7 +679,7 @@ def rss_feed():
         items=[PyRSS2Gen.RSSItem(
             title=post['title'],
             description=post['subtitle'],
-            author='Somainer',
+            author=post['author']['nickname'],
             link="{}post?p={}".format(BLOG_LINK, post['id']),
             guid=PyRSS2Gen.Guid("{}post?p={}".format(BLOG_LINK, post['id'])),
             categories=post['tags'],
@@ -871,43 +880,6 @@ def delete_image(username, role):
         'success': success,
         'msg': msg
     }
-
-
-@app.route('/<string:post_title>')
-def getpostpage_from_title(post_title):
-    logged_in = True
-    data = None
-    token = request.args.get('token')
-    if not token:
-        logged_in = False
-    else:
-        state, data = token_processor.get_username(token)
-        print(data)
-        logged_in = state
-    if not logged_in:
-        data = {'role': 0}
-    post = ppl.find_post_by_title(post_title) if post_title else None
-    p = post['id'] if post else -1
-    level = logged_in + data['role']
-    if post and level >= post['secret']:
-        post_data = dict(post, prev=ppl.get_prev(p, level), next=ppl.get_next(p, level), notFound=False)
-    else:
-        if not post:
-            abort(404)
-        post_data = {
-            'title': 'Page Not Found',
-            'subtitle': "Please check your post-id. Or try to <a href='../login.html' onclick='utils.setRedirect(utils.getAbsPath())'" + ">Login</a>",
-            'date': datetime.datetime.now().strftime('%B %d, %Y'),
-            'tags': ['404'],
-            'content': '<p>There might be some problem here. Please check your input.</p>',
-            'id': p,
-            'prev': -1,
-            'next': -1,
-            'secret': 0 if not post else post.get('secret', 0),
-            'notFound': True
-        }
-    user_data = {'username': data['username'], 'role': data['role'], 'token': token} if logged_in else None
-    return render_template('post.html', post=post_data, userData=user_data, info=BLOG_INFO)
 
 
 from oauth.adapters import adapters as oauth_adapters

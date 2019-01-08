@@ -22,10 +22,16 @@
             prepend-icon="title"
             required
             :rules="[v => !!v || 'Title is required']"
-          ></v-text-field><v-text-field
+          ></v-text-field>
+          <v-text-field
             v-model="postData.subtitle"
             label="Subtitle"
             prepend-icon="subtitles"
+          ></v-text-field>
+          <v-text-field
+            v-model="postData.displayId"
+            label="Eternal link"
+            prepend-icon="link"
           ></v-text-field>
           <span>Language</span>
           <v-switch color="accent"
@@ -41,8 +47,26 @@
             ticks
             thumb-label
             label="Secret level"
-            prepend-icon="lock"
+            :prepend-icon="lockIcon"
           ></v-slider>
+          <span>
+            <v-icon>visibility{{ postData.hidden ? '_off' : '' }}</v-icon>
+            Hidden?
+          </span>
+          <v-switch color="accent"
+            :label="postData.hidden ? 'Hidden' : 'Public'"
+            v-model="postData.hidden"
+          ></v-switch>
+          <span>Comment</span>
+          <v-switch color="accent"
+            :label="postData.enableComment ? 'Enabled' : 'Disabled'"
+            v-model="postData.enableComment"
+          ></v-switch>
+          <span>Color of Title</span>
+          <v-switch color="accent"
+            :label="postData.darkTitle ? 'Dark' : 'Light'"
+            v-model="postData.darkTitle"
+          ></v-switch>
           <v-combobox
             v-model="postData.tags"
             hide-selected
@@ -144,6 +168,8 @@ import 'simplemde/dist/simplemde.min.css'
 import 'github-markdown-css'
 import 'highlight.js/styles/xcode.css'
 
+import {mapToCamelCase, mapToUnderline} from '../common/helpers'
+
 window.hljs = hljs
 
 export default {
@@ -157,6 +183,10 @@ export default {
       secret: 0,
       title: '',
       subtitle: '',
+      hidden: false,
+      enableComment: true,
+      darkTitle: false,
+      displayId: '',
       tags: []
     },
     toast: {
@@ -220,11 +250,14 @@ export default {
         ...this.postData,
         id: undefined,
         next: undefined,
-        prev: undefined
+        prev: undefined,
+        lastEdit: undefined,
+        author: undefined,
+        created: undefined
       }
       return {
         postID: this.addPost ? undefined : this.postData.id,
-        data,
+        data: mapToUnderline(data),
         markdown: this.markdown
       }
     },
@@ -254,7 +287,7 @@ export default {
           this.addPost = true
           return
         }
-        this.postData = data
+        this.postData = mapToCamelCase(data)
       }).catch(reason => {
         this.showToast(reason, 'error')
       })
@@ -342,6 +375,9 @@ export default {
     },
     operationVerb () {
       return this.addPost ? 'add' : 'edit'
+    },
+    lockIcon () {
+      return this.postData.secret ? 'lock' : 'lock_open'
     }
   },
   mounted () {
