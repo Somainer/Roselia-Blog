@@ -42,7 +42,7 @@ class Digest(object):
     suffix = 'qmmlw$p20'
     hash_salt = prefix + suffix
 
-    hash_func = hashlib.sha3_256
+    hash_func = hashlib.sha256
 
     @classmethod
     def need_byte(cls, pld):

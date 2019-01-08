@@ -1,4 +1,4 @@
-# Roselia-Blog-NEO2.0
+# Roselia-Blog 3.0
 ## A new trial of blog system. 
 
 A single page app with slight SEO optimization.

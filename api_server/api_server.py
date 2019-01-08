@@ -486,7 +486,7 @@ def all_post():
     tag = request.args.get('tag')
     catalog = request.args.get('catalog')
     offset = (page - 1) * limit
-    total = ppl.get_count(level)
+    total = ppl.filter_post(level, tag, catalog).count()
     pages = total // limit + (total % limit > 0)
     posts = ppl.get_posts(offset, limit, level, tag, catalog)
     return {

@@ -24,7 +24,7 @@ def migrate_post():
     posts = old_pm.get_all()
     for k, v in posts.items():
         v['tags'] = list(map(pm.ensure_tag, v['tags']))
-        post = Post(**v, owner=1)
+        post = Post(**v, owner=1, cover=v['img'])
         post.post_id = v['id']
         date = datetime.datetime.utcfromtimestamp(v['time'])
         post.create_time = date

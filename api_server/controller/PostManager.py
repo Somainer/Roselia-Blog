@@ -130,11 +130,7 @@ class PostManager:
 
         return True
 
-    def get_posts(self, offset, count=None, level=0, tag=None, catalog=None):
-        if count is None:
-            count = offset
-            offset = 0
-
+    def filter_post(self, level=0, tag=None, catalog=None):
         query = Post.query \
             .filter(Post.secret <= level) \
             .filter(~Post.hidden)
@@ -157,6 +153,14 @@ class PostManager:
                 .filter(post_catalog.c.post_id == Post.post_id) \
                 .filter(post_catalog.c.catalog_id == catalog.catalog_id)
 
+        return query
+
+    def get_posts(self, offset, count=None, level=0, tag=None, catalog=None):
+        if count is None:
+            count = offset
+            offset = 0
+
+        query = self.filter_post(level, tag, catalog)
         return [x.brief_dict
                 for x in query
                     .order_by(Post.post_id.desc())
