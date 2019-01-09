@@ -1,5 +1,5 @@
 from .github import GithubOauth
-from PipeLine import ManagerAccount
+from controller.UserManager import UserManager
 from tokenProcessor import TokenProcessor
 from fn.monad import Option
 
@@ -14,7 +14,7 @@ class GeneralAdapter:
 
 class GithubAdapter(GeneralAdapter):
     def __init__(self):
-        self.manager = ManagerAccount()
+        self.manager = UserManager
         self.token = TokenProcessor()
 
     @classmethod

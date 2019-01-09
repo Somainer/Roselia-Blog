@@ -3,7 +3,7 @@
     <nav-bar :userData="userData" :route="this.$route.fullPath"></nav-bar>
     <v-parallax
       dark
-      src="static/img/bg_n0.png"
+      :src="config.images.timelineBannerImage"
     >
       <v-layout
         align-center
@@ -22,6 +22,7 @@
           align-top
           :dense="$vuetify.breakpoint.smAndDown"
         >
+        <v-slide-x-transition group>
           <v-timeline-item
             v-for="(post, i) in postData"
             :key="i"
@@ -32,7 +33,8 @@
               slot="opposite"
               class="headline font-weight-bold"
             >
-              {{ post.datetime.toLocaleDateString() }}
+              <h4>{{ post.datetime.toLocaleDateString() }}</h4>
+              <h3 class="secondary-text">{{ post.author && post.author.nickname }}</h3>
               <router-link v-for="tag in post.tags" :to="{name: 'index', params: {tag: tag}, query: {tag: tag}}" :key="tag">
                   <v-chip>{{tag}}</v-chip>
               </router-link>
@@ -68,6 +70,7 @@
               </v-card>
             </div>
           </v-timeline-item>
+        </v-slide-x-transition>
         </v-timeline>
         <v-layout
           align-center
@@ -76,16 +79,16 @@
         >
           <div v-observe-visibility="loadNextPage">
             <div v-if="currentPage < totalPages">
-                <v-btn :loading="loading" small @click="loadNextPage" block color="secondary" dark>
-                    <v-icon>keyboard_arrow_down</v-icon>
-                </v-btn>
+              <v-btn :loading="loading" small @click="loadNextPage" block color="secondary" dark>
+                  <v-icon>keyboard_arrow_down</v-icon>
+              </v-btn>
             </div>
             <div v-else-if="loading">
-                <v-progress-circular indeterminate color="primary"></v-progress-circular>
+              <v-progress-circular indeterminate color="primary"></v-progress-circular>
             </div>
             <div v-else-if="postData.length">
-                <v-divider></v-divider>
-                Tiro finale
+              <v-divider></v-divider>
+              Tiro finale
             </div>
             
           </div>
@@ -117,7 +120,7 @@ export default {
       utils.fetchJSON(utils.apiFor("posts"), "GET", fetchData).then(data => {
         const postData = data.data.map(d => ({
           ...d,
-          datetime: new Date(d.time * 1000)
+          datetime: new Date(d.created)
         }))
         this.postData = append ? this.postData.concat(postData) : postData;
         this.totalPages = parseInt(data.pages);

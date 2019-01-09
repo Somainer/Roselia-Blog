@@ -12,7 +12,7 @@
     <v-toolbar-items>
       <v-btn dark flat to="/">Index</v-btn>
       <v-btn dark flat to="/timeline">Timeline</v-btn>
-      <v-btn dark flat v-if="userData" to="/userspace">{{userData.username}}</v-btn>
+      <v-btn dark flat v-if="userData" to="/userspace">{{userData.nickname}}</v-btn>
       <v-btn dark flat v-else tag="a" @click.native="setRedirect" :to="{name: 'login'}" @contextmenu="portedLogin($event)">Login</v-btn>
     </v-toolbar-items>
   </v-toolbar>

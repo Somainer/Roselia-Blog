@@ -135,17 +135,20 @@ export default {
         password: this.password
       }, false).then(data => {
         if (!data.success) return Promise.reject(data.msg)
-        utils.setLoginData({
+        this.setLoginData({
           username: this.username,
           token: data.token,
           role: data.role,
           rftoken: data.rftoken
-        })
-        utils.redirectTo(this.redirection)
+        }).then(() => this.redirectBack())
+        
       }).catch(reason => {
         this.showToast(reason, 'error')
         this.loading = false
       })
+    },
+    redirectBack() {
+      this.$router.push(this.redirection)
     },
     showToast (text, color = 'info') {
       this.toast.show = false
@@ -160,6 +163,21 @@ export default {
       utils.cleanRedirect()
       window.sessionStorage.removeItem('message')
     },
+    setLoginData({username, ...rest}) {
+      return utils.fetchJSONWithSuccess(utils.apiFor('user', 'nickname'), 'GET', {username}).then(({nickname}) => {
+        utils.setLoginData({
+          username,
+          nickname,
+          ...rest
+        })
+      }).catch(err => {
+        utils.setLoginData({
+          username,
+          nickname: username,
+          ...rest
+        })
+      })
+    },
     tokenLogin (token) {
       this.loading = true
       return utils.fetchJSON(utils.apiFor('login', 'token'), 'POST', {
@@ -168,12 +186,11 @@ export default {
         if (!data.success) {
           return Promise.reject(data.msg)
         }
-        utils.setLoginData({
+        this.setLoginData({
           username: data.payload.username,
           token,
           role: data.payload.role
-        })
-        utils.redirectTo(this.redirection)
+        }).then(() => this.redirectBack())
       }).catch(reason => {
         this.loading = false
         this.showToast(reason, 'error')
@@ -194,12 +211,11 @@ export default {
               this.scannedUsername = payload.username
             }
             if (payload.token) {
-              utils.setLoginData({
+              this.setLoginData({
                 username: payload.username,
                 role: payload.role,
                 token: payload.token
-              })
-              utils.redirectTo(this.redirection)
+              }).then(() => this.redirectBack())
             }
           }
         ).catch(err => {
@@ -273,7 +289,7 @@ export default {
         utils.removeLoginData()
         this.showToast('Logged out!')
       } else {
-        utils.redirectTo(this.redirection)
+        this.redirectBack()
       }
     }
     if (this.$route.params.alert) {
@@ -281,7 +297,7 @@ export default {
       this.showToast(text, color)
     }
     addEventListener('storage', e => {
-      e.key === 'loginData' && e.newValue && utils.redirectTo(this.redirection)
+      e.key === 'loginData' && e.newValue && this.redirectBack()
     })
     let token = utils.getArguments.call(this).token
     token && this.tokenLogin(token).catch(err => {

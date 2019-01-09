@@ -4,13 +4,13 @@ BLOG_INFO = {
     "title": "Roselia-Blog",
     "motto": "Do what you want to do, be who you want to be."
 }
-DEBUG = True
+DEBUG = False
 
 HOST = '0.0.0.0'
 PORT = 5000
 
-DB_USER = 'User.db'
-DB_POST = 'Post.db'
+DB_PATH = 'sqlite:///roselia.db'
+
 
 COLOR = {
     "light": {

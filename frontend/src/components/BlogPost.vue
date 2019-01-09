@@ -4,16 +4,18 @@
     <v-parallax
       id="main-pic"
       dark
-      :src="postData.img || 'static/img/nest.png'"
+      :src="postData.img || config.images.postBannerImage"
     >
       <v-layout
         align-center
         column
         justify-center
+        :class="titleClass"
       >
         <h1 id="title" class="display-2 font-weight-thin mb-3">{{postData.title}}</h1>
         <h4 id="subtitle" class="subheading">{{postData.subtitle}}</h4>
-        <h4 id="date" class="subheading">{{postData.date}}</h4>
+        <h4 id="date" class="subheading">{{formatDate(postData.created) || postData.date}}</h4>
+        <h4 id="author" class="subheading">{{postData.author.nickname}}</h4>
       </v-layout>
     </v-parallax>
     <v-container grid-list-md fluid fill-height>
@@ -35,13 +37,19 @@
               </v-avatar>
               404
             </v-chip>
+            <v-chip v-if="postData.hidden" color="grey" text-color="white">
+              <v-avatar>
+                <v-icon>visibility_off</v-icon>
+              </v-avatar>
+              Hidden
+            </v-chip>
             
           </v-layout>
           <v-flex xs10 offset xs2>
             <v-btn v-if="cachedData" color="secondary" fab small @click="$router.go(-1)">
               <v-icon>arrow_back</v-icon>
             </v-btn>
-            <v-layout v-if="postData.id !== 'preview' && postData.id !== -1 && userData && userData.role  && userData.role + 1 >= postData.secret">
+            <v-layout v-if="postData.id !== 'preview' && postData.id !== -1 && isEditable">
               <v-spacer></v-spacer>
               <v-btn color="error" fab small :to="{name: 'edit', params: {deletePost: true, title: postData.title}, query: {post: postData.id}}">
                 <v-icon>delete</v-icon>
@@ -53,7 +61,10 @@
           </v-flex>
           <v-layout>
             <v-flex :class="{sm8: hasDigest, sm10: !hasDigest}">
-              <div id="content" class="flow-text responsive-img" ref="content" v-html="postData.content"></div>
+              <div id="content" class="flow-text responsive-img" ref="content">
+                <div v-if="rsRendered" ref="rhodonite"></div>
+                <div v-else v-html="postData.content"></div>
+              </div>
               <div class="flow-text" v-if="postData.id < 0">
                 <p>Oops, we can not show you the post.</p>
                 <p><strong>This may because:</strong></p>
@@ -75,11 +86,16 @@
           <div v-wechat-title="postData.title"></div>
         </v-flex>
 
-
       </v-layout>
 
     </v-container>
 
+    <v-container>
+      <div class="text-xs-center">
+        <h4 class="subheading grey--text">Last edit at: {{formatDate(postData.lastEdit, true)}}</h4>
+      </div>
+      <blog-comments v-if="isPostFound" :userData="userData" :postData="postData" :toast="showToast"></blog-comments>
+    </v-container>
     <v-container>
       <v-flex row xs12 sm10 offset-sm1>
         <v-layout>
@@ -136,9 +152,12 @@ import utils from '../common/utils'
 import BlogDigestNav from './BlogDigestNav'
 import M from 'materialize-css'
 import RoseliaScript from '../common/roselia-script/'
+import {mapToCamelCase} from '../common/helpers'
+import BlogComments from './comments'
 export default {
   components: {
-    BlogDigestNav
+    BlogDigestNav,
+    BlogComments
   },
   name: 'blog-post',
   props: {
@@ -148,7 +167,12 @@ export default {
     postData: {
       img: '',
       id: 0,
+      displayId: '',
       content: '<p>Loading, please wait...</p>',
+      author: {
+        nickname: ''
+      },
+      darkTitle: false,
       next: -1,
       prev: -1,
       secret: 0,
@@ -173,7 +197,8 @@ export default {
     },
     cachedData: false,
     renderer: null,
-    toast: utils.getToastOption()
+    toast: utils.getToastOption(),
+    rsRendered: false
   }),
   methods: {
     showToast: utils.showToast,
@@ -181,6 +206,9 @@ export default {
       this.toast.show = show
     },
     getArguments: utils.getArguments,
+    formatDate(date, withTime=false) {
+      return utils.formatDate(date, withTime)
+    },
     loadContent (p, context) {
       p = p || this.getPostNum()
       context = context || this.$route
@@ -194,115 +222,173 @@ export default {
           return
         }
       }
+      const useLink = context && context.params.postLink
+      if (useLink) {
+        p = context.params.postLink
+      }
       this.cachedData = false
       if (p === -1) {
         this.postData = this.notFoundData()
         return
       }
-      utils.fetchJSON(utils.apiFor('post', p)).then(data => {
+      utils.fetchJSON(utils.apiFor(useLink ? 'post-link' : 'post', p)).then(data => {
         if (!data) return Promise.reject(ReferenceError('NPE'))
-        this.postData = data
-        this.processContent()
+        this.postData = mapToCamelCase(data)
+        return this.processContent()
       }).catch(_ => {
         this.postData = this.notFoundData()
       })
     },
     processContent () {
-      this.postData.content = this.renderer.render(this.postData.content)
-      this.$nextTick(_ => {
-          // utils.setHeimu()
-          utils.colorUtils.apply({selector: '#main-pic img', text: '#title,#subtitle,#date,.digest-nav-el,#digest-nav', changeText: true})
-          const postImages = this.$refs.content.querySelectorAll('img')
-          Array.from(postImages).forEach(e => {
-            e.classList.add('responsive-img')
-          })
-          M.Materialbox.init(postImages)
-          this.setDigest()
-          let pattern = new RegExp(`${location.host}/.*\\?p=(\\d+)`);
-          Array.from(this.$refs.content.querySelectorAll('a')).filter(e => e.href && e.host === location.host).forEach(ev => {
-            let link = ev.href;
-            let matchResult = pattern.exec(link)
-            if (matchResult) {
-              let p = matchResult[1];
-              const isFootNotes = ev.hash // && p === this.getPostNum()
-              
-              ev.addEventListener('click', e => {
-                e.preventDefault()
-                if(isFootNotes) {
-                  this.$vuetify.goTo(document.getElementById(ev.hash.substring(1)), {offset: -200})
-                  return
-                }
-                // e.stopImmediatePropagation()
-                // console.log(this.preview);
-                // console.log('data->', this.preview.current == p && !this.preview.loading && this.preview.cacheData || undefined)
-                
-                this.$router.push({
-                  name: 'post',
-                  query: {
-                    p
-                  },
-                  params: {
-                    data: this.preview.current == p && !this.preview.loading && this.preview.cacheData || undefined
-                  }
-                })
-                
-              }, true)
-
-              ev.addEventListener('mouseover', e => {
-                // this.preview.origin = `${ev.offsetHeight} ${ev.offsetTop}`
-                this.preview.show = true;
-                this.preview.attach = ev
-                if (isFootNotes) {
-                  this.preview.cacheData = null
-                  this.preview.current = p
-                  let dom = document.getElementById(ev.hash.substring(1))
-                  this.preview.title = dom.innerText
-                  this.preview.img = ''
-                  if(ev.hash.indexOf('ref') !== -1) this.preview.subtitle = dom.parentElement.innerText
-                  else this.preview.subtitle = ''
-                  return
-                }
-                if (this.preview.current === p && !this.preview.loading && this.preview.cacheData) {
-                  this.preview.current = p;
-                  // this.preview.loading = true
-                  // console.log(this.preview)
-                  return
-                }
-                this.preview.current = p;
-                this.preview.loading = true
-                this.preview.img = ''
-                utils.fetchJSON(utils.apiFor('post', p)).then(data => {
-                  if(!data){
-                    // this.preview.show = false
-                    this.preview.loading = false
-                    this.preview.title = 'Oops! :('
-                    this.preview.subtitle = 'This is a secret'
-                    this.preview.img = ''
-                    return
-                  }
-                  this.preview.cacheData = data
-                  this.preview.loading = false
-                  this.preview.title = data.title
-                  this.preview.subtitle = data.subtitle
-                  this.preview.img = data.img
-                }).catch(reason => {
-                  this.preview.loading = false
-                  this.preview.cacheData = null
-                  this.preview.title = ':('
-                  this.preview.subtitle = reason.message
-                  this.preview.img = ''
-                })
-              });
-              ev.addEventListener('mouseout', e => {
-                this.preview.show = false;
-              })
-            }
-            
-            
-          });
-          this.renderWithMathJax()
-          this.$emit('postLoaded')
+      // this.postData.content = this.renderer.render(this.postData.content)
+      // this.$nextTick(_ => {
+      //   this.afterContentMounted()
+      // })
+      if(this.$route.query.p && this.postData.displayId) {
+        this.$router.replace({
+          name: 'postWithEternalLink',
+          params: {
+            postLink: this.postData.displayId,
+            doNotLoad: true
+          }
         })
+      }
+
+      this.renderer.renderAsync(this.postData.content).then(template => {
+        this.postData.content = template
+        this.$nextTick(() => this.renderer.injectEvents())
+      }).then(() => this.$nextTick(async () => this.afterContentMounted()))
+      // this.rsRendered = false
+      // this.renderer.renderVueAsync(this.postData.content).then(v => {
+        
+      //   this.rsRendered = true
+      //   this.$nextTick(() => {
+      //     // const div = document.createElement('div')
+      //     v.$mount("#rhodonite")
+      //     // this.$refs.rhodonite.appendChild(div)
+      //     this.$nextTick(() => this.renderer.injectEvents())
+      //   })
+      //   this.$once('postUnload', () => v.$destroy())
+      //   return v
+      // }).then(v => {
+      //   v.$nextTick(_ => {
+      //     this.afterContentMounted()
+      //   })
+      // })
+    },
+    afterContentMounted() {
+      // utils.setHeimu()
+      // utils.colorUtils.apply({selector: '#main-pic img', text: '#title,#subtitle,#date,.digest-nav-el,#digest-nav', changeText: true})
+      const postImages = this.$refs.content.querySelectorAll('img')
+      Array.from(postImages).forEach(e => {
+        e.classList.add('responsive-img')
+      })
+      M.Materialbox.init(postImages)
+      this.setDigest()
+      let pattern = new RegExp(`${location.host}/.*\\?p=(\\d+)`);
+      const links = Array.from(this.$refs.content.querySelectorAll('a')).filter(e => !!e.href);
+      links.filter(e => e.host === location.host).forEach(async ev => {
+        let link = ev.href;
+        let matchResult = pattern.exec(link)
+        if (matchResult) {
+          let p = matchResult[1];
+          const isFootNotes = ev.hash // && p === this.getPostNum()
+          
+          ev.addEventListener('click', e => {
+            e.preventDefault()
+            if(isFootNotes) {
+              this.$vuetify.goTo(document.getElementById(ev.hash.substring(1)), {offset: -200})
+              return
+            }
+            // e.stopImmediatePropagation()
+            // console.log(this.preview);
+            // console.log('data->', this.preview.current == p && !this.preview.loading && this.preview.cacheData || undefined)
+            
+            this.$router.push({
+              name: 'post',
+              query: {
+                p
+              },
+              params: {
+                data: this.preview.current == p && !this.preview.loading && this.preview.cacheData || undefined
+              }
+            })
+            
+          }, true)
+
+          ev.addEventListener('mouseover', async e => {
+            // this.preview.origin = `${ev.offsetHeight} ${ev.offsetTop}`
+            this.preview.show = true;
+            this.preview.attach = ev
+            if (isFootNotes) {
+              this.preview.cacheData = null
+              this.preview.current = p
+              let dom = document.getElementById(ev.hash.substring(1))
+              this.preview.title = dom.innerText
+              this.preview.img = ''
+              if(ev.hash.indexOf('ref') !== -1) this.preview.subtitle = dom.parentElement.innerText
+              else this.preview.subtitle = ''
+              return
+            }
+            if (this.preview.current === p && !this.preview.loading && this.preview.cacheData) {
+              this.preview.current = p;
+              // this.preview.loading = true
+              // console.log(this.preview)
+              return
+            }
+            this.preview.current = p;
+            this.preview.loading = true
+            this.preview.img = ''
+            utils.fetchJSON(utils.apiFor('post', p)).then(data => {
+              if(!data){
+                // this.preview.show = false
+                this.preview.loading = false
+                this.preview.title = 'Oops! :('
+                this.preview.subtitle = 'This is a secret'
+                this.preview.img = ''
+                return
+              }
+              this.preview.cacheData = data
+              this.preview.loading = false
+              this.preview.title = data.title
+              this.preview.subtitle = data.subtitle
+              this.preview.img = data.img
+            }).catch(reason => {
+              this.preview.loading = false
+              this.preview.cacheData = null
+              this.preview.title = ':('
+              this.preview.subtitle = reason.message
+              this.preview.img = ''
+            })
+          });
+          ev.addEventListener('mouseout', e => {
+            this.preview.show = false;
+          })
+        }
+        
+        
+      });
+      const personalHosts = [
+        'mohuety.com', 'roselia.moe', 'roselia.xyz', 'lisa.moe', 'roselia.app'
+      ].map(x => new RegExp(x))
+      links.filter(x => x.host !== location.host && !personalHosts.some(y => y.exec(x.host))).forEach(async e => {
+        e.addEventListener('click', ev => {
+          this.renderer.context.askForAccess(e.host, `This link wish to visit an unknown host ${e.host}`,
+           `The link is ${e.href} please make sure it is safe.`).then(() => {
+            window.open(e.href)
+          })
+          ev.preventDefault()
+        })
+      })
+      this.highlightLanguage()
+      this.renderWithMathJax()
+      this.$emit('postLoaded')
+    },
+    highlightLanguage () {
+      if (window.hljs) {
+        window.hljs.initHighlighting.called = false
+        window.hljs.initHighlighting()
+      }
     },
     renderWithMathJax () {
       if(window.MathJax) window.MathJax.Hub.Queue(["Typeset", window.MathJax.Hub, "output"]);
@@ -320,8 +406,13 @@ export default {
         secret: 0,
         title: 'Page Not Found',
         subtitle: 'Please check your post-id. Or try to login.',
+        author: {
+          nickname: ''
+        },
+        darkTitle: false,
         tags: [],
-        date: (new Date()).toDateString()
+        created: new Date,
+        lastEdit: new Date
       }
     },
     setDigest () {
@@ -343,6 +434,16 @@ export default {
     },
     isTokenExpired () {
       return utils.isTokenExpired(this.userData && this.userData.token)
+    },
+    titleClass () {
+      return `${['white', 'black'][+this.postData.darkTitle]}--text`
+    },
+    isEditable() {
+      if (!this.postData.author || !this.userData) return false
+      return this.userData.role >= this.postData.author.role
+    },
+    isPostFound() {
+      return this.postData.id > 0
     }
   },
   mounted () {
@@ -354,7 +455,7 @@ export default {
       }
     })
     // console.log(RoseliaScript)
-    this.renderer = RoseliaScript.createRenderer(this)
+    // this.renderer = RoseliaScript.createRenderer(this)
     if (!window.MathJax) {
       let mathNode = document.createElement('script')
       mathNode.async = true
@@ -367,7 +468,8 @@ export default {
     }
   },
   beforeRouteUpdate (to, from, next) {
-    if (to.query.p === from.query.p) return next()
+    if(to.params.doNotLoad) return next()
+    if (to.query.p === from.query.p && to.params.postLink == from.params.postLink) return next()
     this.$vuetify.goTo(0)
     this.$emit('postUnload')
     this.loadContent(to.query.p, to)

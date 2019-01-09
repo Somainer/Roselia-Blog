@@ -1,6 +1,6 @@
 <template>
 <v-card-action>
-  <h1 class="primary--text display-1">Well met, {{ userData.username }}!</h1>
+  <h1 class="primary--text display-1">Well met, {{ userData.nickname }}({{ userData.username }})!</h1>
   <p>There are {{ posts }} posts from your perspective.</p>
   <p>Take it easy casuse I will NOT break your legs in this page.</p>
 </v-card-action>

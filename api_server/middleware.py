@@ -2,6 +2,7 @@ import functools
 from flask import request, jsonify, make_response
 from config import DEBUG
 from tokenProcessor import TokenProcessor
+from Logger import log
 
 token_processor = TokenProcessor()
 
@@ -10,6 +11,10 @@ def verify_token(role_require=1, is_post=False):
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
+            no_token = {
+                'username': None,
+                'role': None
+            }
             if is_post:
                 form = request.get_json()
                 if not form:
@@ -18,12 +23,16 @@ def verify_token(role_require=1, is_post=False):
             else:
                 token = request.args.get('token')
             if not token:
+                if role_require < 0:
+                    return func(*args, **dict(kwargs, **no_token))
                 return {
                     'success': False,
                     'msg': 'Missing Token'
                 }
             stat, msg = token_processor.get_username(token)
             if not stat:
+                if role_require < 0:
+                    return func(*args, **dict(kwargs, **no_token))
                 return {
                     'success': False,
                     'msg': msg
@@ -93,5 +102,57 @@ def to_json(func):
             response.headers['Access-Control-Allow-Headers'] = 'x-requested-with,content-type'
         return response
         # return json.dumps(func(*args, **kwargs))
+
+    return wrapper
+
+
+def require_argument(xs, is_post=False, need_raw_payload=False):
+    if not isinstance(xs, list):
+        xs = [xs]
+
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            # is_post = request.method != 'GET'
+
+            def get_payload():
+                if is_post:
+                    form = request.get_json()
+                    if not form:
+                        form = request.form
+                    return form
+                return request.args
+
+            def get_arg(a):
+                return get_payload().get(a)
+
+            missings = [x for x in xs if get_arg(x) is None]
+            if len(missings):
+                return {"success": False, "msg": "Missing arguments:" + ', '.join(missings)}
+            arguments = {x: get_arg(x) for x in xs}
+            if need_raw_payload:
+                return func(*args, **dict(arguments, **kwargs, raw_payload=get_payload()))
+            else:
+                return func(*args, **dict(arguments, **kwargs))
+
+        return wrapper
+
+    return decorator
+
+
+def catch_exception(func):
+    if DEBUG:
+        return func
+
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            log.e('Ignored exception: ', e)
+            return {
+                'success': False,
+                'msg': 'Internal Server Error'
+            }
 
     return wrapper

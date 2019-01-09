@@ -37,6 +37,8 @@ utils.setLoginData = data => {
   window.localStorage.loginData = JSON.stringify(data)
 }
 
+utils.updateLoginData = (fn) => utils.setLoginData(fn(utils.getLoginData()))
+
 utils.removeLoginData = () => window.localStorage.loginData && window.localStorage.removeItem('loginData')
 
 // utils.setLoginUI = (data) => (data || (data = utils.getLoginData())) ? $('.username').text(data.username).attr('href', './userspace') : $('.username').text('Login').attr('onclick', 'utils.setRedirect(utils.getAbsPath())').attr('href', './login')
@@ -75,6 +77,16 @@ utils.refreshToken = function (token) {
       return Promise.reject(data.msg)
     }
   })
+}
+
+utils.formatDate = (date, withTime = false) => {
+  try {
+    const dateObj = new Date(date)
+    if (withTime) return dateObj.toLocaleString()
+    return dateObj.toLocaleDateString()
+  } catch (ex) {
+    return undefined
+  }
 }
 
 utils.getPostsData = () => JSON.parse(window.localStorage.postData || 'null')
@@ -132,7 +144,7 @@ utils.fetchJSON = function (url, method = 'GET', payload = {}, withToken = true,
 utils.fetchJSONWithSuccess = function (...args) {
   return this.fetchJSON(...args).then(data => {
     if (!data.success) return Promise.reject(data.msg)
-    return data.result || data.data
+    return data.result || data.data || data
   })
 };
 (function (utils, $) {

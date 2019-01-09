@@ -121,6 +121,7 @@ export default {
         { divider: true },
         { icon: 'add_circle', text: 'Write a new post', to: {name: 'edit'}, cond: this.userData.role },
         { icon: 'delete', text: 'Remove all drafts', click: this.removeAllDraft },
+        { icon: 'account_box', text: 'Change Nickname', to: {name: 'setNickname'}},
         { divider: true },
         { heading: 'Management' },
         { icon: 'lock', text: 'Change password', to: {name: 'changePassword'} },

@@ -3,7 +3,7 @@
     <nav-bar :userData="userData" :route="this.$route.fullPath"></nav-bar>
     <v-parallax
       dark
-      src="static/img/bg_n3.jpg"
+      :src="meta.images.indexBannerImage"
     >
       <v-layout
         align-center
@@ -25,6 +25,7 @@
             <v-card hover :to="{name: 'post', params: {p: post.id}, query: {p: post.id}}">
               <v-img v-if="post.img"
                     :src="post.img"
+                    :lazy-src="meta.images.lazyloadBannerImage"
                     ripple="true"
               >
                 <v-container fill-height fluid>
@@ -51,10 +52,12 @@
 
                 </div>
                 <v-spacer></v-spacer>
-                <span class="right">{{post.date}}</span>
+                <span class="right">{{formatDate(post.created) || post.date}}</span>
               </v-card-title>
-
-              <v-card-actions v-if="userData && userData.role && userData.role + 1 >= post.secret">
+              <v-card-title>
+                <span class="grey--text">{{post.author.nickname}}</span>
+              </v-card-title>
+              <v-card-actions v-if="userData && userData.role && userData.role >= post.author.role">
                 <v-spacer></v-spacer>
                 <v-btn small fab color="error" :to="{name: 'edit', query: {post: post.id}, params:{deletePost: true, title: post.title}}">
                   <v-icon>delete</v-icon>
@@ -142,6 +145,9 @@ export default {
       if (res > 0 && res <= this.pages) return res
       return -1
     },
+    formatDate(date) {
+      return utils.formatDate(date)
+    },
     shiftPage (offset) {
       let page = this.getPageOffset(offset)
       if (page === -1) return
@@ -204,6 +210,7 @@ export default {
     },
   },
   mounted () {
+    this.userData = utils.getLoginData()
     this.getPostsOnContex()
     window.addEventListener('storage', e => {
       if (e.key === 'loginData') {

@@ -5,20 +5,24 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <link rel="shortcut icon" href="/favicon.ico">
-  <title>Roselia-Blog</title>
-  <meta name="apple-mobile-web-app-title" content="Roselia Blog">
+  <title>{{ info.title }}</title>
+  <meta name="apple-mobile-web-app-title" content="{{ info.title }}">
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <link rel="apple-touch-icon" href="favicon.ico"/>
   <meta name="theme-color" content="#7c4dff">
   <meta name="description" content="{{ info.title }} - {{ info.motto }}">
-  <link href="/static/css/app.f47cdce0e79f20aabcafb13d7278369b.css" rel="stylesheet">
+  <link rel="shortcut icon" href=/favicon.ico> <link href="https://fonts.cat.net/css?family=Roboto:100,300,400,500,700,900|Material+Icons"
+    rel=stylesheet>
+  <link rel=manifest href=/manifest.json>
+  <link href=/static/css/chunk-vendors.575cc592.css rel=stylesheet>
+  <link href=/static/css/app.550f5b3c.css rel=stylesheet>
 </head>
 
 <body>
-  <div id="app">
+  <div id="black-shout">
     <div></div>
-    <div data-app="true" class="application" id="app">
+    <div>
       <div class="application--wrap">
         <main class="v-content" data-booted="true" style="padding: 0px;">
           <div class="v-content__wrap">
@@ -45,7 +49,7 @@
                 <div data-v-1be1f375="" class="container fluid grid-list-lg">
                   <div data-v-1be1f375="" class="layout row wrap">
                     {% for post in posts %}
-                    {% set link = 'post?p={}'.format(post.id) %}
+                    {% set link = 'post/{}'.format(post.display_id) if post.display_id else 'post?p={}'.format(post.id) %}
                     <div data-v-1be1f375="" class="flex xs12 sm8 offset-sm2">
                       <a data-v-1be1f375="" href="{{ link }}" class="v-card v-card--hover">
                       <!---->
@@ -69,6 +73,7 @@
                       <div data-v-1be1f375="" class="v-card__title v-card__title--primary">
                         <div data-v-1be1f375="">
                           <div data-v-1be1f375="" class="headline">{{ post.title }}</div> <span data-v-1be1f375="" class="grey--text">{{ post.subtitle }}</span></div>
+                          {{post.author.nickname}}
                         <div
                           data-v-1be1f375="" class="spacer"></div> <span data-v-1be1f375="" class="right">{{ post.date }}</span></div>
                       
@@ -118,9 +123,8 @@
       </div>
     </div>
   </div>
-  <script type="text/javascript" src="/static/js/manifest.2ae2e69a05c33dfc65f8.js"></script>
-  <script type="text/javascript" src="/static/js/vendor.5412e75c6f8c25ea2d9d.js"></script>
-  <script type="text/javascript" src="/static/js/app.4bd260bfe34b06e6600f.js"></script>
+  <script src=/static/js/chunk-vendors.f9a53428.js> </script>
+  <script src=/static/js/app.9c8ff30b.js> </script>
 </body>
 
 </html>

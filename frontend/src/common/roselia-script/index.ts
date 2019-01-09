@@ -8,6 +8,8 @@ import {
   MusicMetaObject,
   RSElementSelector
 } from './script-types'
+import {summonDialog} from './summonDialog'
+import Vue from 'vue';
 declare global {
   interface Window {
     APlayer: any
@@ -33,9 +35,26 @@ function unescapeToHTML (str) {
   return d.innerText || d.textContent
 }
 
+function handleRenderResult(res: RSElementSelector | RSElementSelector[]) {
+  if (res instanceof Array) {
+    return res.map(handleRenderResult).join('')
+  }
+  if (res instanceof RenderResult) {
+    res = res.template
+  }
+  if (res instanceof HTMLElement) {
+    return res.outerHTML
+  }
+  if (_.isNumber(res) || _.isString(res)) return res
+  return ''
+}
+
 function render (template, context, delim) { // A not so naive template engine.
   const funcTemplate = expr => `with(data || {}) { with(data.functions) {return (${expr});}}`
   return template.replace(new RegExp((delim || ['{{', '}}']).join('\\s*?(([\\s\\S]+?))\\s*?'), 'gm'), (_total, expr) => {
+    if (!config.enableRoseliaScript) {
+      return `<pre><code>${expr}</code></pre>`
+    }
     try {
       const bigC = /([a-zA-Z_$]+[a-zA-Z_0-9]*){([\s\S]+)}/.exec(expr)
       let res
@@ -52,14 +71,7 @@ function render (template, context, delim) { // A not so naive template engine.
         expr = unescapeToHTML(expr)
         res = (new Function('data', funcTemplate(expr)))(context)
       }
-      if (res instanceof RenderResult) {
-        res = res.template
-      }
-      if (res instanceof HTMLElement) {
-        return res.outerHTML
-      }
-      if (_.isNumber(res) || _.isString(res)) return res
-      return ''
+      return handleRenderResult(res)
     } catch (e) {
       console.log('On rendering:', expr)
       console.error(e)
@@ -68,7 +80,7 @@ function render (template, context, delim) { // A not so naive template engine.
   })
 }
 
-function selfish (target, forbid?) {
+function selfish (target, forbid?: string[]) {
   const cache = new WeakMap()
   if (forbid) {
     const err = key => new Proxy({}, {
@@ -95,20 +107,54 @@ function selfish (target, forbid?) {
 class RoseliaRenderer {
   app: any
   context: RoseliaScript
+  scriptEvaluator: RoseliaScript
+  toInject: any
   constructor (app) {
     this.app = app
-    this.context = selfish(new RoseliaScript(app), [
-      'window', 'document', 'fetch'
+    this.scriptEvaluator = new RoseliaScript(app)
+    this.context = selfish(this.scriptEvaluator, [
+      'window', 'document', 'fetch', 'localStorage', 'seesionStorage', 'XMLHttpRequest'
     ])
   }
   render (template) {
+    // if (!config.enableRoseliaScript) return template
+    this.scriptEvaluator.pendingFunctions = []
     try {
-      return render(template, this.context, ['(?:Roselia|roselia|r|R){{', '}}'])
+      this.toInject = this.app
+      const result = render(template, this.context, ['(?:Roselia|roselia|r|R){{', '}}'])
+      return result
     } catch (e) {
       console.error(e)
+      // this.scriptEvaluator.injectEventsOn(this.app)
       return template
     }
     // return render(template, this.context, ['(?:Roselia|roselia|r|R){{', '}}'])
+  }
+
+  async renderAsync (template) {
+    return new Promise(resolve => resolve(this.render(template))).then(t => {
+      // this.scriptEvaluator.injectEventsOn(this.app)
+      return t
+    })
+  }
+
+  renderVue (template) {
+    const v = new Vue({
+      template: '<div id="rhodonite">' + this.render(template) + '</div>',
+      data: this.scriptEvaluator.functions,
+      delimiters: ['v{{', '}}']
+    })
+    this.toInject = v
+    // this.injectEvents()
+    return v
+  }
+
+  async renderVueAsync(template) {
+    return new Promise(resolve => resolve(this.renderVue(template)))
+  }
+
+  injectEvents () {
+    this.scriptEvaluator.injectEventsOn(this.toInject)
   }
 }
 
@@ -117,6 +163,9 @@ class RoseliaScript {
   app: any
   customFunctions: object
   functions: object
+  askAccess: Map<String, boolean>
+  pendingFunctions: (() => void)[]
+  mounted: boolean
 
   constructor (app) {
     this.app = app
@@ -125,11 +174,23 @@ class RoseliaScript {
     this.app.$on('postUnload', () => {
       this.customFunctions = {app: null}
       this.functions = selfish(this.customFunctions)
+      this.mounted = false
     })
+    this.askAccess = new Map
+    this.pendingFunctions = []
+    this.mounted = false
   }
 
   then (f) {
-    this.app.$nextTick(f)
+    if (this.mounted) this.app.$nextTick(f)
+    else this.pendingFunctions.push(f)
+  }
+
+  injectEventsOn (app: Vue) {
+    // console.log("PF", this.pendingFunctions, this.pendingFunctions.forEach, this.pendingFunctions.map)
+    this.pendingFunctions.forEach(async f => app.$nextTick(f))
+    this.pendingFunctions = []
+    this.mounted = true
   }
 
   music (meta: MusicMetaObject | Array<MusicMetaObject>, autoplay = false, onPlayerReady = null) {
@@ -222,7 +283,7 @@ class RoseliaScript {
     })
   }
 
-  static importJS (url, onComplete?) {
+  importJS (url, onComplete?) {
     const jsNode = document.createElement('script')
     jsNode.onload = onComplete
     jsNode.async = true
@@ -243,7 +304,7 @@ class RoseliaScript {
 
   audio (src: string) {
     const id = this.randomID()
-    return new RenderResult(`<audio id='${id}' src='${src}' hidden='true'>`, id)
+    return new RenderResult(`<audio id='${id}' src='${src}' hidden='true'/>`, id)
   }
 
   getElement (name: RSElementSelector) {
@@ -290,7 +351,7 @@ class RoseliaScript {
     })
   }
 
-  createElement (type, extend) {
+  createElement (type, extend?): HTMLElement {
     const el = document.createElement(type)
     el.id = this.randomID()
     extend && this.element(el).then(e => {
@@ -350,11 +411,63 @@ class RoseliaScript {
 
   Y = fn => (u => u(u))(x => fn(s => x(x)(s)))
 
-  fetchJSON = utils.fetchJSON.bind(utils)
-  fetchJSONWithSuccess = utils.fetchJSONWithSuccess.bind(utils)
+  askForAccess (type: string, title: string, message: string) {
+    return new Promise((resolve, reject) => {
+      this.onceUnload(() => this.askAccess.clear())
+      if (this.askAccess.has(type)) {
+        if (this.askAccess.get(type)) resolve()
+        else reject()
+      } else {
+        const ch = this.createElement('div')
+        document.getElementById('content').appendChild(ch)
+        summonDialog({
+          onConfirm: () => {
+            resolve()
+            this.askAccess.set(type, true)
+          },
+          onReject: () => {
+            reject()
+            this.askAccess.set(type, false)
+          },
+          cleanUp: () => {
+            document.getElementById('content').removeChild(ch)
+          },
+          title,
+          message
+        }, ch)
+      }
+    }).then(() => {
+      this.toast(`Operation ${type} granted`, 'success')
+    }).catch(() => {
+      this.toast(`Operation ${type} rejected`, 'error')
+      return Promise.reject(new Error("User rejected"))
+    })
+  }
+
+  askForToken () {
+    return this.askForAccess('token', 'This post wish to access your personal info', 'This post needs to access your token to make requests.')
+  }
+
+  roseliaApi (...args) {
+    return async data => {
+      await this.askForToken()
+      return utils.fetchJSON(utils.apiFor(...args), 'GET', data)
+    }
+  }
+
+  // async fetchJSON (...args) { 
+  //   await this.askForToken();
+  //   return utils.fetchJSON(...args);
+  // }
+  // async fetchJSONWithSuccess (...args) { 
+  //   await this.askForToken();
+  //   return utils.fetchJSONWithSuccess(...args);
+  // }
   request = {
-    get (url, data) {
-      return axios.get(url, data).then(x => x.data)
+    get: (url, data) => {
+      return this.askForAccess('fetch', 'This post would like to fetch data', `It wants to access ${url}.`).then(() => {
+        return axios.get(url, data).then(x => x.data)
+      })
     }
   }
 }
