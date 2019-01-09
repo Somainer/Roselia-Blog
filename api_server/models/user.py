@@ -14,7 +14,7 @@ class User(database.Model):
     avatar = db.Column(db.String(256))
 
     def __repr__(self):
-        return f'<User {self.username}>'
+        return '<User {}>'.format(self.username)
 
     @property
     def dict(self):
@@ -50,7 +50,8 @@ class Digest(object):
 
     @classmethod
     def add_salt(cls, password):
-        return f'{cls.prefix}{password}{len(password)}{cls.suffix}'
+        # return f'{cls.prefix}{password}{len(password)}{cls.suffix}'
+        return '{}{}{}{}'.format(cls.prefix, password, len(password), cls.suffix)
 
     @classmethod
     def digest(cls, password):

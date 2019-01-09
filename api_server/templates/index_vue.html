@@ -49,7 +49,7 @@
                 <div data-v-1be1f375="" class="container fluid grid-list-lg">
                   <div data-v-1be1f375="" class="layout row wrap">
                     {% for post in posts %}
-                    {% set link = 'post?p={}'.format(post.id) %}
+                    {% set link = 'post/{}'.format(post.display_id) if post.display_id else 'post?p={}'.format(post.id) %}
                     <div data-v-1be1f375="" class="flex xs12 sm8 offset-sm2">
                       <a data-v-1be1f375="" href="{{ link }}" class="v-card v-card--hover">
                       <!---->

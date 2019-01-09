@@ -60,11 +60,13 @@ def get_comments(p):
     result = p_int \
         .map(lambda pid:
              CommentManager.get_comments(p, limit, offset))
-    total_pages = p_int\
-        .map(lambda pid: CommentManager.get_comment_count(pid))\
+    total_count = p_int \
+        .map(lambda pid: CommentManager.get_comment_count(pid))
+    total_pages = total_count \
         .map(lambda count: count // limit + (count % limit > 0))
     return {
         'success': not result.empty,
         'result': result.get_or(None),
-        'pages': total_pages.get_or(None)
+        'pages': total_pages.get_or(None),
+        'total': total_count.get_or(None)
     }

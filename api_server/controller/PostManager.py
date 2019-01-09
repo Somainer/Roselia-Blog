@@ -94,7 +94,7 @@ class PostManager:
             'display_id': post.get('display_id', post.get('title')),
             'content': post.get('content', ''),
             'author': author,
-            'img': post.get('img', ''),
+            'cover': post.get('img', ''),
             'tags': tags,
             'secret': secret,
             'catalogs': catalogs,
@@ -121,6 +121,8 @@ class PostManager:
             post['content'] = markdown(post['content'])
         if not post.get('display_id'):
             post['display_id'] = None
+        if 'cover' not in post:
+            post['cover'] = post.get('img')
         tags = list(map(self.ensure_tag, post.pop('tags', [])))
         for k in db_post.__dir__():
             if not k.startswith('_') and k in post and k not in Post.modify_forbidden_attrs:

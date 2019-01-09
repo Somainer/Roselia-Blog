@@ -70,7 +70,7 @@ if DEBUG:
     @app.route('/<string:path>.js')
     def stjs(path):
         import requests
-        response = make_response(requests.get(f'http://localhost:8080/{path}.js').content)
+        response = make_response(requests.get('http://localhost:8080/{}.js'.format(path)).content)
         response.headers['Access-Control-Allow-Origin'] = '*'
         response.headers['Access-Control-Allow-Methods'] = 'POST'
         response.headers['Access-Control-Allow-Headers'] = 'x-requested-with,content-type'
@@ -162,6 +162,7 @@ def edit_page():
 
 @app.route('/post')
 @app.route('/post/<string:p>')
+@app.route('/post/<string:p>/')
 def getpostpage(p=None):
     p = p or request.args.get("p", -1, int)
     logged_in = True
@@ -191,7 +192,10 @@ def getpostpage(p=None):
             'id': -1,
             'prev': -1,
             'next': -1,
-            'secret': 0 if not post else post.get('secret', 0)
+            'secret': 0 if not post else post.get('secret', 0),
+            'author': {
+                'nickname': ''
+            }
         }
     user_data = {'username': data['username'], 'role': data['role'], 'token': token} if logged_in else None
     return render_template('post_vue.html', post=post_data, userData=user_data, info=BLOG_INFO)
@@ -671,19 +675,19 @@ def rss_feed():
     level = logged_in + data['role']
     data = ppl.get_all_posts(level)
     rss = PyRSS2Gen.RSS2(
-        title="Roselia-Blog",
+        title=BLOG_INFO['title'],
         link=BLOG_LINK,
-        description="Do what you want to do, be who you want to be",
-        lastBuildDate=datetime.datetime.now() if not len(data) else datetime.datetime.fromtimestamp(data[-1]['time']),
+        description=BLOG_INFO['motto'],
+        lastBuildDate=datetime.datetime.now() if not len(data) else data[-1]['last_edit'],
         pubDate=datetime.datetime.now(),
         items=[PyRSS2Gen.RSSItem(
             title=post['title'],
             description=post['subtitle'],
             author=post['author']['nickname'],
-            link="{}post?p={}".format(BLOG_LINK, post['id']),
-            guid=PyRSS2Gen.Guid("{}post?p={}".format(BLOG_LINK, post['id'])),
+            link="{}post/{}".format(BLOG_LINK, post['display_id']) if post['display_id'] else '{}post?p={}'.format(post['id']),
+            guid=PyRSS2Gen.Guid("{}post/{}".format(BLOG_LINK, post['display_id']) if post['display_id'] else '{}post?p={}'.format(post['id'])),
             categories=post['tags'],
-            pubDate=datetime.datetime.fromtimestamp(post['time'])
+            pubDate=post['created']
         ) for post in data]
 
     )
