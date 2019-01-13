@@ -1,12 +1,12 @@
 let BLOG_TITLE = 'Roselia-Blog'
 // let BLOG_TITLE = 'Mohuety'
 let BLOG_MOTTO = 'Do what you want to do, be who you want to be.'
-// const apiBase = '/api'
+const apiBase = '/api'
 // const apiBase = 'http://localhost:5000/api'
 // const apiBase = 'https://roselia.moe/blog/api'
 const urlPrefix = ''
 // const urlPrefix = '/blog'
-const apiBase = `${urlPrefix}/api`
+// const apiBase = `${urlPrefix}/api`
 const roseliaTheme = {
   primary: '#6670ed',
   secondary: '#890f87',
@@ -35,9 +35,9 @@ export default {
   enableRoseliaScript: true,
   urlPrefix,
   images: {
-    indexBannerImage: '/static/img/bg_n3.jpg',
-    postBannerImage: '/static/img/nest.png',
-    lazyloadImage: '/static/img/observe.jpg',
-    timelineBannerImage: '/static/img/bg_n0.png'
+    indexBannerImage: urlPrefix + '/static/img/bg_n3.jpg',
+    postBannerImage: urlPrefix + '/static/img/nest.png',
+    lazyloadImage: urlPrefix + '/static/img/observe.jpg',
+    timelineBannerImage: urlPrefix + '/static/img/bg_n0.png'
   }
 }

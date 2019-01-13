@@ -94,7 +94,6 @@
       <div class="text-xs-center">
         <h4 class="subheading grey--text">Last edit at: {{formatDate(postData.lastEdit, true)}}</h4>
       </div>
-      <blog-comments v-if="isPostFound" :userData="userData" :postData="postData" :toast="showToast"></blog-comments>
     </v-container>
     <v-container>
       <v-flex row xs12 sm10 offset-sm1>
@@ -108,6 +107,7 @@
           </v-btn>
         </v-layout>
       </v-flex>
+      <blog-comments v-if="isPostFound" :userData="userData" :postData="postData" :toast="showToast" :renderer="renderer"></blog-comments>
     </v-container>
 
     <v-dialog
@@ -368,18 +368,6 @@ export default {
         
         
       });
-      const personalHosts = [
-        'mohuety.com', 'roselia.moe', 'roselia.xyz', 'lisa.moe', 'roselia.app'
-      ].map(x => new RegExp(x))
-      links.filter(x => x.host !== location.host && !personalHosts.some(y => y.exec(x.host))).forEach(async e => {
-        e.addEventListener('click', ev => {
-          this.renderer.context.askForAccess(e.host, `This link wish to visit an unknown host ${e.host}`,
-           `The link is ${e.href} please make sure it is safe.`).then(() => {
-            window.open(e.href)
-          })
-          ev.preventDefault()
-        })
-      })
       this.highlightLanguage()
       this.renderWithMathJax()
       this.$emit('postLoaded')

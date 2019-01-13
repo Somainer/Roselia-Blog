@@ -4,7 +4,7 @@ BLOG_INFO = {
     "title": "Roselia-Blog",
     "motto": "Do what you want to do, be who you want to be."
 }
-DEBUG = False
+DEBUG = True
 
 HOST = '0.0.0.0'
 PORT = 5000
