@@ -32,6 +32,14 @@ class CommentManager:
         return True, 'Success'
 
     @classmethod
+    def can_delete_comment(cls, user, author):
+        if not author:
+            return user.role
+        if user.user_id == author.user_id:
+            return True
+        return user.role > author.role
+
+    @classmethod
     @db_mutation_cleanup
     def delete_comment(cls, comment_id, by_user):
         user = UserManager.find_user(by_user)
@@ -40,8 +48,9 @@ class CommentManager:
 
         comment = Comment.query.get(comment_id)
         post = comment.post
-        author = post.author
-        if author and author.role > user.role:
+        author = comment.author
+        
+        if not cls.can_delete_comment(user, author):
             return False
 
         db.session.delete(comment)
@@ -60,3 +69,9 @@ class CommentManager:
     @classmethod
     def get_comment_count(cls, post_id):
         return Comment.query.filter(Comment.to_article == post_id).count()
+
+    @classmethod
+    def get_comment(cls, comment_id):
+        comment = Comment.query.get(comment_id)
+        if comment:
+            return comment.dict

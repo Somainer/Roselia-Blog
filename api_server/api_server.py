@@ -136,7 +136,7 @@ def seo_main():
         logged_in = False
     else:
         state, data = token_processor.get_username(token)
-        print(data)
+        # print(data)
         logged_in = state
     if not logged_in:
         data = {'role': 0}
@@ -172,7 +172,7 @@ def getpostpage(p=None):
         logged_in = False
     else:
         state, data = token_processor.get_username(token)
-        print(data)
+        # print(data)
         logged_in = state
     if not logged_in:
         data = {'role': 0}
@@ -248,7 +248,7 @@ def error_404(error):
 
 @app.errorhandler(500)
 def error_500(error):
-    print(error)
+    # print(error)
     return render_template('error.html', error_code='500 Internal Server Error',
                            error_taunt=error if isinstance(error, str) else "SHHH! That's shame. Do not tell others.",
                            path=request.path, link=BLOG_LINK, info=BLOG_INFO, url=request.url,
@@ -257,7 +257,7 @@ def error_500(error):
 
 @app.route('/post/<int:p>')
 def seo_post(p):
-    print("Got an request:", p)
+    # print("Got an request:", p)
     logged_in = True
     data = None
     token = request.args.get('token')
@@ -265,7 +265,7 @@ def seo_post(p):
         logged_in = False
     else:
         state, data = token_processor.get_username(token)
-        print(data)
+        # print(data)
         logged_in = state
     if not logged_in:
         data = {'role': 0}
@@ -434,7 +434,7 @@ def tag_post(t):
         logged_in = False
     else:
         state, data = token_processor.get_username(token)
-        print(data)
+        # print(data)
         logged_in = state
     if not logged_in:
         data = {'role': 0}

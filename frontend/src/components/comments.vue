@@ -43,7 +43,7 @@
               v-for="item in commentList"
               :key="item.id"
               class="mb-3"
-              :color="item.author ? 'accent' : 'grey'"
+              :color="item.color || (item.author ? 'accent' : 'grey')"
               :id="'comment-' + item.id"
             >
               <v-layout justify-space-between>
@@ -51,7 +51,7 @@
                 <v-flex xs7>
                   <v-chip
                     class="white--text ml-0"
-                    :color="item.author ? 'secondary' : 'grey'"
+                    :color="item.color || (item.author ? 'secondary' : 'grey')"
                     label
                     small
                   >
@@ -61,25 +61,33 @@
                     class="mt-3 mx-auto"
                     v-if="item.replyTo"
                   >
-                    <v-card-text class="pt-0">
+                    <v-card-title>
                       <div class="title font-weight-light mb-2">@{{ getCommentNickname(getCommentOrNotFound(item.replyTo)) }}</div>
-                      <div class="subheading font-weight-light grey--text" v-html="getCommentOrNotFound(item.replyTo).content"></div>
-                      <v-divider class="my-2"></v-divider>
-                      
-                      <v-layout>
-                        <v-btn flat icon small @click="$vuetify.goTo('#comment-' + getCommentOrNotFound(item.replyTo).id)">
-                          <v-icon>mode_comment</v-icon>
-                        </v-btn>
-                        <v-spacer></v-spacer>
-                        <v-icon
-                          class="mr-2"
-                          small
-                        >
-                          mdi-clock
-                        </v-icon>
-                        <span class="caption grey--text font-weight-light">{{ formatDate(getCommentOrNotFound(item.replyTo).createdAt) }}</span>
-                      </v-layout>
-                    </v-card-text>
+                    </v-card-title>
+                    <v-slide-y-transition>
+                      <v-card-text class="pt-0" v-show="item.showReply">
+                        <div class="subheading font-weight-light grey--text" 
+                          v-html="getCommentOrNotFound(item.replyTo).cleanedContent || getCommentOrNotFound(item.replyTo).content"
+                        ></div>
+                      </v-card-text>
+                    </v-slide-y-transition>
+                    
+                    <v-divider class="my-2"></v-divider>
+                    <v-card-actions>
+                      <v-btn flat icon small @click="item.showReply = !item.showReply">
+                        <v-icon>keyboard_arrow_{{ item.showReply ? 'up' : 'down'}}</v-icon>
+                      </v-btn>
+                      <v-btn flat icon small @click="$vuetify.goTo('#comment-' + getCommentOrNotFound(item.replyTo).id)">
+                        <v-icon>mode_comment</v-icon>
+                      </v-btn>
+                      <v-spacer></v-spacer>
+                      <v-icon
+                        class="mr-2"
+                      >
+                        date_range
+                      </v-icon>
+                      <span class="caption grey--text font-weight-light">{{ formatDate(getCommentOrNotFound(item.replyTo).createdAt) }}</span>
+                    </v-card-actions>
                   </v-card>
                   <div v-html="item.content"></div>
                   <v-btn flat icon @click="replyToComment = item.id" v-if="canAddComment">
@@ -197,6 +205,7 @@ export default {
         comment: cid
       }).then(succ => {
         this.commentList = this.commentList.filter(x => x.id !== cid)
+        --this.commentCount
       }).catch(err => {
         this.toast('Oops! Failed.', 'error')
       })
@@ -207,7 +216,7 @@ export default {
       return cmt.author.role <= this.userData.role
     },
     loadNextPage() {
-      if (this.loading) return
+      if (this.loading || this.currentPage >= this.totalPages) return
       this.loading = true
       utils.fetchJSON(utils.apiFor('comment', 'comments'), 'GET', {
         p: this.postData.id,
@@ -217,7 +226,10 @@ export default {
         if (!data.success) return Promise.reject('Invalid postid')
         return data
       }).then(data => {
-        this.commentList = this.commentList.concat(data.result.map(mapToCamelCase))
+        this.commentList = this.commentList.concat(data.result.map(mapToCamelCase).map(d => ({
+          ...d,
+          showReply: false
+        })))
         this.totalPages = data.pages
         this.commentCount = data.total
         ++this.currentPage
@@ -236,7 +248,13 @@ export default {
       return this.commentDict[cid]
     },
     getCommentOrNotFound(cid) {
-      return this.getComment(cid) || {
+      const result = this.getComment(cid) 
+      if(!result) {
+        this.loadNextPage()
+      } else {
+        return result
+      }
+      return {
         id: 0,
         nickname: 'Anoymous',
         content: 'This comment is gone.',
@@ -269,9 +287,14 @@ export default {
       M.Materialbox.init(selectedImages)
     },
     renderScript() {
-      this.commentList.filter(x => x.author).forEach(c => {
-        c.content = this.renderer.render(c.content)
+      this.commentList.filter(x => x.author).filter(x => !x.rendered).forEach(c => {
+        const popContext = this.renderer.pushContext(c, 'comment')
+        c.cleanedContent = this.renderer.cleanScript(c.content)
+        const renderResult = this.renderer.render(c.content)
+        c.content = renderResult
+        c.rendered = true
         this.renderer.injectEvents()
+        popContext()
       })
     },
     onExit(id) {

@@ -49,9 +49,13 @@ function handleRenderResult(res: RSElementSelector | RSElementSelector[]) {
   return ''
 }
 
+function replaceTemplate(template: string, delim: string[], replace: (s: string, ...args: any[]) => string) {
+  return template.replace(new RegExp((delim || ['{{', '}}']).join('\\s*?(([\\s\\S]+?))\\s*?'), 'gm'), replace)
+}
+
 function render (template, context, delim) { // A not so naive template engine.
-  const funcTemplate = expr => `with(data || {}) { with(data.functions) {return (${expr});}}`
-  return template.replace(new RegExp((delim || ['{{', '}}']).join('\\s*?(([\\s\\S]+?))\\s*?'), 'gm'), (_total, expr) => {
+  const funcTemplate = expr => `with(data) { with(functions) {return (${expr});}}`
+  return replaceTemplate(template, delim, (_total, expr) => {
     if (!config.enableRoseliaScript) {
       return `<pre><code>${expr}</code></pre>`
     }
@@ -104,24 +108,38 @@ function selfish (target, forbid?: string[]) {
   }
   return new Proxy(target, handler)
 }
+
+function sandbox(target: any) {
+  return new Proxy(target, {
+    has(target, key) {
+      return true
+    },
+    get(target, key) {
+      if(key === Symbol.unscopables) {
+        return undefined
+      }
+      return Reflect.get(target, key)
+    }
+  })
+}
+
 class RoseliaRenderer {
   app: any
   context: RoseliaScript
   scriptEvaluator: RoseliaScript
   toInject: any
+  static roseliaScriptDelim = ['(?:Roselia|roselia|r|R){{', '}}']
   constructor (app) {
     this.app = app
     this.scriptEvaluator = new RoseliaScript(app)
-    this.context = selfish(this.scriptEvaluator, [
-      'window', 'document', 'fetch', 'localStorage', 'seesionStorage', 'XMLHttpRequest'
-    ])
+    this.context = sandbox(selfish(this.scriptEvaluator))
   }
   render (template) {
     // if (!config.enableRoseliaScript) return template
     this.scriptEvaluator.pendingFunctions = []
     try {
       this.toInject = this.app
-      const result = render(template, this.context, ['(?:Roselia|roselia|r|R){{', '}}'])
+      const result = render(template, this.context, RoseliaRenderer.roseliaScriptDelim)
       return result
     } catch (e) {
       console.error(e)
@@ -129,6 +147,10 @@ class RoseliaRenderer {
       return template
     }
     // return render(template, this.context, ['(?:Roselia|roselia|r|R){{', '}}'])
+  }
+
+  cleanScript(template: string) {
+    return replaceTemplate(template, RoseliaRenderer.roseliaScriptDelim, _ => '')
   }
 
   async renderAsync (template) {
@@ -155,6 +177,17 @@ class RoseliaRenderer {
 
   injectEvents () {
     this.scriptEvaluator.injectEventsOn(this.toInject)
+  }
+
+  pushContext(context: object, name: string = 'context') {
+    this.scriptEvaluator.def(name, context)
+    return () => {
+      this.scriptEvaluator.undef(name)
+    }
+  }
+
+  pushMethod(method: (rs: RoseliaScript) => (...args: any[]) => any, name: string) {
+    return this.pushContext((...args: any[]) => method(this.context)(...args), name)
   }
 }
 
@@ -300,6 +333,10 @@ class RoseliaScript {
     if (_.isString(func) || func instanceof HTMLElement) {
       return func
     }
+  }
+
+  undef (name: string) {
+    this.customFunctions[name] = undefined
   }
 
   audio (src: string) {
@@ -469,6 +506,10 @@ class RoseliaScript {
         return axios.get(url, data).then(x => x.data)
       })
     }
+  }
+
+  nil () {
+    return null
   }
 }
 
