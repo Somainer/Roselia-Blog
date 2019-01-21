@@ -41,7 +41,7 @@ def add_comment(username, role, content, to_post, raw_payload):
 @route('/delete', methods=['POST'])
 @to_json
 @require_argument(['comment'], True)
-@verify_token(1, True)
+@verify_token(0, True)
 def remove_comment(comment, username, role):
     stat = CommentManager.delete_comment(comment, username)
     return {
@@ -69,4 +69,14 @@ def get_comments(p):
         'result': result.get_or(None),
         'pages': total_pages.get_or(None),
         'total': total_count.get_or(None)
+    }
+
+
+@route('/comment/<int:cid>')
+@to_json
+def get_comment(cid):
+    comment = CommentManager.get_comment(cid)
+    return {
+        'success': comment is not None,
+        'result': comment
     }
