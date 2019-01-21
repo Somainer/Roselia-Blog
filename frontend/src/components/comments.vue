@@ -2,6 +2,13 @@
   <lazy-component text="Load comment">
     <v-container>
       <v-flex v-if="canAddComment" xs10 sm7 offset-sm2>
+        <v-badge>
+          <span slot="badge" v-if="commentCount">{{commentCount}}</span>
+          <v-icon>
+            mode_comment
+          </v-icon>
+        </v-badge>
+        <v-divider class="my-3"></v-divider>
         <v-chip close color="secondary" dark v-if="replyToComment" v-model="chip">
           @{{ atToNickname }}
         </v-chip>
@@ -27,7 +34,7 @@
           </v-flex>
         </v-layout>
       </v-flex>
-      <v-flex xs10 sm7 offset-sm2>
+      <v-flex xs10 sm7 offset-sm2 ref="comments">
         <v-timeline dense clipped>
           <v-slide-x-transition
           group
@@ -36,7 +43,7 @@
               v-for="item in commentList"
               :key="item.id"
               class="mb-3"
-              :color="item.author ? 'accent' : 'grey'"
+              :color="item.color || (item.author ? 'accent' : 'grey')"
               :id="'comment-' + item.id"
             >
               <v-layout justify-space-between>
@@ -44,7 +51,7 @@
                 <v-flex xs7>
                   <v-chip
                     class="white--text ml-0"
-                    :color="item.author ? 'secondary' : 'grey'"
+                    :color="item.color || (item.author ? 'secondary' : 'grey')"
                     label
                     small
                   >
@@ -53,20 +60,34 @@
                   <v-card
                     class="mt-3 mx-auto"
                     v-if="item.replyTo"
-                    @click="$vuetify.goTo('#comment-' + getCommentOrNotFound(item.replyTo).id)"
                   >
-                    <v-card-text class="pt-0">
+                    <v-card-title>
                       <div class="title font-weight-light mb-2">@{{ getCommentNickname(getCommentOrNotFound(item.replyTo)) }}</div>
-                      <div class="subheading font-weight-light grey--text" v-html="getCommentOrNotFound(item.replyTo).content"></div>
-                      <v-divider class="my-2"></v-divider>
+                    </v-card-title>
+                    <v-slide-y-transition>
+                      <v-card-text class="pt-0" v-show="item.showReply">
+                        <div class="subheading font-weight-light grey--text" 
+                          v-html="getCommentOrNotFound(item.replyTo).cleanedContent || getCommentOrNotFound(item.replyTo).content"
+                        ></div>
+                      </v-card-text>
+                    </v-slide-y-transition>
+                    
+                    <v-divider class="my-2"></v-divider>
+                    <v-card-actions>
+                      <v-btn flat icon small @click="item.showReply = !item.showReply">
+                        <v-icon>keyboard_arrow_{{ item.showReply ? 'up' : 'down'}}</v-icon>
+                      </v-btn>
+                      <v-btn flat icon small @click="$vuetify.goTo('#comment-' + getCommentOrNotFound(item.replyTo).id)">
+                        <v-icon>mode_comment</v-icon>
+                      </v-btn>
+                      <v-spacer></v-spacer>
                       <v-icon
                         class="mr-2"
-                        small
                       >
-                        mdi-clock
+                        date_range
                       </v-icon>
                       <span class="caption grey--text font-weight-light">{{ formatDate(getCommentOrNotFound(item.replyTo).createdAt) }}</span>
-                    </v-card-text>
+                    </v-card-actions>
                   </v-card>
                   <div v-html="item.content"></div>
                   <v-btn flat icon @click="replyToComment = item.id" v-if="canAddComment">
@@ -90,33 +111,42 @@
           column
           justify-center
         >
-        <div>
-          <div v-if="currentPage < totalPages" v-observe-visibility="loadNextPage">
-            <v-btn :loading="loading" small @click="loadNextPage" block color="secondary" dark>
-                <v-icon>keyboard_arrow_down</v-icon>
-            </v-btn>
-          </div>
-          <div v-else-if="loading">
-            <v-progress-circular indeterminate color="primary"></v-progress-circular>
-          </div>
-          <div v-else>
-            <v-divider></v-divider>
-            Tiro finale
-          </div>
-          
+        <v-chip
+          class="white--text ml-0 center-align"
+          color="secondary"
+          label
+          small
+          @click="$vuetify.goTo($refs.commentText)"
+        >
+          <v-icon>add_comment</v-icon>
+        </v-chip>
+        <div v-if="currentPage < totalPages" v-observe-visibility="loadNextPage">
+          <v-btn :loading="loading" small @click="loadNextPage" block color="secondary" dark>
+              <v-icon>keyboard_arrow_down</v-icon>
+          </v-btn>
         </div>
+        <div v-else-if="loading">
+          <v-progress-circular indeterminate color="primary"></v-progress-circular>
+        </div>
+        <div v-else>
+          <v-divider></v-divider>
+          Tiro finale
+        </div>
+          
       </v-layout>
     </v-container>
     
   </lazy-component>
 </template>
 <script>
+import {mapState, mapGetters, mapMutations} from 'vuex'
 import lazyComponent from './lazyComponent'
 import { mapToUnderline, mapToCamelCase, safeDictGet } from '@/common/helpers';
 import utils from '@/common/utils';
+import M from 'materialize-css'
 export default {
   components: {lazyComponent},
-  props: ['userData', 'postData', 'toast'],
+  props: ['userData', 'postData', 'toast', 'renderer'],
   name: 'blog-comment',
   data() {
     return {
@@ -128,11 +158,20 @@ export default {
       loading: false,
       currentPage: 0,
       totalPages: 1,
+      commentCount: 0,
       commentList: [],
-      replyToComment: undefined
+      replyToComment: undefined,
+      hasUnsafedDraft: false
     }
   },
   methods: {
+    ...mapMutations([
+      'setCommentDraft',
+      'removeCommentDraft'
+    ]),
+    getCommentDraft(id) {
+      return this.$store.state.commentDraft[id]
+    },
     setVisible() {
       this.visible = true
     },
@@ -144,6 +183,7 @@ export default {
       utils.fetchJSONWithSuccess(utils.apiFor('comment', 'add'), 'POST', this.addPostForm).then(d => {
         this.toast('Well, you placed a comment!', 'success')
         this.loading = false
+        this.removeCommentDraft(this.postData.id)
         this.cleanUp()
         this.loadNextPage()
       }).catch(err => {
@@ -154,6 +194,7 @@ export default {
     cleanUp() {
       this.currentPage = 0
       this.totalPages = 1
+      this.commentCount = 0
       this.commentList = []
       this.comment = ''
       this.replyToComment = undefined
@@ -164,6 +205,9 @@ export default {
         comment: cid
       }).then(succ => {
         this.commentList = this.commentList.filter(x => x.id !== cid)
+        --this.commentCount
+      }).catch(err => {
+        this.toast('Oops! Failed.', 'error')
       })
     },
     canDeleteComment(cmt) {
@@ -172,7 +216,7 @@ export default {
       return cmt.author.role <= this.userData.role
     },
     loadNextPage() {
-      if (this.loading) return
+      if (this.loading || this.currentPage >= this.totalPages) return
       this.loading = true
       utils.fetchJSON(utils.apiFor('comment', 'comments'), 'GET', {
         p: this.postData.id,
@@ -182,10 +226,19 @@ export default {
         if (!data.success) return Promise.reject('Invalid postid')
         return data
       }).then(data => {
-        this.commentList = this.commentList.concat(data.result.map(mapToCamelCase))
+        this.commentList = this.commentList.concat(data.result.map(mapToCamelCase).map(d => ({
+          ...d,
+          showReply: false
+        })))
         this.totalPages = data.pages
+        this.commentCount = data.total
         ++this.currentPage
         this.loading = false
+        this.renderScript()
+        this.$nextTick(() => {
+          this.processComments()
+          this.hasUnsafedDraft = false
+        })
       }).catch(err => {
         this.toast(err, 'error')
         this.loading = false
@@ -195,7 +248,13 @@ export default {
       return this.commentDict[cid]
     },
     getCommentOrNotFound(cid) {
-      return this.getComment(cid) || {
+      const result = this.getComment(cid) 
+      if(!result) {
+        this.loadNextPage()
+      } else {
+        return result
+      }
+      return {
         id: 0,
         nickname: 'Anoymous',
         content: 'This comment is gone.',
@@ -204,6 +263,57 @@ export default {
     },
     getCommentNickname(comment) {
       return comment.nickname || safeDictGet('author', 'nickname')(comment)
+    },
+    processComments() {
+      const links = Array.from(this.$refs.comments.querySelectorAll('a')).filter(e => !!e.href)
+      const personalHosts = [
+        'mohuety.com', 'roselia.moe', 'roselia.xyz', 'lisa.moe', 'roselia.app'
+      ].map(x => new RegExp(x))
+      links.filter(e => !e.getAttribute('roselia-prevented')).filter(x => x.host !== location.host && !personalHosts.some(y => y.exec(x.host))).forEach(async e => {
+        e.setAttribute('roselia-prevented', true)
+        e.addEventListener('click', ev => {
+          ev.preventDefault()
+          this.renderer.context.askForAccess(e.host, `This link wish to visit an unknown host ${e.host}`,
+           `The link is ${e.href} please make sure it is safe.`).then(() => {
+            window.open(e.href)
+          })
+        })
+      })
+      const selectedImages = this.$refs.comments.querySelectorAll('img')
+      const images = Array.from(selectedImages)
+      images.forEach(e => {
+        e.classList.add('responsive-img')
+      })
+      M.Materialbox.init(selectedImages)
+    },
+    renderScript() {
+      this.commentList.filter(x => x.author).filter(x => !x.rendered).forEach(c => {
+        const popContext = this.renderer.pushContext(c, 'comment')
+        c.cleanedContent = this.renderer.cleanScript(c.content)
+        const renderResult = this.renderer.render(c.content)
+        c.content = renderResult
+        c.rendered = true
+        this.renderer.injectEvents()
+        popContext()
+      })
+    },
+    onExit(id) {
+      if(this.hasUnsafedDraft) {
+        this.setCommentDraft({
+          commentId: id || this.postData.id,
+          comment: {
+            comment: this.comment,
+            nickname: this.nickname
+          }
+        })
+      }
+    },
+    loadDraft(id) {
+      const draft = this.getCommentDraft(id || this.postData.id)
+      if (draft) {
+        this.comment = draft.comment || this.comment
+        this.nickname = draft.nickname || this.nickname
+      }
     }
   },
   computed: {
@@ -244,6 +354,7 @@ export default {
   watch: {
     comment() {
       this.commentLeft = true
+      this.hasUnsafedDraft = true
     },
     replyToComment(val) {
       if(val) {
@@ -257,9 +368,17 @@ export default {
         this.replyToComment = undefined
       }
     },
-    postData() {
+    postData(nv, ov) {
+      this.onExit(ov.id)
       this.cleanUp()
+      this.loadDraft(nv.id)
     }
+  },
+  mounted() {
+    this.loadDraft()
+  },
+  beforeDestroy() {
+    this.onExit()
   }
 }
 </script>

@@ -22,7 +22,8 @@
       >
         <v-layout row wrap>
           <v-flex v-for="post in posts" xs12 sm8 offset-sm2 :key="post.id">
-            <v-card hover :to="{name: 'post', params: {p: post.id}, query: {p: post.id}}">
+            <v-card hover :to="getRoute(post)">
+              <!-- {name: 'post', params: {p: post.id}, query: {p: post.id}} -->
               <v-img v-if="post.img"
                     :src="post.img"
                     :lazy-src="meta.images.lazyloadBannerImage"
@@ -108,6 +109,7 @@
 
 <script>
 import utils from '../common/utils'
+import {mapToCamelCase} from '../common/helpers'
 // import router from '../router/index'
 import meta from '../common/config'
 
@@ -208,6 +210,23 @@ export default {
         console.log(reason)
       })
     },
+    getRoute(post) {
+      post = mapToCamelCase(post)
+      if(post.displayId) {
+        return {
+          name: 'postWithEternalLink',
+          params: {
+            postLink: post.displayId
+          }
+        }
+      }
+      return {
+        name: 'post',
+        query: {
+          p: post.id
+        }
+      }
+    }
   },
   mounted () {
     this.userData = utils.getLoginData()
