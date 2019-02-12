@@ -17,6 +17,7 @@ import ConsoleIndex from '../components/console/ConsoleIndex'
 import TokenRefresh from '../components/console/TokenRefresh'
 import Timeline from '../components/BlogTimeline'
 import SetNickname from '../components/console/SetNickname'
+import OAuthAccounts from  '../components/console/OauthBind'
 
 Vue.use(Router)
 
@@ -98,6 +99,11 @@ export default new Router({
           path: 'set-nickname',
           name: 'setNickname',
           component: SetNickname
+        },
+        {
+          path: 'oauth-accounts',
+          name: 'oauthAccounts',
+          component: OAuthAccounts
         },
         {
           path: '/',

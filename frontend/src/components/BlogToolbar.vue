@@ -23,10 +23,10 @@ import meta from '../common/config'
 import utils from '../common/utils'
 export default {
   name: 'blog-toolbar',
-  props: ['userData', 'route'],
+  props: ['userData', 'route', 'realTitle'],
   data () {
     return {
-      title: meta.title
+      title: this.realTitle || meta.title
     }
   },
   methods: {

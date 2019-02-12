@@ -10,6 +10,7 @@ import {
 } from './script-types'
 import {summonDialog} from './summonDialog'
 import Vue from 'vue';
+import { mapEntries } from '../helpers';
 declare global {
   interface Window {
     APlayer: any
@@ -25,8 +26,8 @@ function ensureAPlayer(onload) {
     playerNode.onload = onload || null
 
     playerNode.src = 'https://cdn.bootcss.com/aplayer/1.10.1/APlayer.min.js'
-    document.head.appendChild(playerStyle)
-    document.body.appendChild(playerNode)
+    document.head!.appendChild(playerStyle)
+    document.body!.appendChild(playerNode)
   }
 }
 function unescapeToHTML (str) {
@@ -55,7 +56,7 @@ function replaceTemplate(template: string, delim: string[], replace: (s: string,
 
 function render (template, context, delim) { // A not so naive template engine.
   const funcTemplate = expr => `with(data) { with(functions) {return (${expr});}}`
-  return replaceTemplate(template, delim, (_total, expr) => {
+  const innerRenderer = expr => {
     if (!config.enableRoseliaScript) {
       return `<pre><code>${expr}</code></pre>`
     }
@@ -81,6 +82,13 @@ function render (template, context, delim) { // A not so naive template engine.
       console.error(e)
       return expr
     }
+  }
+  return replaceTemplate(template, delim, (_total, expr: string) => {
+    const exprTrim = expr.trim()
+    const needReturnValue = !exprTrim.endsWith(';')
+    const expression = needReturnValue ? exprTrim : exprTrim.substring(0, exprTrim.length - 1)
+    const renderResult = innerRenderer(expression)
+    return needReturnValue ? renderResult : ''
   })
 }
 
@@ -123,8 +131,10 @@ function sandbox(target: any) {
   })
 }
 
+const innerCallToken = Symbol("yukina") // Verify inner token.
+
 class RoseliaRenderer {
-  app: any
+  app: Vue
   context: RoseliaScript
   scriptEvaluator: RoseliaScript
   toInject: any
@@ -134,7 +144,7 @@ class RoseliaRenderer {
     this.scriptEvaluator = new RoseliaScript(app)
     this.context = sandbox(selfish(this.scriptEvaluator))
   }
-  render (template) {
+  render (template: string) {
     // if (!config.enableRoseliaScript) return template
     this.scriptEvaluator.pendingFunctions = []
     try {
@@ -153,25 +163,32 @@ class RoseliaRenderer {
     return replaceTemplate(template, RoseliaRenderer.roseliaScriptDelim, _ => '')
   }
 
-  async renderAsync (template) {
+  async renderAsync (template: string) {
     return new Promise(resolve => resolve(this.render(template))).then(t => {
       // this.scriptEvaluator.injectEventsOn(this.app)
       return t
     })
   }
 
-  renderVue (template) {
+  renderVue (template: string) {
+    const rid = this.scriptEvaluator.randomID()
     const v = new Vue({
-      template: '<div id="rhodonite">' + this.render(template) + '</div>',
+      template: `<div id="${rid}">` + this.render(template) + '</div>',
       data: this.scriptEvaluator.functions,
       delimiters: ['v{{', '}}']
     })
     this.toInject = v
     // this.injectEvents()
+    Object.defineProperty(v, 'aotoInject', {
+      value: () => {
+        v.$mount(document.getElementById(rid)!)
+        v.$nextTick(() => this.injectEvents())
+      }
+    })
     return v
   }
 
-  async renderVueAsync(template) {
+  async renderVueAsync(template: string) {
     return new Promise(resolve => resolve(this.renderVue(template)))
   }
 
@@ -200,7 +217,7 @@ class RoseliaScript {
   pendingFunctions: (() => void)[]
   mounted: boolean
 
-  constructor (app) {
+  constructor (app: Vue) {
     this.app = app
     this.customFunctions = {app: null}
     this.functions = selfish(this.customFunctions)
@@ -214,7 +231,7 @@ class RoseliaScript {
     this.mounted = false
   }
 
-  then (f) {
+  then (f: () => void) {
     if (this.mounted) this.app.$nextTick(f)
     else this.pendingFunctions.push(f)
   }
@@ -226,13 +243,13 @@ class RoseliaScript {
     this.mounted = true
   }
 
-  music (meta: MusicMetaObject | Array<MusicMetaObject>, autoplay = false, onPlayerReady = null) {
+  music (meta: MusicMetaObject | Array<MusicMetaObject>, autoplay = false, onPlayerReady?: (ob?: object) => void) {
     ensureAPlayer(() => this.app.$emit('aPlayerLoaded'))
     let id = this.randomID()
     let player
-    this.then(_ => {
+    this.then(() => {
       const addPlayer = () => {
-        const element = document.getElementById(id)
+        const element = document.getElementById(id)!
         player = new window.APlayer({
           container: element,
           narrow: false,
@@ -245,8 +262,8 @@ class RoseliaScript {
           audio: meta
         })
         player.on('loadstart', () => {
-          Array.from(element.getElementsByClassName('aplayer-title')).forEach((ev: HTMLElement) => {
-            ev.style.color = config.theme.secondary
+          Array.from(element.getElementsByClassName('aplayer-title')).forEach((ev: Element) => {
+            if(ev) (ev as HTMLElement).style.color = config.theme.secondary
           })
           onPlayerReady && onPlayerReady(player)
         })
@@ -273,7 +290,7 @@ class RoseliaScript {
     return `<a href="post?p=${pid}">${text}</a>`
   }
 
-  randomID (length?) {
+  randomID (length?: number) {
     return Number(Math.random().toString().substring(3, length) + Date.now()).toString(36)
   }
 
@@ -285,16 +302,25 @@ class RoseliaScript {
     this.app.$once('postUnload', fn)
   }
 
-  btn (text, onClick, externalClasses: Array<String>|String = '') {
+  extendAttributes(element: RSElementSelector, attributes: object) {
+    this.element(element).then(el => {
+      _.merge(el, attributes)
+    })
+  }
+
+  btn (text: string, onClick?: () => void, externalClasses: Array<String>|String = '', externalAttributes?: object) {
     const id = this.randomID()
     if (externalClasses instanceof Array) externalClasses = externalClasses.join(' ')
     onClick && this.then(() => {
-      document.getElementById(id).addEventListener('click', onClick)
+      document.getElementById(id)!.addEventListener('click', onClick)
     })
+    if (externalAttributes) {
+      this.extendAttributes(id, externalAttributes)
+    }
     return new RenderResult(`<button id="${id}" class="v-btn ${externalClasses}">${text}</button>`, id)
   }
 
-  toast (text, color) {
+  toast (text: string, color: string) {
     this.app.showToast(text, color || 'info')
   }
 
@@ -316,7 +342,7 @@ class RoseliaScript {
     })
   }
 
-  importJS (url, onComplete?) {
+  importJS (url: string, onComplete?: any) {
     const jsNode = document.createElement('script')
     jsNode.onload = onComplete
     jsNode.async = true
@@ -324,7 +350,7 @@ class RoseliaScript {
     document.body.appendChild(jsNode)
   }
 
-  def (name, func) {
+  def (name: string, func: any) {
     if (func instanceof RenderResult) {
       this.customFunctions[name] = func.returnValue
       return func.template
@@ -380,10 +406,15 @@ class RoseliaScript {
     })
   }
 
-  element (name) {
-    return new Promise(resolve => {
-      this.then(_ => {
-        resolve(this.getElement(name))
+  element (name: RSElementSelector): Promise<HTMLElement> {
+    return new Promise((resolve, reject) => {
+      this.then(() => {
+        const elem = this.getElement(name)
+        if(elem) {
+          resolve(elem)
+        } else {
+          reject()
+        }
       })
     })
   }
@@ -391,9 +422,7 @@ class RoseliaScript {
   createElement (type, extend?): HTMLElement {
     const el = document.createElement(type)
     el.id = this.randomID()
-    extend && this.element(el).then(e => {
-      _.assignIn(e, extend)
-    })
+    extend && this.extendAttributes(el, extend)
     return el
   }
   setPreview (el, preview: PreviewObject /* :{title, subtitle, img, color} */) {
@@ -426,7 +455,7 @@ class RoseliaScript {
     })
   }
 
-  previewed (el, preview) {
+  previewed (el, preview: PreviewObject) {
     this.setPreview(el, preview)
     return el
   }
@@ -456,7 +485,7 @@ class RoseliaScript {
         else reject()
       } else {
         const ch = this.createElement('div')
-        document.getElementById('content').appendChild(ch)
+        document.getElementById('content')!.appendChild(ch)
         summonDialog({
           onConfirm: () => {
             resolve()
@@ -467,7 +496,7 @@ class RoseliaScript {
             this.askAccess.set(type, false)
           },
           cleanUp: () => {
-            document.getElementById('content').removeChild(ch)
+            document.getElementById('content')!.removeChild(ch)
           },
           title,
           message
@@ -501,15 +530,56 @@ class RoseliaScript {
   //   return utils.fetchJSONWithSuccess(...args);
   // }
   request = {
-    get: (url, data) => {
+    get: (url: string, data?: object) => {
       return this.askForAccess('fetch', 'This post would like to fetch data', `It wants to access ${url}.`).then(() => {
-        return axios.get(url, data).then(x => x.data)
+        return axios.get(url, {
+          params: data
+        }).then(x => x.data)
       })
     }
   }
 
   nil () {
     return null
+  }
+
+  private forceChangeTheme(theme: Partial<typeof config.theme>, token: Symbol) {
+    if (token === innerCallToken) {
+      Object.assign(this.app.$vuetify.theme, theme)
+    }
+  }
+
+  currentTheme () {
+    return {
+      ...this.app.$vuetify.theme
+    }
+  }
+
+  changeTheme(theme: Partial<typeof config.theme>) {
+    this.askForAccess('theme', 'This post would like to change your theme', 'Changes will discard after refresh').then(() => {
+      this.forceChangeTheme(theme, innerCallToken)
+    })
+  }
+
+  changeThemeOnce(theme: Partial<typeof config.theme>) {
+    const oldTheme = this.currentTheme()
+    Object.assign(this.app.$vuetify.theme, theme)
+    this.onceUnload(() => {
+      this.forceChangeTheme(oldTheme, innerCallToken)
+    })
+  }
+
+  resetTheme() {
+    this.changeThemeOnce(config.theme)
+  }
+
+  saveCurrentTheme() {
+    const currentTheme = this.currentTheme()
+    this.askForAccess('theme', 'This post would like to save your current theme.', 'Changes will discard after refresh').then(() => {
+      this.onceUnload(() => {
+        this.forceChangeTheme(currentTheme, innerCallToken)
+      })
+    })
   }
 }
 

@@ -73,7 +73,7 @@ export default {
   }
 
   code, pre {
-    font-family: Consolas, "Courier New", monospace;
+    font-family: Menlo, Consolas, "Courier New", monospace;
   }
 
   pre {

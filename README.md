@@ -17,6 +17,8 @@ A single page app with slight SEO optimization.
 
 如果你需要SEO，你需要将template里面的`index_vue.html`和`post_vue.html`中的css和js文件改为正确的路径。
 
+目前正在逐步迁移到`TypeScript`，但是旧的页面不大可能重写，新的页面将会尝试 `JSX`|`TSX` 写法。
+
 ## 特点
 
 对理工选手特别友好，原生支持：
@@ -45,7 +47,7 @@ A single page app with slight SEO optimization.
 
 `getElement (el)`: 获取对应的元素
 
-`btn (text, onClick, externalClasses = '')`：插入一个按钮
+`btn (text, onClick, externalClasses = '', externalAttributes?: object)`：插入一个按钮
 
 `toast (text, color)`: 显示一个toast通知
 
@@ -55,7 +57,17 @@ A single page app with slight SEO optimization.
 
 `importJS (url, onComplete)`: 插入外置JS代码（会影响到之后的文章，慎用）
 
+`element (el: RSElementSelector): Promise<HTMLElement>`
+
 `Y`: 大名鼎鼎的Y-组合子[Y-Combinator](https://roselia.moe/blog/post?p=30)
+
+`changeThemeOnce(theme: Partial<typeof config.theme>): void` 改变主题，在切换文章时还原
+
+`changeTheme(theme: Partial<typeof config.theme>): void` 直到刷新之前，改变主题（需要征求`theme`权限）
+
+`resetTheme(): void` 重置主题（需要征求`theme`权限）
+
+`saveCurrentTheme(): void` 保存当前主题 （需要征求`theme`权限）
 
 例如：插入一首歌（会在切换文章时自动销毁）：
 ```
@@ -73,11 +85,11 @@ r{{
 
 ```
 roselia{{
-    def('player', music({...}), false, _player => {
+    def('player', music({...}, false, player => {
         console.log(player, 'is ready!')
         toast('Player is ready!')
         player.play()
-    })
+    }))
 }}
 ```
 

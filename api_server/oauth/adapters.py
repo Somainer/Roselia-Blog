@@ -5,14 +5,21 @@ from fn.monad import Option
 
 
 class GeneralAdapter:
+    adapter_name = ''
+
     def get_uri(self, *args, **kwargs):
         pass
 
     def login_payload(self, payload):
         pass
 
+    def add_user(self, username, embedding):
+        pass
+
 
 class GithubAdapter(GeneralAdapter):
+    adapter_name = 'github'
+
     def __init__(self):
         self.manager = UserManager
         self.token = TokenProcessor()
@@ -36,9 +43,12 @@ class GithubAdapter(GeneralAdapter):
         )
         return res
 
+    def add_user(self, username, code):
+        return GithubOauth.add_record(username, code)
+
 
 adapters_list = {
-    'github': GithubAdapter
+    GithubAdapter.adapter_name: GithubAdapter
 }
 
 adapters = {

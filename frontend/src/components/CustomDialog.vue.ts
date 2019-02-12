@@ -6,9 +6,9 @@ const doNothing = () => {}
 export default class Dialog extends Vue {
   dialog = true
   isConfirmed = false
-  @Prop(Function) onConfirm: () => void = doNothing
-  @Prop(Function) onReject: () => void = doNothing
-  @Prop(Function) cleanUp?: () => void
+  @Prop(Function) onConfirm
+  @Prop(Function) onReject
+  @Prop(Function) cleanUp?
   @Prop(String) title?: string
   @Prop(String) message?: string
   @Watch('dialog')

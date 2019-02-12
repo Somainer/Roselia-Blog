@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 from flask import Flask, request, send_from_directory, jsonify, render_template, redirect, url_for, abort, make_response
 from werkzeug.utils import secure_filename
@@ -13,7 +13,7 @@ import time
 import os
 from config import BLOG_INFO, BLOG_LINK, DEBUG, HOST, PORT, UPLOAD_DIR
 from ImageConverter import ImageConverter
-from middleware import verify_token, ReverseProxied, make_option_dict, to_json
+from middleware import verify_token, ReverseProxied, make_option_dict, to_json, require_argument
 from urllib.parse import quote
 
 from external_views import register_views
@@ -87,6 +87,7 @@ if DEBUG:
         response.headers['Access-Control-Allow-Methods'] = 'POST'
         response.headers['Access-Control-Allow-Headers'] = 'x-requested-with,content-type'
         return response
+
 
     @app.route('/fonts/<string:path>')
     def npm_font(path):
@@ -686,8 +687,11 @@ def rss_feed():
             title=post['title'],
             description=post['subtitle'],
             author=post['author']['nickname'],
-            link="{}post/{}".format(BLOG_LINK, post['display_id']) if post['display_id'] else '{}post?p={}'.format(post['id']),
-            guid=PyRSS2Gen.Guid("{}post/{}".format(BLOG_LINK, post['display_id']) if post['display_id'] else '{}post?p={}'.format(post['id'])),
+            link="{}post/{}".format(BLOG_LINK, post['display_id']) if post['display_id'] else '{}post?p={}'.format(
+                post['id']),
+            guid=PyRSS2Gen.Guid(
+                "{}post/{}".format(BLOG_LINK, post['display_id']) if post['display_id'] else '{}post?p={}'.format(
+                    post['id'])),
             categories=post['tags'],
             pubDate=post['created']
         ) for post in data]
@@ -918,12 +922,34 @@ def get_oauth_url(third):
     }
 
 
+@app.route('/api/oauth/bind/<string:third>/url')
+@verify_token(0)
+@to_json
+def get_oauth_bind_url(third, username, role):
+    adp = oauth_adapters.get(third)
+    if not adp:
+        return {
+            'success': False,
+            'msg': 'Adapter not found'
+        }
+    return {
+        'success': True,
+        'result': adp.get_uri() + '&redirect_uri=' + BLOG_LINK[:-1] + quote(
+            url_for('oauth_callback', username=username, third=third, type='bind')
+        )
+    }
+
+
 @app.route('/api/login/oauth/<string:third>/callback')
 def oauth_callback(third):
     adp = oauth_adapters.get(third.lower())
     code = request.args.get('code')
     base = request.args.get('base')
     redirection = request.args.get('redirect')
+    typ = request.args.get('type', '')
+
+    if typ == 'bind':
+        return redirect(url_for('oauth_bind', third=third, **request.args))
 
     def login_uri(token):
         if base:
@@ -935,6 +961,17 @@ def oauth_callback(third):
     return adp.login_payload(code).map(lambda token: redirect(login_uri(token))).get_or(
         redirect(base or url_for('seo_main'))
     )
+
+
+@app.route('/api/oauth/bind/<string:username>/<string:third>/callback')
+def oauth_bind(username, third):
+    adp = oauth_adapters.get(third.lower())
+    code = request.args.get('code')
+    if not adp or not code:
+        return redirect('/userspace/oauth-accounts')
+    adp.add_user(username, code)
+
+    return redirect('/userspace/oauth-accounts?succeed=' + third)
 
 
 def run_server():

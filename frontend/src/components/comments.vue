@@ -43,7 +43,7 @@
               v-for="item in commentList"
               :key="item.id"
               class="mb-3"
-              :color="item.color || (item.author ? 'accent' : 'grey')"
+              :color="item.color || (item.author ? 'accent' : '#bbbbbb')"
               :id="'comment-' + item.id"
             >
               <v-layout justify-space-between>
@@ -51,7 +51,7 @@
                 <v-flex xs7>
                   <v-chip
                     class="white--text ml-0"
-                    :color="item.color || (item.author ? 'secondary' : 'grey')"
+                    :color="item.color || (item.author ? 'secondary' : '#bbbbbb')"
                     label
                     small
                   >
