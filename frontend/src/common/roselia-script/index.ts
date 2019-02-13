@@ -132,6 +132,7 @@ function sandbox(target: any) {
 }
 
 const innerCallToken = Symbol("yukina") // Verify inner token.
+let savedTheme = {...config.theme}
 
 class RoseliaRenderer {
   app: Vue
@@ -558,14 +559,17 @@ class RoseliaScript {
   changeTheme(theme: Partial<typeof config.theme>) {
     this.askForAccess('theme', 'This post would like to change your theme', 'Changes will discard after refresh').then(() => {
       this.forceChangeTheme(theme, innerCallToken)
+      savedTheme = {
+        ...savedTheme,
+        ...theme
+      }
     })
   }
 
   changeThemeOnce(theme: Partial<typeof config.theme>) {
-    const oldTheme = this.currentTheme()
     Object.assign(this.app.$vuetify.theme, theme)
     this.onceUnload(() => {
-      this.forceChangeTheme(oldTheme, innerCallToken)
+      this.forceChangeTheme(savedTheme, innerCallToken)
     })
   }
 
@@ -576,6 +580,10 @@ class RoseliaScript {
   saveCurrentTheme() {
     const currentTheme = this.currentTheme()
     this.askForAccess('theme', 'This post would like to save your current theme.', 'Changes will discard after refresh').then(() => {
+      savedTheme = {
+        ...savedTheme,
+        ...currentTheme,
+      }
       this.onceUnload(() => {
         this.forceChangeTheme(currentTheme, innerCallToken)
       })

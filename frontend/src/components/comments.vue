@@ -34,78 +34,13 @@
           </v-flex>
         </v-layout>
       </v-flex>
-      <v-flex xs10 sm7 offset-sm2 ref="comments">
-        <v-timeline dense clipped>
-          <v-slide-x-transition
-          group
-          >
-            <v-timeline-item
-              v-for="item in commentList"
-              :key="item.id"
-              class="mb-3"
-              :color="item.color || (item.author ? 'accent' : '#bbbbbb')"
-              :id="'comment-' + item.id"
-            >
-              <v-layout justify-space-between>
-                
-                <v-flex xs7>
-                  <v-chip
-                    class="white--text ml-0"
-                    :color="item.color || (item.author ? 'secondary' : '#bbbbbb')"
-                    label
-                    small
-                  >
-                    {{ item.nickname || item.author.nickname }}
-                  </v-chip>
-                  <v-card
-                    class="mt-3 mx-auto"
-                    v-if="item.replyTo"
-                  >
-                    <v-card-title>
-                      <div class="title font-weight-light mb-2">@{{ getCommentNickname(getCommentOrNotFound(item.replyTo)) }}</div>
-                    </v-card-title>
-                    <v-slide-y-transition>
-                      <v-card-text class="pt-0" v-show="item.showReply">
-                        <div class="subheading font-weight-light grey--text" 
-                          v-html="getCommentOrNotFound(item.replyTo).cleanedContent || getCommentOrNotFound(item.replyTo).content"
-                        ></div>
-                      </v-card-text>
-                    </v-slide-y-transition>
-                    
-                    <v-divider class="my-2"></v-divider>
-                    <v-card-actions>
-                      <v-btn flat icon small @click="item.showReply = !item.showReply">
-                        <v-icon>keyboard_arrow_{{ item.showReply ? 'up' : 'down'}}</v-icon>
-                      </v-btn>
-                      <v-btn flat icon small @click="$vuetify.goTo('#comment-' + getCommentOrNotFound(item.replyTo).id)">
-                        <v-icon>mode_comment</v-icon>
-                      </v-btn>
-                      <v-spacer></v-spacer>
-                      <v-icon
-                        class="mr-2"
-                      >
-                        date_range
-                      </v-icon>
-                      <span class="caption grey--text font-weight-light">{{ formatDate(getCommentOrNotFound(item.replyTo).createdAt) }}</span>
-                    </v-card-actions>
-                  </v-card>
-                  <div v-html="item.content"></div>
-                  <v-btn flat icon @click="replyToComment = item.id" v-if="canAddComment">
-                    <v-icon>reply</v-icon>
-                  </v-btn>
-                </v-flex>
-                <v-flex xs5 text-xs-right>
-                  {{ formatDate(item.createdAt) }}
-                  <v-btn fab color="error" small @click="deleteComment(item.id)" v-if="canDeleteComment(item)">
-                    <v-icon>delete</v-icon>
-                  </v-btn>
-                </v-flex>
-              </v-layout>
-            </v-timeline-item>
-          </v-slide-x-transition>
-
-        </v-timeline>
-      </v-flex>
+      <recursive-comment ref="comments"
+        :comments="recursiveCommentList" 
+        :canAddComment="canAddComment"
+        :canDeleteComment="canDeleteComment"
+        @delete-comment="c => { commentToDelete.id = c; commentToDelete.show = true }"
+        @reply-comment="onReplyComment"
+      ></recursive-comment>
       <v-layout
           align-center
           column
@@ -135,6 +70,46 @@
           
       </v-layout>
     </v-container>
+
+    <v-dialog
+      v-model="commentToDelete.show"
+      max-width="500"
+      scrollable
+    >
+      <v-card>
+        <v-card-title class="headline">Are you sure?</v-card-title>
+        <v-divider></v-divider>
+        <v-card-text>
+          You are deleting this comment:
+          <br/>
+          <recursive-comment
+            :comments="commentToDeleteList" 
+            :canAddComment="false"
+            :canDeleteComment="() => false"
+          ></recursive-comment>
+        </v-card-text>
+        <v-divider></v-divider>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+
+          <v-btn
+            color="info"
+            flat="flat"
+            @click="commentToDelete.show = false"
+          >
+            No
+          </v-btn>
+
+          <v-btn
+            color="error"
+            flat="flat"
+            @click="() => {deleteComment(commentToDelete.id); commentToDelete.show = false}"
+          >
+            Yes, delete<v-icon>delete</v-icon>
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
     
   </lazy-component>
 </template>
@@ -142,10 +117,11 @@
 import {mapState, mapGetters, mapMutations} from 'vuex'
 import lazyComponent from './lazyComponent'
 import { mapToUnderline, mapToCamelCase, safeDictGet } from '@/common/helpers';
+import recursiveComment from './RecursiveComments'
 import utils from '@/common/utils';
 import M from 'materialize-css'
 export default {
-  components: {lazyComponent},
+  components: {lazyComponent, recursiveComment},
   props: ['userData', 'postData', 'toast', 'renderer'],
   name: 'blog-comment',
   data() {
@@ -161,7 +137,11 @@ export default {
       commentCount: 0,
       commentList: [],
       replyToComment: undefined,
-      hasUnsafedDraft: false
+      hasUnsafedDraft: false,
+      commentToDelete: {
+        id: 0,
+        show: false
+      }
     }
   },
   methods: {
@@ -209,6 +189,9 @@ export default {
       }).catch(err => {
         this.toast('Oops! Failed.', 'error')
       })
+    },
+    onReplyComment(cid) {
+      this.replyToComment = cid
     },
     canDeleteComment(cmt) {
       if (!this.isLoggedIn) return false
@@ -265,7 +248,8 @@ export default {
       return comment.nickname || safeDictGet('author', 'nickname')(comment)
     },
     processComments() {
-      const links = Array.from(this.$refs.comments.querySelectorAll('a')).filter(e => !!e.href)
+      const commentRef = this.$refs.comments.$el || this.$refs.comments
+      const links = Array.from(commentRef.querySelectorAll('a')).filter(e => !!e.href)
       const personalHosts = [
         'mohuety.com', 'roselia.moe', 'roselia.xyz', 'lisa.moe', 'roselia.app'
       ].map(x => new RegExp(x))
@@ -279,7 +263,7 @@ export default {
           })
         })
       })
-      const selectedImages = this.$refs.comments.querySelectorAll('img')
+      const selectedImages = commentRef.querySelectorAll('img')
       const images = Array.from(selectedImages)
       images.forEach(e => {
         e.classList.add('responsive-img')
@@ -349,6 +333,39 @@ export default {
     atToNickname() {
       const comment = this.getComment(this.replyToComment)
       return comment && this.getCommentNickname(comment)
+    },
+    recursiveCommentList() {
+      const commentDict = this.commentDict
+      const comments = this.commentList.filter(c => !c.replyTo).concat(
+        this.commentList.filter(c => c.replyTo).filter(c => !commentDict[c.replyTo]).map(c => {
+          const comment = {
+            ...this.getCommentOrNotFound(c.replyTo),
+            id: c.replyTo
+          }
+          return commentDict[c.replyTo] = comment
+        })
+      )
+      Object.entries(commentDict).forEach(([k, v]) => {
+        commentDict[k] = {
+          ...v,
+          replies: []
+        }
+      })
+      this.commentList.forEach(c => {
+        if(c.replyTo) {
+          commentDict[c.replyTo].replies.push(commentDict[c.id])
+        }
+      })
+      comments.sort((a, b) => b.id - a.id)
+      return comments.map(c => commentDict[c.id])
+    },
+    commentToDeleteList() {
+      return [
+        {
+          ...this.commentDict[this.commentToDelete.id],
+          replies: []
+        }
+      ]
     }
   },
   watch: {

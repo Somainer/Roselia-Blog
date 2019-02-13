@@ -154,6 +154,7 @@ import M from 'materialize-css'
 import RoseliaScript from '../common/roselia-script/'
 import {mapToCamelCase} from '../common/helpers'
 import BlogComments from './comments'
+import {escapeRegExp} from 'lodash'
 export default {
   components: {
     BlogDigestNav,
@@ -285,13 +286,15 @@ export default {
       })
       M.Materialbox.init(postImages)
       this.setDigest()
-      let pattern = new RegExp(`${location.host}/.*\\?p=(\\d+)`);
+      const escapedHost = escapeRegExp(location.host)
+      let patterns = [`${escapedHost}/.*\\?p=(\\d+)`, `${escapedHost}(?:/.*)?/post/([\\s\\S]*)`].map(s => new RegExp(s));
       const links = Array.from(this.$refs.content.querySelectorAll('a')).filter(e => !!e.href);
       links.filter(e => e.host === location.host).forEach(async ev => {
         let link = ev.href;
-        let matchResult = pattern.exec(link)
-        if (matchResult) {
-          let p = matchResult[1];
+        const pidMatchResult = patterns[0].exec(link)
+        const displayIdMatchResult = patterns[1].exec(link)
+        if (pidMatchResult || displayIdMatchResult) {
+          let p = (pidMatchResult || displayIdMatchResult)[1];
           const isFootNotes = ev.hash // && p === this.getPostNum()
           
           ev.addEventListener('click', e => {
@@ -305,12 +308,14 @@ export default {
             // console.log('data->', this.preview.current == p && !this.preview.loading && this.preview.cacheData || undefined)
             
             this.$router.push({
-              name: 'post',
+              name: pidMatchResult ? 'post' : 'postWithEternalLink',
               query: {
-                p
+                p: pidMatchResult ? p : undefined
               },
               params: {
-                data: this.preview.current == p && !this.preview.loading && this.preview.cacheData || undefined
+                data: (this.preview.current == p && !this.preview.loading) ? this.preview.cacheData : undefined,
+                postLink: displayIdMatchResult ? p : undefined,
+                // postCached: this.preview.current == p && !this.preview.loading
               }
             })
             
@@ -339,7 +344,7 @@ export default {
             this.preview.current = p;
             this.preview.loading = true
             this.preview.img = ''
-            utils.fetchJSON(utils.apiFor('post', p)).then(data => {
+            utils.fetchJSON(utils.apiFor(pidMatchResult ? 'post' : 'post-link', p)).then(data => {
               if(!data){
                 // this.preview.show = false
                 this.preview.loading = false
@@ -348,7 +353,7 @@ export default {
                 this.preview.img = ''
                 return
               }
-              this.preview.cacheData = data
+              this.preview.cacheData = mapToCamelCase(data)
               this.preview.loading = false
               this.preview.title = data.title
               this.preview.subtitle = data.subtitle
