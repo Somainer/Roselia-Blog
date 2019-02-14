@@ -20,3 +20,9 @@ export const mapToCamelCase = mapKeys(underlineToCamelCase)
 export const mapToUnderline = mapKeys(camelCaseToUnderline)
 
 export const safeDictGet = (...path: string[]) => (obj: object) => path.reduce((acc, attr) => typeof acc === 'undefined' ? undefined : acc[attr], obj)
+
+export const caselessEqual = (a: string, b: string) => {
+    if (a === b) return true
+    if (!a || !b) return false
+    return a.toLowerCase() === b.toLowerCase()
+}

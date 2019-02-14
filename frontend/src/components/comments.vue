@@ -40,6 +40,8 @@
         :canDeleteComment="canDeleteComment"
         @delete-comment="c => { commentToDelete.id = c; commentToDelete.show = true }"
         @reply-comment="onReplyComment"
+        :postAuthorUsername="postData.author && postData.author.username"
+        :myUsername="userData && userData.username"
       ></recursive-comment>
       <v-layout
           align-center
@@ -158,6 +160,12 @@ export default {
     formatDate(d) {
       return utils.formatDate(d)
     },
+    hightlightLanguage() {
+      if (window.hljs) {
+        window.hljs.initHighlighting.called = false
+        window.hljs.initHighlighting()
+      }
+    },
     addComment() {
       this.loading = true
       utils.fetchJSONWithSuccess(utils.apiFor('comment', 'add'), 'POST', this.addPostForm).then(d => {
@@ -269,6 +277,7 @@ export default {
         e.classList.add('responsive-img')
       })
       M.Materialbox.init(selectedImages)
+      this.hightlightLanguage()
     },
     renderScript() {
       this.commentList.filter(x => x.author).filter(x => !x.rendered).forEach(c => {

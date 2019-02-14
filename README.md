@@ -9,7 +9,7 @@ A single page app with slight SEO optimization.
 
 ### Usage:
 > * 设置 api_server/config.py && frontend/src/common/config.js
-> * cd frontend && npm run build
+> * cd frontend && yarn build
 > * RUN api_server/api_server.py
 > * Access localhost:5000
 

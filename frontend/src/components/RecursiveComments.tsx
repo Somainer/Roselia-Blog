@@ -11,6 +11,7 @@ import {
 import * as tsx from 'vue-tsx-support'
 import { VNode } from 'vue';
 import utils from '@/common/utils';
+import { caselessEqual } from '@/common/helpers';
 interface CommentBase {
   id: number
   content: string
@@ -37,7 +38,15 @@ function getNickname(rc: RoseliaComment) {
   return (rc as WithNickname).nickname || (rc as WithAutor).author.nickname
 }
 
-export default tsx.component({
+interface RecursiveCommentProps {
+  comments: RoseliaComment[]
+  canAddComment: boolean
+  canDeleteComment(i: number): boolean
+  postAuthorUsername?: string
+  myUsername?: string
+}
+
+export default tsx.componentFactoryOf<RecursiveCommentProps>().create({
   name: 'recursive-comment',
   props: {
     comments: {
@@ -50,7 +59,9 @@ export default tsx.component({
     },
     canDeleteComment: {
       type: Function
-    }
+    },
+    postAuthorUsername: String,
+    myUsername: String
   },
   render(): VNode {
     return (
@@ -62,27 +73,30 @@ export default tsx.component({
   methods: {
     renderComments(comments: RoseliaComment[]): VNode {
       return (
-        <VTimeline dense clipped>
+        <VTimeline dense>
           <VSlideXTransition group>
             {comments.map(comment => (
               <VTimelineItem
                 key={comment.id}
-                class="mb-3"
+                class="mb-3" fill-dot
                 color={
                   comment.color || ((comment as WithAutor).author ? 'accent' : '#bbbbbb')
                 }
                 id={`comment-${comment.id}`}
               >
+                {/* <VAvatar slot="icon">
+                  <VImg src={`https://www.gravatar.com/avatar/${MD5(getNickname(comment))}?d=identicon`}></VImg>
+                </VAvatar> */}
                 <VLayout justify-space-between>
                   <VFlex xs7>
-                    <VChip
-                      class="white--text ml-0"
-                      color={
-                        comment.color || ((comment as WithAutor).author ? 'secondary' : '#bbbbbb')
-                      }
-                      label
-                      small
-                    >{getNickname(comment)}</VChip>
+                    {this.infoLabel(getNickname(comment), comment.color || ((comment as WithAutor).author ? 'secondary' : '#bbbbbb'))}
+                    {this.myUsername && caselessEqual(this.getUsername(comment), this.myUsername) ? (
+                      this.infoLabel('You', 'accent', true)
+                    ) : (
+                      this.postAuthorUsername && caselessEqual(this.getUsername(comment), this.postAuthorUsername) ? (
+                        this.infoLabel('Author', 'accent', true)
+                      ) : null
+                    )}
                     <div domProps-innerHTML={comment.content}></div>
                     {this.canAddComment && (<VBtn flat icon onClick={() => this.$emit('reply-comment', comment.id)}>
                       <VIcon>reply</VIcon>
@@ -98,7 +112,11 @@ export default tsx.component({
                   </VFlex>
                 </VLayout>
                 <VFlex>
-                  {comment.replies.length ? this.renderComments(comment.replies) : null}
+                  {comment.replies.length ? (
+                  <div>
+                    {/* <span class="subheading grey--text">{comment.replies.length === 1 ? 'Reply' : 'Replies'}:</span> */}
+                    {this.renderComments(comment.replies)}
+                  </div>) : null}
                 </VFlex>
               </VTimelineItem>
             ))}
@@ -106,8 +124,13 @@ export default tsx.component({
         </VTimeline>
       )
     },
-    processComments() {
-
+    getUsername(c: RoseliaComment) {
+      return ((cmt: WithAutor) => cmt.author && cmt.author.username)(c as WithAutor)
+    },
+    infoLabel(text: string, color: string, outline: boolean = false) {
+      return (
+        <VChip small color={color} label outline={outline}>{text}</VChip>
+      )
     }
   }
 })

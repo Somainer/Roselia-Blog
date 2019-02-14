@@ -2,6 +2,7 @@ import mistune
 from pygments import highlight
 from pygments.lexers import get_lexer_by_name
 from pygments.formatters import html
+import pygments
 import re
 
 
@@ -12,7 +13,10 @@ class HighlightRenderer(mistune.Renderer):
                    mistune.escape(code)
         if lang.lower() == 'math':
             return "<p>$$ {} $$</p>".format(mistune.escape(code))
-        lexer = get_lexer_by_name(lang, stripall=True)
+        try:
+            lexer = get_lexer_by_name(lang, stripall=True)
+        except pygments.util.ClassNotFound as e:
+            return self.block_code(code, None)
         formatter = html.HtmlFormatter()
         return '\n<code>%s</code>\n' % highlight(code, lexer, formatter)
 

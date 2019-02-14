@@ -24,6 +24,7 @@
     "vue-property-decorator": "^7.0.0",
     "vue-router": "^3.0.1",
     "vue-simplemde": "^0.5.1",
+    "vue-tsx-support": "^2.2.2",
     "vue-wechat-title": "^2.0.5",
     "vuetify": "^1.3.0",
     "vuex": "^3.0.1"

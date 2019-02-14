@@ -22,7 +22,7 @@
       >
         <v-layout row wrap>
           <v-flex v-for="post in posts" xs12 sm8 offset-sm2 :key="post.id">
-            <v-card hover :to="getRoute(post)">
+            <v-card hover :to="getRoute(post)" class="roselia-post-card">
               <!-- {name: 'post', params: {p: post.id}, query: {p: post.id}} -->
               <v-img v-if="post.img"
                     :src="post.img"
@@ -264,5 +264,7 @@ export default {
 </script>
 
 <style scoped>
-
+.roselia-post-card {
+  border-radius: 25px;
+}
 </style>
