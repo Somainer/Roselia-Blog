@@ -589,6 +589,17 @@ class RoseliaScript {
       })
     })
   }
+
+  switchToColorMode(dark: boolean) {
+    this.app.$emit('forceSwitchToLight', !dark)
+    this.app.$emit('forceSwitchToDark', !!dark)
+    this.onceUnload(this.resetColorMode)
+  }
+
+  resetColorMode () {
+    this.app.$emit('forceSwitchToLight', false)
+    this.app.$emit('forceSwitchToDark', false)
+  }
 }
 
 export default {

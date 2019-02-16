@@ -18,6 +18,7 @@ import TokenRefresh from '../components/console/TokenRefresh'
 import Timeline from '../components/BlogTimeline'
 import SetNickname from '../components/console/SetNickname'
 import OAuthAccounts from  '../components/console/OauthBind'
+import TwoStepAuth from '../components/console/TwoStepAuth'
 
 Vue.use(Router)
 
@@ -104,6 +105,11 @@ export default new Router({
           path: 'oauth-accounts',
           name: 'oauthAccounts',
           component: OAuthAccounts
+        },
+        {
+          path: '2-step-auth',
+          name: 'twoStepAuth',
+          component: TwoStepAuth
         },
         {
           path: '/',

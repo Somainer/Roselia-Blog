@@ -1,6 +1,6 @@
 {
   "name": "roselia-blog",
-  "version": "3.1.0",
+  "version": "3.2.0",
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve",
@@ -8,6 +8,7 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
+    "@chenfengyuan/vue-qrcode": "^1.0.0",
     "axios": "^0.18.0",
     "github-markdown-css": "^2.10.0",
     "highlight.js": "^9.13.1",

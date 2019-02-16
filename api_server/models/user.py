@@ -12,6 +12,7 @@ class User(database.Model):
     role = db.Column(db.Integer, nullable=False)
     mail = db.Column(db.String(64), unique=True)
     avatar = db.Column(db.String(256))
+    totp_code = db.Column(db.String(64))
 
     def __repr__(self):
         return '<User {}>'.format(self.username)
@@ -22,7 +23,10 @@ class User(database.Model):
             'id': self.user_id,
             'username': self.username,
             'role': self.role,
-            'nickname': self.nickname
+            'nickname': self.nickname,
+            'mail': self.mail,
+            'avatar': self.avatar,
+            'totp': not not self.totp_code
         }
 
     def set_password(self, password):

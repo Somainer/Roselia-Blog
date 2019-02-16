@@ -56,6 +56,17 @@
                   </v-layout>
                 </v-container>
               </v-window-item>
+              <v-window-item :value="3">
+                <v-container>
+                  <v-layout align-center justify-center>
+                    <div>
+                      <h6>One more step</h6>
+                      <v-text-field v-model="authLoginCode" @keyup.enter="login"></v-text-field>
+                      <v-btn color="primary" @click.native="forceStep = null" small round>Give Up</v-btn>
+                    </div>
+                  </v-layout>
+                </v-container>
+              </v-window-item>
             </v-window>
             
             
@@ -120,7 +131,9 @@ export default {
     oauthLogin: {
       loading: false,
       adapters: []
-    }
+    },
+    authLoginCode: '',
+    forceStep: 0
   }),
   props: {
     source: String
@@ -132,9 +145,19 @@ export default {
       this.loading = true
       utils.fetchJSON(utils.apiFor('login'), 'POST', {
         username: this.username,
-        password: this.password
+        password: this.password,
+        code: this.authLoginCode
       }, false).then(data => {
-        if (!data.success) return Promise.reject(data.msg)
+        if (!data.success) {
+          if (data.totp) {
+            this.forceStep = 3
+            if(!this.authLoginCode) return Promise.reject({
+              msg: 'Please enter two step authentication code',
+              color: 'info'
+            })
+          }
+          return Promise.reject(data.msg)
+        }
         this.setLoginData({
           username: this.username,
           token: data.token,
@@ -143,7 +166,9 @@ export default {
         }).then(() => this.redirectBack())
         
       }).catch(reason => {
-        this.showToast(reason, 'error')
+        if(reason.color) {
+          this.showToast(reason.msg, reason.color)
+        } else this.showToast(reason, 'error')
         this.loading = false
       })
     },
@@ -279,6 +304,7 @@ export default {
       return this.oauthLogin.adapters.length > 0
     },
     currentLayer () {
+      if (this.forceStep) return this.forceStep
       const state = (!!this.loading << 1) | !!this.loginCode
       return (state & 1) || (state & 2)
     }

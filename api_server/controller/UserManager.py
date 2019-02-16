@@ -5,6 +5,7 @@ from fn.monad import Option
 from operator import *
 from sqlalchemy.sql import operators as sql_ops
 from sqlalchemy.sql import functions as sql_funcs
+import pyotp
 
 
 class UserManager:
@@ -93,6 +94,56 @@ class UserManager:
         return True, user.username, user.role
 
     @classmethod
+    def get_user_dict(cls, username):
+        return cls.find_user_option(username).map(attrgetter('dict')).get_or(None)
+
+    @classmethod
     def is_empty(cls):
         return User.query.count() == 0
 
+    @classmethod
+    @db_mutation_cleanup
+    def bind_totp(cls, username):
+        def do_bind(user):
+            code = pyotp.random_base32()
+            user.totp_code = code
+            db.session.commit()
+            totp = pyotp.TOTP(code)
+            return {
+                'code': code,
+                'url': totp.provisioning_uri(user.username, 'Roselia Blog'),
+                'nextCode': totp.now()
+            }
+
+        return cls.find_user_option(username)\
+            .filter(lambda user: not user.totp_code)\
+            .map(do_bind)\
+            .get_or(None)
+
+    @classmethod
+    def check_totp(cls, username, code):
+        return cls.find_user_option(username)\
+            .map(lambda user: user.totp_code)\
+            .filter(truth)\
+            .map(pyotp.TOTP)\
+            .map(methodcaller('verify', code))\
+            .get_or(True)
+
+    @classmethod
+    @db_mutation_cleanup
+    def remove_totp(cls, username, code):
+        if not cls.check_totp(username, code):
+            return False
+
+        def do_remove(user):
+            user.totp_code = None
+            db.session.commit()
+
+        cls.find_user_option(username).map(do_remove)
+        return True
+
+    @classmethod
+    def has_totp(cls, username):
+        return not cls.find_user_option(username)\
+            .filter(lambda u: u.totp_code)\
+            .empty

@@ -126,6 +126,7 @@ export default {
         { heading: 'My account' },
         { icon: 'account_box', text: 'Change Nickname', to: {name: 'setNickname'}},
         { icon: 'account_box', text: 'OAuth accounts', to: {name: 'oauthAccounts'}, cond: false},
+        { icon: 'lock', text: 'Two step auth', to: {name: 'twoStepAuth'} },
         { divider: true },
         { heading: 'Management' },
         { icon: 'lock', text: 'Change password', to: {name: 'changePassword'} },

@@ -11,7 +11,7 @@ import {
 import * as tsx from 'vue-tsx-support'
 import { VNode } from 'vue';
 import utils from '@/common/utils';
-import { caselessEqual } from '@/common/helpers';
+import { caselessEqual, selectByLuminance } from '@/common/helpers';
 interface CommentBase {
   id: number
   content: string
@@ -128,8 +128,12 @@ export default tsx.componentFactoryOf<RecursiveCommentProps>().create({
       return ((cmt: WithAutor) => cmt.author && cmt.author.username)(c as WithAutor)
     },
     infoLabel(text: string, color: string, outline: boolean = false) {
+      const calculatingColor = (this as any).$vuetify.theme[color] || color
       return (
-        <VChip small color={color} label outline={outline}>{text}</VChip>
+        <VChip small color={color} label outline={outline} class={{
+          'ml-0': true,
+          'white--text': !outline && selectByLuminance(calculatingColor, false, true, true)
+        }}>{text}</VChip>
       )
     }
   }

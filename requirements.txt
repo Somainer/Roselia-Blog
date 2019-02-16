@@ -12,3 +12,4 @@ fn
 requests
 pymonad
 Flask-SQLAlchemy
+pyotp

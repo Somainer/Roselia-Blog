@@ -4,7 +4,7 @@
     <v-app :dark="isNight">
       <v-content>
         <v-slide-x-transition hide-on-leave>
-          <router-view @forceSwitchToLight="switchToLight"></router-view>
+          <router-view @forceSwitchToLight="switchToLight" @forceSwitchToDark="switchToDark"></router-view>
         </v-slide-x-transition>
 
       </v-content>
@@ -48,11 +48,15 @@ export default {
   methods: {
     switchToLight(ev) {
       this.forceLight = !!ev
+    },
+    switchToDark(ev) {
+      this.forceDark = ! ev
     }
   },
   data(){
     return {
       forceLight: false,
+      forceDark: false,
       forceTitle: ''
     }
   },
@@ -60,7 +64,7 @@ export default {
     isNight () {
       let hour = (new Date()).getHours()
       let morning = (hour > 6 && hour < 18)
-      return !(this.forceLight || morning)
+      return this.forceDark || !(this.forceLight || morning)
     }
   }
 }

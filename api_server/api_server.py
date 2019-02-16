@@ -528,6 +528,15 @@ def login():
         return {
             'success': False, 'msg': 'Wrong Username or Password'
         }
+    need_two_factor = acm.has_totp(username)
+    if need_two_factor:
+        login_code = form.get('code')
+        if not login_code or not acm.check_totp(username, login_code):
+            return {
+                'success': False,
+                'msg': '{} two step auth.'.format('Wrong' if login_code else 'Missing'),
+                'totp': True
+            }
     log.v("User logged in successfully!", username=username, role=code)
     return {
         'success': True, 'token': token_processor.iss_token(username, code)[1]['token'],

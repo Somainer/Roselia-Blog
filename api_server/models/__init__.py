@@ -23,6 +23,10 @@ class DBModelInjector:
         with self.app.app_context():
             self.db.create_all()
 
+    def context(self):
+        return self.app.app_context()
+
+
     @property
     def Model(self):
         return self.db.Model
