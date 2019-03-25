@@ -99,6 +99,7 @@ class PostManager:
             'secret': secret,
             'catalogs': catalogs,
             'md_content': post.get('md_content', ''),
+            'hidden': post.get('hidden', False),
             'enable_comment': post.get('enable_comment', True)
         }
         insert_post = Post(**cnv_dict)
@@ -132,10 +133,17 @@ class PostManager:
 
         return True
 
-    def filter_post(self, level=0, tag=None, catalog=None):
+    def filter_post(self, level=0, tag=None, catalog=None, user=None):
         query = Post.query \
-            .filter(Post.secret <= level) \
-            .filter(~Post.hidden)
+            .filter(Post.secret <= level)
+
+        if isinstance(user, (str, int)):
+            user = UserManager.find_user(user)
+
+        if user:
+            query = query.filter(Post.owner == User.user_id).filter((~Post.hidden) | (Post.owner == user.user_id) | (User.role < user.role))
+        else:
+            query = query.filter(~Post.hidden)
 
         if tag:
             tag = self.find_tag(tag)
@@ -157,12 +165,12 @@ class PostManager:
 
         return query
 
-    def get_posts(self, offset, count=None, level=0, tag=None, catalog=None):
+    def get_posts(self, offset, count=None, level=0, tag=None, catalog=None, user=None):
         if count is None:
             count = offset
             offset = 0
 
-        query = self.filter_post(level, tag, catalog)
+        query = self.filter_post(level, tag, catalog, user)
         return [x.brief_dict
                 for x in query
                     .order_by(Post.post_id.desc())

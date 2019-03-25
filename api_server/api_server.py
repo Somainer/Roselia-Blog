@@ -493,9 +493,10 @@ def all_post():
     tag = request.args.get('tag')
     catalog = request.args.get('catalog')
     offset = (page - 1) * limit
-    total = ppl.filter_post(level, tag, catalog).count()
+    username = data.get('username')
+    total = ppl.filter_post(level, tag, catalog, username).count()
     pages = total // limit + (total % limit > 0)
-    posts = ppl.get_posts(offset, limit, level, tag, catalog)
+    posts = ppl.get_posts(offset, limit, level, tag, catalog, username)
     return {
         'data': posts, 'total': total, 'pages': pages, 'valid': logged_in
     }
@@ -696,8 +697,8 @@ def rss_feed():
             title=post['title'],
             description=post['subtitle'],
             author=post['author']['nickname'],
-            link="{}post/{}".format(BLOG_LINK, post['display_id']) if post['display_id'] else '{}post?p={}'.format(
-                post['id']),
+            link=quote("{}post/{}".format(BLOG_LINK, post['display_id']) if post['display_id'] else '{}post?p={}'.format(
+                post['id'])),
             guid=PyRSS2Gen.Guid(
                 "{}post/{}".format(BLOG_LINK, post['display_id']) if post['display_id'] else '{}post?p={}'.format(
                     post['id'])),

@@ -9,16 +9,15 @@ import re
 class HighlightRenderer(mistune.Renderer):
     def block_code(self, code, lang):
         if not lang:
-            return '\n<pre><code>%s</code></pre>\n' % \
-                   mistune.escape(code)
+            return super().block_code(code, lang)
         if lang.lower() == 'math':
             return "<p>$$ {} $$</p>".format(mistune.escape(code))
         try:
             lexer = get_lexer_by_name(lang, stripall=True)
+            formatter = html.HtmlFormatter()
+            return '\n<code>%s</code>\n' % highlight(code, lexer, formatter)
         except pygments.util.ClassNotFound as e:
-            return self.block_code(code, None)
-        formatter = html.HtmlFormatter()
-        return '\n<code>%s</code>\n' % highlight(code, lexer, formatter)
+            return super().block_code(code, lang)
 
 
 class RoseliaRenderer(HighlightRenderer):

@@ -41,6 +41,12 @@
                         </v-avatar>
                         Secret
                       </v-chip>
+                      <v-chip v-if="post.hidden" color="grey" text-color="white">
+                        <v-avatar>
+                          <v-icon>visibility_off</v-icon>
+                        </v-avatar>
+                        Hidden
+                      </v-chip>
                     </v-flex>
                   </v-layout>
                 </v-container>
@@ -55,6 +61,23 @@
                 <v-spacer></v-spacer>
                 <span class="right">{{formatDate(post.created) || post.date}}</span>
               </v-card-title>
+              <v-flex xs12 align-end flexbox v-if="!post.img">
+                <router-link v-for="tag in post.tags" :to="{name: 'index', params: {tag: tag}, query: {tag: tag}}" :key="tag">
+                  <v-chip>{{tag}}</v-chip>
+                </router-link>
+                <v-chip v-if="post.secret" color="success" text-color="white">
+                  <v-avatar>
+                    <v-icon>lock</v-icon>{{post.secret}}
+                  </v-avatar>
+                  Secret
+                </v-chip>
+                <v-chip v-if="post.hidden" color="grey" text-color="white">
+                  <v-avatar>
+                    <v-icon>visibility_off</v-icon>
+                  </v-avatar>
+                  Hidden
+                </v-chip>
+              </v-flex>
               <v-card-title>
                 <span class="grey--text">{{post.author.nickname}}</span>
               </v-card-title>
