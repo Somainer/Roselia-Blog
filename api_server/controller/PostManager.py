@@ -30,22 +30,39 @@ class PostManager:
             post['content'] = md
         return post
 
-    def get_prev(self, pid, level=0):
+    def get_prev(self, pid, level=0, user=None):
         data = Post.query \
-            .filter(sql_ops.and_(Post.post_id < pid, Post.secret <= level)) \
-            .filter(~Post.hidden) \
+            .filter(sql_ops.and_(Post.post_id < pid, Post.secret <= level))
+        
+        if isinstance(user, (str, int)):
+            user = UserManager.find_user(user)
+
+        if user:
+            data = data.filter(Post.owner == User.user_id).filter((~Post.hidden) | (Post.owner == user.user_id) | (User.role < user.role))
+        else:
+            data = data.filter(~Post.hidden)
+
+        data = data \
             .order_by(Post.post_id.desc()).limit(1).first()
 
         if not data:
             return -1
         return data.post_id
 
-    def get_next(self, pid, level=0):
+    def get_next(self, pid, level=0, user=None):
         data = Post.query \
-            .filter(sql_ops.and_(Post.post_id > pid, Post.secret <= level)) \
-            .filter(~Post.hidden) \
-            .order_by(Post.post_id.asc()).limit(1).first()
+            .filter(sql_ops.and_(Post.post_id > pid, Post.secret <= level))
+        
+        if isinstance(user, (str, int)):
+            user = UserManager.find_user(user)
 
+        if user:
+            data = data.filter(Post.owner == User.user_id).filter((~Post.hidden) | (Post.owner == user.user_id) | (User.role < user.role))
+        else:
+            data = data.filter(~Post.hidden)
+
+        data = data \
+            .order_by(Post.post_id.asc()).limit(1).first()
         if not data:
             return -1
         return data.post_id

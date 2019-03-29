@@ -61,7 +61,7 @@ def remove_two_factor(username, role, code):
     }
 
 
-@route('change-role', methods=['POST'])
+@route('/change-role', methods=['POST'])
 @to_json
 @require_argument(['token', 'username', 'role'], is_post=True)
 def change_role(username, token, role):

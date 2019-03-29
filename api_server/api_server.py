@@ -99,7 +99,7 @@ if DEBUG:
         return response
 
 static_urls = [
-    'login', 'userspace', 'me', 'edit', 'add', 'hello', 'timeline'
+    'login', 'userspace', 'me', 'edit', 'add', 'hello', 'timeline', 'post/shared/<string:sid>'
 ]
 
 if DEBUG:
@@ -184,7 +184,8 @@ def getpostpage(p=None):
         p = post['id']
     level = logged_in + data['role']
     if post and level >= post['secret']:
-        post_data = dict(post, prev=ppl.get_prev(p, level), next=ppl.get_next(p, level))
+        username = data.get('username')
+        post_data = dict(post, prev=ppl.get_prev(p, level, username), next=ppl.get_next(p, level, username))
     else:
         post_data = {
             'title': 'Page Not Found',
@@ -275,7 +276,8 @@ def seo_post(p):
     post = ppl.find_post(p)
     level = logged_in + data['role']
     if post and level >= post['secret']:
-        post_data = dict(post, prev=ppl.get_prev(p, level), next=ppl.get_next(p, level))
+        username = data.get('username')
+        post_data = dict(post, prev=ppl.get_prev(p, level, username), next=ppl.get_next(p, level, username))
     else:
         post_data = {
             'title': 'Page Not Found',
@@ -468,8 +470,9 @@ def get_post(p):
     need_markdown = json.loads(request.args.get('markdown', "false").lower())
     post = ppl.find_post(p, need_markdown)
     level = logged_in + data['role']
+    username = data.get('username')
     if post:
-        return dict(post, prev=ppl.get_prev(post['id'], level), next=ppl.get_next(post['id'], level)) if level >= post['secret'] else None
+        return dict(post, prev=ppl.get_prev(post['id'], level, username), next=ppl.get_next(post['id'], level, username)) if level >= post['secret'] else None
     return None
 
 

@@ -55,6 +55,11 @@ export default new Router({
       component: BlogPost,
       children: [
         {
+          path: 'shared/:shareId',
+          name: 'sharedPost',
+          component: BlogPost
+        },
+        {
           path: ':postLink',
           name: 'postWithEternalLink',
           component: BlogPost

@@ -49,13 +49,18 @@
             <v-btn v-if="cachedData" color="secondary" fab small @click="$router.go(-1)">
               <v-icon>arrow_back</v-icon>
             </v-btn>
-            <v-layout v-if="postData.id !== 'preview' && postData.id !== -1 && isEditable">
+            <v-layout>
               <v-spacer></v-spacer>
-              <v-btn color="error" fab small :to="{name: 'edit', params: {deletePost: true, title: postData.title}, query: {post: postData.id}}">
-                <v-icon>delete</v-icon>
-              </v-btn>
-              <v-btn color="primary" fab small :to="{name: 'edit', query: {post: postData.id}}">
-                <v-icon>mode_edit</v-icon>
+              <div v-if="postData.id !== 'preview' && postData.id !== -1 && isEditable">
+                <v-btn color="error" fab small :to="{name: 'edit', params: {deletePost: true, title: postData.title}, query: {post: postData.id}}">
+                  <v-icon>delete</v-icon>
+                </v-btn>
+                <v-btn color="primary" fab small :to="{name: 'edit', query: {post: postData.id}}">
+                  <v-icon>mode_edit</v-icon>
+                </v-btn>
+              </div>
+              <v-btn fab small color="secondary" @click="sharePost" v-if="isPostFound && !isShared">
+                <v-icon>share</v-icon>
               </v-btn>
             </v-layout>
           </v-flex>
@@ -144,6 +149,44 @@
 
     <toast v-bind="toast" @showChange="changeToast"></toast>
     <blog-footer></blog-footer>
+    <v-dialog
+      v-model="share.open"
+      width="500"
+    >
+
+      <v-card>
+        <v-card-title
+          class="headline primary"
+          primary-title
+        >
+          Share {{ postData.title }}
+        </v-card-title>
+
+        <v-card-text>
+          <v-text-field
+            label="Address"
+            outline
+            :value="sharePath"
+            readonly
+          ></v-text-field>
+          <a :href="sharePath">Shared_{{ postData.title }}</a> &lt;- Right click and copy link.
+          <p>This post will be visible regardless of the user privileges.</p>
+        </v-card-text>
+
+        <v-divider></v-divider>
+
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn
+            color="accent"
+            flat
+            @click="share.open = false"
+          >
+            Done
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
 
   </div>
 </template>
@@ -199,7 +242,11 @@ export default {
     cachedData: false,
     renderer: null,
     toast: utils.getToastOption(),
-    rsRendered: false
+    rsRendered: false,
+    share: {
+      open: false,
+      shareId: ''
+    }
   }),
   methods: {
     showToast: utils.showToast,
@@ -245,7 +292,7 @@ export default {
       // this.$nextTick(_ => {
       //   this.afterContentMounted()
       // })
-      if(this.$route.query.p && this.postData.displayId) {
+      if(this.$route.query.p && this.postData.displayId && !this.isShared) {
         this.$router.replace({
           name: 'postWithEternalLink',
           params: {
@@ -419,6 +466,26 @@ export default {
           element: e
         }
       })
+    },
+    getPostByShared(sid) {
+      utils.fetchJSON(utils.apiFor('post', 'get-shared', sid)).then(data => {
+        if (!data) return Promise.reject('')
+        this.postData = {...this.notFoundData(), ...mapToCamelCase(data)}
+        this.processContent()
+      }).catch(_ => {
+        this.postData = this.notFoundData()
+      })
+    },
+    sharePost() {
+      this.share.shareId = ''
+      if (this.postData.secret) {
+        utils.fetchJSONWithSuccess(utils.apiFor('post', 'share'), 'post', {
+          pid: this.postData.id
+        }).then(sid => {
+          this.share.shareId = sid
+        })
+      }
+      this.share.open = true
     }
   },
   computed: {
@@ -437,11 +504,27 @@ export default {
     },
     isPostFound() {
       return this.postData.id > 0
+    },
+    isShared() {
+      return !!this.$route.params.shareId
+    },
+    sharePath() {
+      if (!this.postData.secret || !this.share.shareId) return location.href
+      const path = this.$router.resolve({
+        name: 'sharedPost',
+        params: {
+          shareId: this.share.shareId
+        }
+      }).href
+      const a = document.createElement('a')
+      a.href = path
+      return a.href
     }
   },
   mounted () {
     this.renderer = RoseliaScript.createRenderer(this)
-    this.loadContent()
+    if(this.$route.params.shareId) this.getPostByShared(this.$route.params.shareId)
+    else this.loadContent()
     window.addEventListener('storage', e => {
       if (e.key === 'loginData') {
         this.userData = utils.getLoginData()

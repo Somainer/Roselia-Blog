@@ -101,14 +101,14 @@ export default tsx.componentFactoryOf<RecursiveCommentProps>().create({
                     {this.canAddComment && (<VBtn flat icon onClick={() => this.$emit('reply-comment', comment.id)}>
                       <VIcon>reply</VIcon>
                     </VBtn>)}
-                  </VFlex>
-                  <VFlex xs5 text-xs-right>
-                    {utils.formatDate(comment.createdAt)}
-                    {this.canDeleteComment(comment.id) ? (<VBtn fab color="error" small onClick={
+                    {this.canDeleteComment(comment.id) ? (<VBtn flat icon color="error" small onClick={
                       () => this.$emit('delete-comment', comment.id)
                     }>
                       <VIcon>delete</VIcon>
                     </VBtn>) : null}
+                  </VFlex>
+                  <VFlex xs5 text-xs-right>
+                    {utils.formatDate(comment.createdAt)}
                   </VFlex>
                 </VLayout>
                 <VFlex>
