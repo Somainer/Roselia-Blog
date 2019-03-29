@@ -12,15 +12,22 @@
       <v-progress-linear slot="progress" color="blue" indeterminate></v-progress-linear>
       <template slot="items" slot-scope="props">
         <td>{{ props.item.username }}</td>
-        <td class="text-xs-right">{{ props.item.role }}</td>
         <td class="text-xs-right">
-          <v-btn small color="secondary" @click="setPasswordForm(props.item.username)">
+          <v-btn flat icon small :disabled="props.item.role <= 0" @click="shiftRole(props.item, -1)">-</v-btn>
+          {{ props.item.role }}
+          <v-btn flat icon small :disabled="props.item.role + 1 >= userData.role" @click="shiftRole(props.item, 1)">+</v-btn>
+        </td>
+        <td class="text-xs-right">
+          <v-btn icon flat color="secondary" @click="setPasswordForm(props.item.username)">
             <v-icon>edit</v-icon>
           </v-btn>
-          <v-btn small color="error" @click="deleteUserForm(props.item.username)">
+          <v-btn icon flat color="error" @click="deleteUserForm(props.item.username)">
             <v-icon>delete</v-icon>
           </v-btn>
         </td>
+      </template>
+      <template v-slot:no-data>
+        <div>I am sorry to announce that you can manage nobody. :(</div>
       </template>
     </v-data-table>
     <v-layout row justify-center>
@@ -277,6 +284,22 @@ export default {
         this.toast(reason, 'error')
       }).finally(_ => {
         this.loading = false
+      })
+    },
+    shiftRole(user, shiftCount) {
+      const role = user.role + shiftCount
+      this.loading = true
+      utils.fetchJSONWithSuccess(utils.apiFor('user', 'change-role'), 'POST', {
+        username: user.username,
+        role,
+        token: this.suToken
+      }, false, false).then(() => {
+        user.role = role
+        this.loading = false
+        this.toast('It feels good to change privileges, right?', 'success')
+      }).catch(err => {
+        this.loading = false
+        this.toast('There must be something wrong', 'error')
       })
     }
   },

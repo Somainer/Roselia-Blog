@@ -415,7 +415,7 @@ export default {
         e.id = e.id || `section-${idx}`
         return {
           hash: e.id,
-          title: e.innerHTML,
+          title: e.innerText,
           element: e
         }
       })

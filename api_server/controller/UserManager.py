@@ -147,3 +147,18 @@ class UserManager:
         return not cls.find_user_option(username)\
             .filter(lambda u: u.totp_code)\
             .empty
+    
+    @classmethod
+    @db_mutation_cleanup
+    def change_role(cls, username, role, by_role):
+        if by_role <= role or role < 0:
+            return False
+        user = cls.find_user_option(username)\
+            .filter(lambda u: u.role < by_role).get_or(None)
+        
+        if not user:
+            return False
+        
+        user.role = role
+        db.session.commit()
+        return True

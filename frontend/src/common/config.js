@@ -1,5 +1,5 @@
 let BLOG_TITLE = 'Roselia-Blog'
-// let BLOG_TITLE = 'Mohuety'
+// let BLOG_TITLE = "Somainer's Blog"
 let BLOG_MOTTO = 'Do what you want to do, be who you want to be.'
 const apiBase = '/api'
 // const apiBase = 'http://localhost:5000/api'
