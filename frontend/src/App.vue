@@ -1,6 +1,7 @@
 <template>
   <div id="app">
     <div v-wechat-title="$route.meta.title"></div>
+    <theme-listener v-model="preferedLight"></theme-listener>
     <v-app :dark="isNight">
       <v-content>
         <v-slide-x-transition hide-on-leave>
@@ -16,9 +17,12 @@
 </template>
 
 <script>
-
+import ThemeListener from './plugin/ThemeListener'
 export default {
   name: 'App',
+  components: {
+    'theme-listener': ThemeListener
+  },
   mounted () {
     //  [App.vue specific] When App.vue is finish loading finish the progress bar
     this.$Progress.finish()
@@ -57,7 +61,8 @@ export default {
     return {
       forceLight: false,
       forceDark: false,
-      forceTitle: ''
+      forceTitle: '',
+      preferedLight: undefined
     }
   },
   computed: {
@@ -65,6 +70,17 @@ export default {
       let hour = (new Date()).getHours()
       let morning = (hour > 6 && hour < 18)
       return this.forceDark || !(this.forceLight || morning)
+    }
+  },
+  watch: {
+    preferedLight(val) {
+      if(typeof val !== 'undefined') {
+        const isDark = !val
+        this.forceLight = !isDark
+        this.forceDark = isDark
+      } else {
+        this.forceLight = this.forceDark = false
+      }
     }
   }
 }
