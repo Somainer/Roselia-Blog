@@ -54,7 +54,7 @@ export default {
       this.forceLight = !!ev
     },
     switchToDark(ev) {
-      this.forceDark = ! ev
+      this.forceDark = !!ev
     }
   },
   data(){

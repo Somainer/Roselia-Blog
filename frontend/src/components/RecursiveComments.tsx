@@ -130,7 +130,7 @@ export default tsx.componentFactoryOf<RecursiveCommentProps>().create({
     infoLabel(text: string, color: string, outline: boolean = false) {
       const calculatingColor = (this as any).$vuetify.theme[color] || color
       return (
-        <VChip small color={color} label outline={outline} class={{
+        <VChip small color={color} outline={outline} class={{
           'ml-0': true,
           'white--text': !outline && selectByLuminance(calculatingColor, false, true, true)
         }}>{text}</VChip>

@@ -45,7 +45,8 @@
                 Secret
               </v-chip>
             </span>
-            <div class="py-3">
+            <div class="py-3"
+            :class="{scale: post.clicked, 'scale-finished': post.clicked === 1}">
               <!-- <h2 class="headline font-weight-light mb-3 primary--text">{{post.title}}</h2>
               <div>
                 {{post.subtitle}}
@@ -61,8 +62,9 @@
                   <v-btn
                     class="mx-0"
                     outline
+                    round
                     color="secondary"
-                    :to="{name: 'post', query: {p: post.id}}"
+                    @click="manuallyLoadPost(post)"
                   >
                     <v-icon>unfold_more</v-icon>
                   </v-btn>
@@ -99,6 +101,7 @@
 </template>
 <script>
 import utils from "../common/utils";
+import {mapToCamelCase} from '../common/helpers';
 export default {
   data() {
     return {
@@ -120,7 +123,8 @@ export default {
       utils.fetchJSON(utils.apiFor("posts"), "GET", fetchData).then(data => {
         const postData = data.data.map(d => ({
           ...d,
-          datetime: new Date(d.created)
+          datetime: new Date(d.created),
+          clicked: false
         }))
         this.postData = append ? this.postData.concat(postData) : postData;
         this.totalPages = parseInt(data.pages);
@@ -129,6 +133,32 @@ export default {
         console.error(err)
         this.loading = false
       });
+    },
+    manuallyLoadPost(post) {
+      post.clicked = true
+      utils.fetchJSON(utils.apiFor('post', post.id)).then(data => {
+        if (!data) return Promise.reject(ReferenceError('NPE'))
+        const postData = mapToCamelCase(data)
+        post.clicked = 1
+        this.$router.push({
+          name: 'post',
+          params: {
+            changeRoute: true,
+            data: postData
+          },
+          query: {
+            p: post.id
+          }
+        })
+      }).catch(_ => {
+        post.clicked = 1
+        this.$router.push({
+          name: 'post',
+          query: {
+            p: post.id
+          }
+        })
+      })
     },
     loadNextPage() {
       if (this.currentPage >= this.totalPages) return
@@ -152,3 +182,20 @@ export default {
   }
 };
 </script>
+<style scoped>
+@keyframes scale-anime {
+  from {
+    transform: scale(1);
+  }
+  
+  to {
+    transform: scale(10);
+  }
+}
+.scale {
+  animation: scale-anime 1s ease-in-out forwards;
+}
+.scale-finished {
+  transform: scale(10);
+}
+</style>

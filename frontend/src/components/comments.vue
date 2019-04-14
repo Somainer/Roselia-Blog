@@ -28,7 +28,7 @@
           </v-flex>
           <v-spacer></v-spacer>
           <v-flex xs2>
-            <v-btn color="primary" :disabled="!this.isValid" :loading="loading" @click="addComment">
+            <v-btn color="primary" :disabled="!this.isValid" :loading="loading" @click="addComment" round>
               <v-icon>send</v-icon>
             </v-btn>
           </v-flex>
@@ -51,7 +51,6 @@
         <v-chip
           class="white--text ml-0 center-align"
           color="secondary"
-          label
           small
           @click="$vuetify.goTo($refs.commentText)"
         >

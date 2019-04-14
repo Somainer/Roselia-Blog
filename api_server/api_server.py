@@ -700,8 +700,8 @@ def rss_feed():
             title=post['title'],
             description=post['subtitle'],
             author=post['author']['nickname'],
-            link=quote("{}post/{}".format(BLOG_LINK, post['display_id']) if post['display_id'] else '{}post?p={}'.format(
-                post['id'])),
+            link="{}post/{}".format(BLOG_LINK, quote(post['display_id'])) if post['display_id'] else '{}post?p={}'.format(
+                BLOG_LINK, post['id']),
             guid=PyRSS2Gen.Guid(
                 "{}post/{}".format(BLOG_LINK, post['display_id']) if post['display_id'] else '{}post?p={}'.format(
                     post['id'])),
@@ -810,7 +810,7 @@ def query_code(code):
 
 @app.route("/api/login/code/info/<int:code>")
 @to_json
-def getlkdfsja(code):
+def get_login_code_info(code):
     _, info = auth_login.get_code(code)
     return {
         "info": info

@@ -1,5 +1,5 @@
 <template>
-  <v-app :dark="dark">
+  <v-app>
     <blog-toolbar :userData="userData">
       <v-toolbar-side-icon dark @click.native="drawer = !drawer"></v-toolbar-side-icon>
     </blog-toolbar>
@@ -90,7 +90,6 @@
 <script>
 import BlogToolbar from './BlogToolbar'
 import utils from '../common/utils'
-import app from '../App'
 const userData = (function () {
   let loginData = utils.getLoginData();
   return () => {
@@ -110,8 +109,7 @@ export default {
         text: '',
         color: ''
       },
-      drawer: null,
-      dark: app.computed.isNight()
+      drawer: null
     }
   },
   computed: {

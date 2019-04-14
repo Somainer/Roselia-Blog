@@ -265,7 +265,7 @@ export default {
   },
   watch: {
     userData() {
-      this.getPosts()
+      if(this.pages) this.getPosts()
     },
     currentPage (page) {
       this.$router.push({

@@ -292,7 +292,7 @@ export default {
       // this.$nextTick(_ => {
       //   this.afterContentMounted()
       // })
-      if(this.$route.query.p && this.postData.displayId && !this.isShared) {
+      if(this.postData.displayId && (this.$route.params.changeRoute || (this.$route.query.p && !this.isShared))) {
         this.$router.replace({
           name: 'postWithEternalLink',
           params: {

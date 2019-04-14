@@ -590,10 +590,18 @@ class RoseliaScript {
     })
   }
 
-  switchToColorMode(dark: boolean) {
-    this.app.$emit('forceSwitchToLight', !dark)
-    this.app.$emit('forceSwitchToDark', !!dark)
-    this.onceUnload(this.resetColorMode)
+  async forceSwitchToColorMode(light: boolean, token?: symbol) {
+    if (token !== innerCallToken) {
+      await this.askForAccess('colorMode', 'This post would like to change your color scheme.', 'Changes will discard after refresh,')
+    }
+
+    this.app.$emit('forceSwitchToLight', !!light)
+    this.app.$emit('forceSwitchToDark', !light)
+  }
+
+  switchToColorMode(light: boolean) {
+    this.forceSwitchToColorMode(light, innerCallToken)
+    this.onceUnload(() => this.resetColorMode())
   }
 
   resetColorMode () {
