@@ -1,6 +1,6 @@
 <template>
   <div id="post">
-    <nav-bar :userData="userData" :route="this.$route.fullPath"></nav-bar>
+    <nav-bar :userData="userData" :route="$route.fullPath"></nav-bar>
     <v-parallax
       id="main-pic"
       dark
@@ -94,7 +94,27 @@
       </v-layout>
 
     </v-container>
-
+    <v-container v-if="postData.author" fluid>
+      <v-layout row justify-center>
+        <div v-if="postData.author.avatar">
+          <v-avatar class="elevation-7">
+            <v-img
+              :src="postData.author.avatar"
+              :alt="postData.author.username"
+            ></v-img>
+          </v-avatar>
+        </div>
+        
+        <div>
+          <router-link :to="{name: 'userTimeline', params: {username: postData.author.username}}">
+            <v-chip>
+              @{{ postData.author.username }} ({{ postData.author.nickname }})
+            </v-chip>
+          </router-link>
+        </div>
+      </v-layout>
+      
+    </v-container>
     <v-container>
       <div class="text-xs-center">
         <h4 class="subheading grey--text">Last edit at: {{formatDate(postData.lastEdit, true)}}</h4>
@@ -205,7 +225,8 @@ export default {
   },
   name: 'blog-post',
   props: {
-    p: Number
+    p: Number,
+    currentColorScheme: Boolean
   },
   data: () => ({
     postData: {

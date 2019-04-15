@@ -193,6 +193,18 @@ class PostManager:
                     .order_by(Post.post_id.desc())
                     .limit(count)
                     .offset(offset).all()]
+    
+    def get_posts_from_author(self, user, offset, count=None, level=0, by_user=None):
+        user = UserManager.find_user(user)
+        if not user:
+            return []
+        posts = self.filter_post(level, user=by_user).filter(Post.owner == user.user_id)
+        return posts.count(), [x.brief_dict
+                for x in posts
+                    .order_by(Post.post_id.desc())
+                    .limit(count)
+                    .offset(offset).all()]
+
 
     def get_all_posts(self, level=0):
         return [x.brief_dict for x in Post.query \

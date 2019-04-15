@@ -102,7 +102,7 @@ export default new Router({
           component: TokenRefresh
         },
         {
-          path: 'set-nickname',
+          path: 'account-settings',
           name: 'setNickname',
           component: SetNickname
         },
@@ -129,7 +129,14 @@ export default new Router({
       component: Timeline,
       meta: {
         title: 'Timeline'
-      }
+      },
+      children: [
+        {
+          name: 'userTimeline',
+          path: ':username',
+          component: Timeline
+        }
+      ]
     },
     {
       path: '*',

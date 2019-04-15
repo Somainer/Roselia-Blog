@@ -6,7 +6,6 @@ Vue.use(Vuex)
 export default new Vuex.Store({
   state: {
     commentDraft: {}
-
   },
   mutations: {
     setCommentDraft(state, comment: {commentId: number, comment: object}) {

@@ -1,5 +1,5 @@
 <template>
-  <v-app>
+  <v-app :dark="!currentColorScheme">
     <blog-toolbar :userData="userData">
       <v-toolbar-side-icon dark @click.native="drawer = !drawer"></v-toolbar-side-icon>
     </blog-toolbar>
@@ -84,6 +84,7 @@
       </v-container>
     </v-content>
     <toast v-bind="toast" @showChange="changeToast"></toast>
+
   </v-app>
 </template>
 
@@ -111,6 +112,9 @@ export default {
       },
       drawer: null
     }
+  },
+  props: {
+    currentColorScheme: Boolean
   },
   computed: {
     items () {

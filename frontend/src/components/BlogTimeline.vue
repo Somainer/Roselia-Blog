@@ -10,9 +10,24 @@
         column
         justify-center
       >
-        <h1 class="display-2 font-weight-regular mb-3">Timeline</h1>
-        <h2 class="subheading">
+        <div v-if="userInfo.avatar">
+          <v-avatar
+            size="128px"
+            class="elevation-7"
+          >
+            <v-img
+              :src="userInfo.avatar"
+              :alt="userInfo.username"
+            ></v-img>
+          </v-avatar>
+          <br/><br/>
+        </div>
+        <h1 class="display-2 font-weight-regular mb-3">{{ realTitle }}</h1>
+        <h2 class="subheading" v-if="userFound">
           The fate of a person, of course, depends on self-strengthening, but also on the journey of the history.
+        </h2>
+        <h2 class="subheading" v-else>
+          This guy is a mystery.
         </h2>
       </v-layout>
     </v-parallax>
@@ -34,7 +49,7 @@
               class="headline font-weight-bold"
             >
               <h4>{{ post.datetime.toLocaleDateString() }}</h4>
-              <h3 class="secondary-text">{{ post.author && post.author.nickname }}</h3>
+              <h3 class="secondary-text" v-if="!userInfo.username">{{ post.author && post.author.nickname }}</h3>
               <router-link v-for="tag in post.tags" :to="{name: 'index', params: {tag: tag}, query: {tag: tag}}" :key="tag">
                   <v-chip>{{tag}}</v-chip>
               </router-link>
@@ -46,7 +61,7 @@
               </v-chip>
             </span>
             <div class="py-3"
-            :class="{scale: post.clicked, 'scale-finished': post.clicked === 1}">
+            :class="{scale: post.clicked, 'scale-finished': post.clicked === 1, 'scale-back': post.clicked === -1}">
               <!-- <h2 class="headline font-weight-light mb-3 primary--text">{{post.title}}</h2>
               <div>
                 {{post.subtitle}}
@@ -97,6 +112,7 @@
         </v-layout>
       </v-card-text>
     </v-container>
+    <blog-footer></blog-footer>
   </div>
 </template>
 <script>
@@ -109,7 +125,15 @@ export default {
       totalPages: 1,
       userData: utils.getLoginData(),
       postData: [],
-      loading: false
+      loading: false,
+      hasLeft: false,
+      fromPost: 0,
+      userInfo: {
+        username: '',
+        avatar: '',
+        nickname: ''
+      },
+      userFound: true
     };
   },
   methods: {
@@ -120,14 +144,24 @@ export default {
         limit: 6
       };
       this.loading = true
-      utils.fetchJSON(utils.apiFor("posts"), "GET", fetchData).then(data => {
-        const postData = data.data.map(d => ({
+      utils.fetchJSON(this.userInfo.username ? utils.apiFor('post', 'user', this.userInfo.username) : utils.apiFor("posts"), "GET", fetchData).then(data => {
+        const postData = data.data.map(mapToCamelCase).map(d => ({
           ...d,
           datetime: new Date(d.created),
           clicked: false
         }))
         this.postData = append ? this.postData.concat(postData) : postData;
         this.totalPages = parseInt(data.pages);
+        if(this.fromPost) {
+          const post = this.findPostBy(this.fromPost)
+          if(post) {
+            post.clicked = -1
+            this.fromPost = 0
+            setTimeout(() => {
+              post.clicked = false
+            }, 1000)
+          }
+        }
         this.loading = false
       }).catch(err => {
         console.error(err)
@@ -143,7 +177,7 @@ export default {
         this.$router.push({
           name: 'post',
           params: {
-            changeRoute: true,
+            changeRoute: !!post.displayId,
             data: postData
           },
           query: {
@@ -163,9 +197,26 @@ export default {
     loadNextPage() {
       if (this.currentPage >= this.totalPages) return
       this.getPostData(++this.currentPage)
+    },
+    findPostBy(id) {
+      return this.postData.find(p => p.id == id || p.displayId === id)
+    },
+    getUserMeta() {
+      utils.fetchJSONWithSuccess(utils.apiFor('user', 'user-meta'), 'GET', {
+        username: this.userInfo.username
+      }).then(data => {
+        this.userInfo = mapToCamelCase(data)
+      }).catch(err => {
+        this.userFound = false
+        this.userInfo.nickname = 'John Appleseed'
+      })
     }
   },
   mounted() {
+    if(this.$route.params.username) {
+      this.userInfo.username = this.userInfo.nickname = this.$route.params.username
+      this.getUserMeta()
+    }
     this.getPostData(1, false);
     window.addEventListener("storage", e => {
       if (e.key === "loginData") {
@@ -179,6 +230,16 @@ export default {
       this.totalPages = 1;
       this.getPostData(1, false);
     }
+  },
+  computed: {
+    realTitle() {
+      return this.userInfo.nickname || this.userInfo.username || this.$route.meta.title
+    }
+  },
+  beforeRouteEnter(to, from, next) {
+    next(vm => {
+      vm.fromPost = from.query.p || from.params.postLink
+    })
   }
 };
 </script>
@@ -195,7 +256,11 @@ export default {
 .scale {
   animation: scale-anime 1s ease-in-out forwards;
 }
+.scale-back {
+  animation: scale-anime 1s ease-in-out reverse forwards;
+}
 .scale-finished {
   transform: scale(10);
 }
+
 </style>

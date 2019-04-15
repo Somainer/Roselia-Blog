@@ -9,6 +9,14 @@
   </head>
   <body>
     <div id="black-shout"></div>
-  <script type="text/javascript" src="//localhost:8080/app.js"></script>
+  <script>
+    function _injectAid() {
+      const node = document.createElement('script')
+      node.src = '//' + location.hostname + ':8080/app.js'
+      node.async = true
+      document.body.appendChild(node)
+    }
+  </script>
+  <script type="text/javascript" src="//localhost:8080/app.js" onerror="_injectAid()"></script>
 </body>
 </html>

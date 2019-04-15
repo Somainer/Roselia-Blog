@@ -1,7 +1,7 @@
 <template>
   <v-footer
     height="auto"
-    color="primary lighten-1"
+    class="oneness"
   >
     <v-layout
       justify-center
@@ -10,9 +10,8 @@
     >
 
       <v-flex
-        primary
-        lighten-2
         py-3
+        lighten-2
         text-xs-center
         white--text
         xs12
@@ -38,5 +37,7 @@ export default {
 </script>
 
 <style scoped>
-
+.oneness {
+  background: linear-gradient(45deg, var(--theme-color) 15%, var(--theme-secondary-color) 85%);
+}
 </style>

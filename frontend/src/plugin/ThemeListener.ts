@@ -26,5 +26,8 @@ export default Vue.extend({
   },
   props: {
     scheme: Boolean
+  },
+  render(h) {
+    return h('div')
   }
 })

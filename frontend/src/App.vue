@@ -5,7 +5,11 @@
     <v-app :dark="isNight">
       <v-content>
         <v-slide-x-transition hide-on-leave>
-          <router-view @forceSwitchToLight="switchToLight" @forceSwitchToDark="switchToDark"></router-view>
+          <router-view
+            @forceSwitchToLight="switchToLight"
+            @forceSwitchToDark="switchToDark"
+            :currentColorScheme="!isNight"
+          ></router-view>
         </v-slide-x-transition>
 
       </v-content>
@@ -26,6 +30,13 @@ export default {
   mounted () {
     //  [App.vue specific] When App.vue is finish loading finish the progress bar
     this.$Progress.finish()
+    this.$watch('$vuetify.theme', theme => {
+      document.body.style.setProperty('--theme-color', theme.primary)
+      document.body.style.setProperty('--theme-secondary-color', theme.secondary)
+    }, {
+      immediate: true,
+      deep: true
+    })
   },
   created () {
     //  [App.vue specific] When App.vue is first loaded start the progress bar
@@ -89,6 +100,7 @@ export default {
 <style>
   :root {
     --theme-color: #6670ed;
+    --theme-secondary-color: #890f87;
     /* --theme-color: #0288d1; */
   }
 

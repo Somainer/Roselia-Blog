@@ -99,7 +99,8 @@ if DEBUG:
         return response
 
 static_urls = [
-    'login', 'userspace', 'me', 'edit', 'add', 'hello', 'timeline', 'post/shared/<string:sid>'
+    'login', 'userspace', 'me', 'edit', 'add', 'hello', 'timeline', 'post/shared/<string:sid>',
+     'timeline/<string:p>'
 ]
 
 if DEBUG:

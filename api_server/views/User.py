@@ -73,3 +73,12 @@ def change_role(username, token, role):
     return {
         'success': success
     }
+
+@route('/change-meta', methods=['POST'])
+@to_json
+@verify_token(0, is_post=True)
+@require_argument('changes', is_post=True)
+def chang_user_info(username, role, changes):
+    return {
+        'success': UserManager.chage_user_meta(username, changes)
+    }

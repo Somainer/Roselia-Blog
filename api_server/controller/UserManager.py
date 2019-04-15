@@ -162,3 +162,19 @@ class UserManager:
         user.role = role
         db.session.commit()
         return True
+
+    @classmethod
+    @db_mutation_cleanup
+    def chage_user_meta(cls, username, info: dict):
+        changeable = ['avatar', 'nickname']
+        for k in info.keys():
+            if k not in changeable:
+                return False
+        user = cls.find_user(username)
+        if not user:
+            return False
+        for k, v in info.items():
+            setattr(user, k, v)
+        
+        db.session.commit()
+        return True

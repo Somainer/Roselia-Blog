@@ -211,7 +211,7 @@ export default {
       }
       utils.fetchJSON(utils.apiFor('posts'), 'GET', fetchData).then(data => {
         if (!data.valid && this.userData && !tried) {
-          return utils.refreshToken().then(userData => {
+          utils.refreshToken().then(userData => {
             this.userData = userData
             this.getPosts(page, true)
           }).catch(reason => {
