@@ -8,7 +8,9 @@
     </v-form>
     <v-card-actions>
       <v-spacer></v-spacer>
-      <v-btn color="primary" v-on:click="changeNickname" :loading="loading" :disabled="!valid">Set</v-btn>
+      <v-btn color="primary" v-on:click="changeNickname" :loading="loading" :disabled="!valid">
+        <v-icon>check</v-icon>
+      </v-btn>
     </v-card-actions>
   </v-card-action>
 
@@ -16,23 +18,28 @@
     <h2 class="flex text--secondary">Set Avatar</h2>
     <v-form v-model="avatarValid" ref="formA" @submit.prevent="">
       <v-text-field v-model="avatar" name="avatar" label="Avatar Image URL" type="text"
-                    @keyup.enter="changeAvatar"></v-text-field>
+                    @keyup.enter="changeAvatar(false)"></v-text-field>
     </v-form>
     <v-card-actions>
       <div v-if="avatar">
-          <v-avatar
-            size="64px"
-            class="elevation-7"
-          >
-            <img
-              :src="avatar"
-              @load="avatarValid = true"
-            />
-          </v-avatar>
-          <br/><br/>
-        </div>
+        <v-avatar
+          size="64px"
+          class="elevation-7"
+        >
+          <img
+            :src="avatar"
+            @load="avatarValid = true"
+          />
+        </v-avatar>
+        <br/><br/>
+      </div>
+      <v-btn v-else color="error" @click="changeAvatar(true)" :loading="loading">
+        <v-icon>remove_circle</v-icon>
+      </v-btn>
       <v-spacer></v-spacer>
-      <v-btn color="primary" v-on:click="changeAvatar" :loading="loading" :disabled="!avatar || !avatarValid">Set</v-btn>
+      <v-btn color="primary" v-on:click="changeAvatar" :loading="loading" :disabled="!avatar || !avatarValid">
+        <v-icon>check</v-icon>
+      </v-btn>
     </v-card-actions>
   </v-card-action>
 </div>
@@ -77,8 +84,8 @@ export default {
         this.toast('Emmm... Something is strange', 'error')
       })
     },
-    changeAvatar() {
-      if(!this.avatarValid || !this.avatar) return;
+    changeAvatar(force = false) {
+      if(!force && (!this.avatarValid || !this.avatar)) return;
       this.loading = true
       utils.fetchJSONWithSuccess(utils.apiFor('user', 'change-meta'), 'POST', {
         changes: {

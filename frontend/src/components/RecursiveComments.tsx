@@ -6,7 +6,9 @@ import {
   VChip, 
   VBtn, 
   VSlideXTransition, 
-  VIcon
+  VIcon,
+  VAvatar,
+  VImg
 } from 'vuetify/lib'
 import * as tsx from 'vue-tsx-support'
 import { VNode } from 'vue';
@@ -25,7 +27,8 @@ type WithAutor = CommentBase & {
     id: number,
     nickname: string,
     role: number,
-    username: string
+    username: string,
+    avatar: string
   }
 }
 type WithNickname = CommentBase & {
@@ -84,9 +87,9 @@ export default tsx.componentFactoryOf<RecursiveCommentProps>().create({
                 }
                 id={`comment-${comment.id}`}
               >
-                {/* <VAvatar slot="icon">
-                  <VImg src={`https://www.gravatar.com/avatar/${MD5(getNickname(comment))}?d=identicon`}></VImg>
-                </VAvatar> */}
+                {(comment as WithAutor).author && (comment as WithAutor).author.avatar ? <VAvatar slot="icon">
+                  <VImg src={(comment as WithAutor).author.avatar}></VImg>
+                </VAvatar> : null}
                 <VLayout justify-space-between>
                   <VFlex xs7>
                     {this.infoLabel(getNickname(comment), comment.color || ((comment as WithAutor).author ? 'secondary' : '#bbbbbb'))}

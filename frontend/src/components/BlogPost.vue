@@ -105,7 +105,7 @@
           </v-avatar>
         </div>
         
-        <div>
+        <div v-if="postData.author && postData.author.username">
           <router-link :to="{name: 'userTimeline', params: {username: postData.author.username}}">
             <v-chip>
               @{{ postData.author.username }} ({{ postData.author.nickname }})
