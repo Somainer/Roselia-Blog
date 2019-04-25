@@ -322,10 +322,17 @@ export default {
           }
         })
       }
-
+      Object.defineProperty(this.postData, 'id', {
+        value: this.postData.id,
+        writable: false
+      })
+      const popContext = this.renderer.pushContext(this.postData, 'post')
       this.renderer.renderAsync(this.postData.content).then(template => {
         this.postData.content = template
-        this.$nextTick(() => this.renderer.injectEvents())
+        this.$nextTick(() => {
+          this.renderer.injectEvents()
+          popContext()
+        })
       }).then(() => this.$nextTick(async () => this.afterContentMounted()))
       // this.rsRendered = false
       // this.renderer.renderVueAsync(this.postData.content).then(v => {

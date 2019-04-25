@@ -13,7 +13,7 @@
         py-3
         lighten-2
         text-xs-center
-        white--text
+        class="themed-text"
         xs12
       >
         &copy;{{year}} — <strong>Somainer</strong>

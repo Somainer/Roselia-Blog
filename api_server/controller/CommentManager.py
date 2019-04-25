@@ -29,7 +29,7 @@ class CommentManager:
         )
         db.session.add(comment)
         db.session.commit()
-        return True, 'Success'
+        return True, comment.comment_id
 
     @classmethod
     def can_delete_comment(cls, user, author):
@@ -51,6 +51,18 @@ class CommentManager:
         author = comment.author
         
         if not cls.can_delete_comment(user, author):
+            return False
+
+        db.session.delete(comment)
+        db.session.commit()
+        return True
+
+    @classmethod
+    @db_mutation_cleanup
+    def force_delete_comment(cls, comment_id):
+        comment = Comment.query.get(comment_id)
+        
+        if not comment:
             return False
 
         db.session.delete(comment)

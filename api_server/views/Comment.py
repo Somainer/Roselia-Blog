@@ -4,10 +4,13 @@ from fn.monad import Option
 from controller.UserManager import UserManager
 from controller.CommentManager import CommentManager
 from middleware import require_argument, to_json, verify_token
+from tokenProcessor import DeleteCommentToken
 
 comment_view = Blueprint('comment_view', __name__, url_prefix='/api/comment')
 
 route = comment_view.route
+
+dct_processor = DeleteCommentToken()
 
 
 @route('/add', methods=['POST'])
@@ -32,18 +35,34 @@ def add_comment(username, role, content, to_post, raw_payload):
         }
 
     state, msg = CommentManager.add_comment(to_post, content, raw_payload.get('to_comment'), username, nickname)
+    if state:
+        token = dct_processor.iss_remove_token(msg)
+    else:
+        token = ''
     return {
         'success': state,
-        'msg': msg
+        'msg': 'Success' if state else msg,
+        'comment_id': msg,
+        'remove_token': token
     }
 
 
 @route('/delete', methods=['POST'])
 @to_json
-@require_argument(['comment'], True)
-@verify_token(0, True)
-def remove_comment(comment, username, role):
-    stat = CommentManager.delete_comment(comment, username)
+@require_argument(['comment'], True, True)
+@verify_token(-1, True)
+def remove_comment(comment, username, role, raw_payload):
+    remove_token = raw_payload.get('remove_token', None)
+    if username:
+        stat = CommentManager.delete_comment(comment, username)
+    elif remove_token:
+        cid = dct_processor.check_remove_token(remove_token)
+        if cid and Option.from_call(int, comment).filter(lambda x: x == cid).get_or(None):
+            stat = CommentManager.force_delete_comment(cid)
+        else:
+            stat = False
+    else:
+        stat = False
     return {
         'success': stat
     }

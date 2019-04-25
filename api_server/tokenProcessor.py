@@ -114,3 +114,16 @@ class TokenProcessor:
             'for_app': payload.get('app_name', ""),
             'role': user_role
         }).decode()
+
+class DeleteCommentToken(TokenProcessor):
+    def iss_remove_token(self, comment_id):
+        return self.serializer.dumps({
+            'comment_id': comment_id,
+            'type': 'token_remove'
+        }).decode()
+
+    def check_remove_token(self, token):
+        stat, payload = self.token_decode(token)
+        if not stat:
+            return None
+        return payload['comment_id'] if payload.get('type') == 'token_remove' else None

@@ -44,7 +44,7 @@ function getNickname(rc: RoseliaComment) {
 interface RecursiveCommentProps {
   comments: RoseliaComment[]
   canAddComment: boolean
-  canDeleteComment(i: number): boolean
+  canDeleteComment(c: RoseliaComment): boolean
   postAuthorUsername?: string
   myUsername?: string
 }
@@ -104,7 +104,7 @@ export default tsx.componentFactoryOf<RecursiveCommentProps>().create({
                     {this.canAddComment && (<VBtn flat icon onClick={() => this.$emit('reply-comment', comment.id)}>
                       <VIcon>reply</VIcon>
                     </VBtn>)}
-                    {this.canDeleteComment(comment.id) ? (<VBtn flat icon color="error" small onClick={
+                    {this.canDeleteComment(comment) ? (<VBtn flat icon color="error" small onClick={
                       () => this.$emit('delete-comment', comment.id)
                     }>
                       <VIcon>delete</VIcon>

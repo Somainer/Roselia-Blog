@@ -1,21 +1,86 @@
 <template>
+<div>
   <v-toolbar
     color="primary"
-    dark
     scroll-off-screen
   >
+    <v-toolbar-side-icon dark v-if="shouldHaveToolbar" @click.native="drawer = !drawer"></v-toolbar-side-icon>
     <slot></slot>
     <v-toolbar-title>
-      <router-link  class="white--text no-deco" :to="{name:'index'}">{{title}}</router-link>
+      <router-link  class="themed-text no-deco" :to="{name:'index'}">{{title}}</router-link>
     </v-toolbar-title>
     <v-spacer></v-spacer>
-    <v-toolbar-items>
+    <v-toolbar-items v-if="!shouldHaveToolbar">
       <v-btn dark flat to="/">Index</v-btn>
       <v-btn dark flat to="/timeline">Timeline</v-btn>
       <v-btn dark flat v-if="userData" to="/userspace">{{userData.nickname}}</v-btn>
       <v-btn dark flat v-else tag="a" @click.native="setRedirect" :to="{name: 'login'}" @contextmenu="portedLogin($event)">Login</v-btn>
     </v-toolbar-items>
   </v-toolbar>
+    <v-navigation-drawer
+      v-model="drawer"
+      fixed
+      clipped
+      app
+      v-if="shouldHaveToolbar"
+    >
+      <v-toolbar flat>
+      <v-list>
+        <v-list-tile>
+          <v-list-tile-title class="title">
+            {{title}}
+          </v-list-tile-title>
+        </v-list-tile>
+      </v-list>
+    </v-toolbar>
+    <v-divider></v-divider>
+
+    <v-list dense class="pt-0">
+      <v-list-tile to="/">
+        <v-list-tile-action>
+          <v-icon>home</v-icon>
+        </v-list-tile-action>
+
+        <v-list-tile-content>
+          <v-list-tile-title>Index</v-list-tile-title>
+        </v-list-tile-content>
+      </v-list-tile>
+    </v-list>
+    <v-list dense class="pt-0">
+      <v-list-tile to="/timeline">
+        <v-list-tile-action>
+          <v-icon>list_alt</v-icon>
+        </v-list-tile-action>
+
+        <v-list-tile-content>
+          <v-list-tile-title>Timeline</v-list-tile-title>
+        </v-list-tile-content>
+      </v-list-tile>
+    </v-list>
+    <v-list dense class="pt-0" v-if="userData">
+      <v-list-tile to="/userspace">
+        <v-list-tile-action>
+          <v-icon>account_circle</v-icon>
+        </v-list-tile-action>
+
+        <v-list-tile-content>
+          <v-list-tile-title>{{userData.nickname}}</v-list-tile-title>
+        </v-list-tile-content>
+      </v-list-tile>
+    </v-list>
+    <v-list dense class="pt-0" v-else>
+      <v-list-tile to="/login" @click="setRedirect">
+        <v-list-tile-action>
+          <v-icon>person</v-icon>
+        </v-list-tile-action>
+
+        <v-list-tile-content>
+          <v-list-tile-title>Login</v-list-tile-title>
+        </v-list-tile-content>
+      </v-list-tile>
+    </v-list>
+    </v-navigation-drawer>
+</div>
 </template>
 
 <script>
@@ -23,10 +88,10 @@ import meta from '../common/config'
 import utils from '../common/utils'
 export default {
   name: 'blog-toolbar',
-  props: ['userData', 'route', 'realTitle'],
+  props: ['userData', 'route', 'realTitle', 'noDrawer'],
   data () {
     return {
-      title: this.realTitle || meta.title
+      drawer: false
     }
   },
   methods: {
@@ -48,6 +113,19 @@ export default {
         }
       })
       w.addEventListener('close', unwatch)
+    }
+  },
+  computed: {
+    title() {
+      return this.realTitle || meta.title
+    },
+    shouldHaveToolbar() {
+      return !this.noDrawer && this.$vuetify.breakpoint.smAndDown
+    }
+  },
+  watch: {
+    shouldHaveToolbar(val) {
+      if(!val) this.drawer = false
     }
   }
 }

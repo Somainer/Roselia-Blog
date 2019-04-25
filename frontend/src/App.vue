@@ -22,6 +22,7 @@
 
 <script>
 import ThemeListener from './plugin/ThemeListener'
+import { selectByLuminance } from './common/helpers';
 export default {
   name: 'App',
   components: {
@@ -33,6 +34,7 @@ export default {
     this.$watch('$vuetify.theme', theme => {
       document.body.style.setProperty('--theme-color', theme.primary)
       document.body.style.setProperty('--theme-secondary-color', theme.secondary)
+      document.body.style.setProperty('--themed-text-color', selectByLuminance(theme.primary, '#000000', '#ffffff', '#ffffff'))
     }, {
       immediate: true,
       deep: true
@@ -101,7 +103,12 @@ export default {
   :root {
     --theme-color: #6670ed;
     --theme-secondary-color: #890f87;
+    --themed-text-color: #ffffff;
     /* --theme-color: #0288d1; */
+  }
+
+  .themed-text {
+    color: var(--themed-text-color) !important;
   }
 
   code, pre {
@@ -120,6 +127,7 @@ export default {
   ::selection {
     background: var(--theme-color);
     color: #fff;
+    color: var(--themed-text-color);
   }
 
   .table-of-contents a.active {

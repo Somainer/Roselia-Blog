@@ -63,6 +63,20 @@ export default {
     }
   },
   methods: {
+    performChangeUserMeta(key, value) {
+      this.loading = true
+      return utils.fetchJSONWithSuccess(utils.apiFor('user', 'change-meta'), 'POST', {
+        changes: {
+          [key]: value
+        }
+      }).then(resp => {
+        this.loading = false
+        return resp
+      }).catch(err => {
+        this.loading = false
+        return Promise.reject(err)
+      })
+    },
     changeNickname() {
       if(!this.valid) return
       this.loading = true

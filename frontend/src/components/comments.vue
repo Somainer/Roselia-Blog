@@ -142,7 +142,11 @@ export default {
       commentToDelete: {
         id: 0,
         show: false
-      }
+      },
+      removeTokens: {
+
+      },
+      cachedDraft: {}
     }
   },
   methods: {
@@ -167,9 +171,15 @@ export default {
     },
     addComment() {
       this.loading = true
-      utils.fetchJSONWithSuccess(utils.apiFor('comment', 'add'), 'POST', this.addPostForm).then(d => {
+      utils.fetchJSONWithSuccess(utils.apiFor('comment', 'add'), 'POST', this.addPostForm).then(mapToCamelCase).then(d => {
         this.toast('Well, you placed a comment!', 'success')
         this.loading = false
+        this.removeTokens[d.commentId] = d.removeToken
+        this.cachedDraft[d.commentId] = {
+          nickname: this.nickname,
+          comment: this.comment,
+          replyTo: this.replyToComment
+        }
         this.removeCommentDraft(this.postData.id)
         this.cleanUp()
         this.loadNextPage()
@@ -188,11 +198,22 @@ export default {
       this.commentLeft = false
     },
     deleteComment(cid) {
-      utils.fetchJSONWithSuccess(utils.apiFor('comment', 'delete'), 'POST', {
-        comment: cid
-      }).then(succ => {
+      utils.fetchJSONWithSuccess(utils.apiFor('comment', 'delete'), 'POST', mapToUnderline({
+        comment: cid,
+        removeToken: this.removeTokens[cid]
+      })).then(succ => {
         this.commentList = this.commentList.filter(x => x.id !== cid)
         --this.commentCount
+        this.removeTokens[cid] = undefined
+        if(this.cachedDraft[cid]) {
+          const {nickname, comment, replyTo} = this.cachedDraft[cid]
+          if(!this.comment) {
+            this.nickname = nickname
+            this.comment = comment
+            this.replyToComment = replyTo
+          }
+          this.cachedDraft[cid] = undefined
+        }
       }).catch(err => {
         this.toast('Oops! Failed.', 'error')
       })
@@ -201,8 +222,11 @@ export default {
       this.replyToComment = cid
     },
     canDeleteComment(cmt) {
+      if (this.removeTokens[cmt.id]) return true
       if (!this.isLoggedIn) return false
       if (!cmt.author) return true
+      if (cmt.author.username == this.userData.username) return true
+      if (!cmt.author.role) return !!this.userData
       return cmt.author.role <= this.userData.role
     },
     loadNextPage() {
@@ -280,6 +304,16 @@ export default {
     },
     renderScript() {
       this.commentList.filter(x => x.author).filter(x => !x.rendered).forEach(c => {
+        Object.defineProperty(c, 'id', {
+          value: c.id,
+          writable: false
+        })
+        c.author = new Proxy(c.author, {
+          set(target, prop, value) {
+            if (prop === 'role') return
+            return Reflect.set(target, prop, value)
+          }
+        })
         const popContext = this.renderer.pushContext(c, 'comment')
         c.cleanedContent = this.renderer.cleanScript(c.content)
         const renderResult = this.renderer.render(c.content)
@@ -330,7 +364,7 @@ export default {
       })
     },
     canAddComment() {
-      return this.userData || this.postData.enableComment
+      return !!(this.userData || this.postData.enableComment)
     },
     commentDict() {
       return this.commentList.reduce((acc, cmt) => ({

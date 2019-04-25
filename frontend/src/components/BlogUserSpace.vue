@@ -1,6 +1,6 @@
 <template>
   <v-app :dark="!currentColorScheme">
-    <blog-toolbar :userData="userData">
+    <blog-toolbar :userData="userData" :noDrawer="true">
       <v-toolbar-side-icon dark @click.native="drawer = !drawer"></v-toolbar-side-icon>
     </blog-toolbar>
     <v-navigation-drawer
