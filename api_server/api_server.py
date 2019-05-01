@@ -129,8 +129,6 @@ app.route('/userspace/<string:p>')(new_index)
 
 # @app.route('/seo')
 def seo_main():
-    if acm.is_empty():
-        return redirect('/hello')
     # return new_index()
 
     logged_in = True
@@ -235,7 +233,8 @@ def first_run():
         return redirect('/')
     user_data = {
         "username": "Master",
-        'role': 3
+        'role': 3,
+        'nickname': 'Marisa Kirisame'
     }
     _, token = token_processor.iss_token(**user_data)
     su_token = token_processor.iss_su_token(user_data['username'], user_data['role'])

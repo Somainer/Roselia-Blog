@@ -1,22 +1,34 @@
 <template>
-  <v-layout align-center justify-center>
-    <h4>OAuth Accounts</h4>
-    <v-spacer></v-spacer>
+  <v-container 
+    fluid
+    grid-list-md
+  >
     <v-layout row wrap>
+      <h2>OAuth Accounts</h2>
       <v-card-actions>
-        <v-btn 
-          v-for="{adapter, isBound, user} in adapterList" 
-          :key="adapter" 
-          round color="accent" dark 
-          @click="goToBind(adapter)"
-        >
-          <v-icon v-if="$vuetify.icons.brand[adapter]">{{$vuetify.icons.brand[adapter]}}</v-icon>
-          <span v-else>{{ adapter }}</span>
-        </v-btn>
+        <v-flex
+          v-for="{adapter, isBound, bindUser} in adapterList" 
+          :key="adapter"
+         >
+          <v-btn 
+            v-if="!isBound"
+            round color="accent" dark 
+            @click="goToBind(adapter)"
+          >
+            <v-icon v-if="$vuetify.icons.brand[adapter]">{{$vuetify.icons.brand[adapter]}}</v-icon>
+            <span v-else>{{ adapter }}</span>
+          </v-btn>
+          <div v-else>
+            <v-icon v-if="$vuetify.icons.brand[adapter]">{{$vuetify.icons.brand[adapter]}}</v-icon>
+            <span v-else>{{ adapter }}</span>
+            :
+            <span>{{ bindUser }}</span>
+          </div>
+        </v-flex>
       </v-card-actions>
     </v-layout>
     
-  </v-layout>
+  </v-container>
 </template>
 
 <script>

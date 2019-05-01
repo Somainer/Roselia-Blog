@@ -113,12 +113,28 @@ export default {
         this.loading = false
         this.toast('Emmm... Something is strange', 'error')
       })
+    },
+    getUserMeta() {
+      this.loading = true
+      utils.fetchJSONWithSuccess(utils.apiFor('user', 'user-meta'), 'GET', {
+        username: this.userData.username
+      }).then(data => {
+        this.loading = false
+        this.nickname = data.nickname
+        this.avatar = data.avatar
+      }).catch(err => {
+        this.loading = false
+        this.toast(err, 'error')
+      })
     }
   },
   watch: {
     avatar() {
       this.avatarValid = false
     }
+  },
+  mounted() {
+    this.getUserMeta()
   }
 }
 </script>

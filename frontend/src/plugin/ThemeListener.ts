@@ -28,6 +28,6 @@ export default Vue.extend({
     scheme: Boolean
   },
   render(h) {
-    return h('div')
+    return h()
   }
 })

@@ -446,11 +446,13 @@ class RoseliaScript {
       if (!_.isNil(preview.goTo)) {
         e.addEventListener('click', ev => {
           ev.preventDefault()
-          this.app.$vuetify.goTo(_.isNumber(preview.goTo) ? preview.goTo : this.getElement(<any>preview.goTo), {offset: -200}).catch(reason => {
+          try {
+            this.app.$vuetify.goTo(_.isNumber(preview.goTo) ? preview.goTo : this.getElement(<RSElementSelector>preview.goTo), {offset: -200})
+          } catch (reason) {
             if(_.isString(preview.goTo)) location.href = preview.goTo
             else this.app.$router.push(preview.goTo)
             console.error(reason)
-          })
+          }
         })
       }
     })

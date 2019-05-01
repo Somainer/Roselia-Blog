@@ -68,6 +68,7 @@ export default {
       utils.fetchJSONWithSuccess(utils.apiFor('firstrun')).then(data => {
         this.isFirstRun = true
         utils.setLoginData({
+          nickname: 'Minato Yukina',
           ...data,
           su_token: undefined
         })

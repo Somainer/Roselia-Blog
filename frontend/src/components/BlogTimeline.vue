@@ -105,7 +105,7 @@
             </div>
             <div v-else-if="postData.length">
               <v-divider></v-divider>
-              Tiro finale
+              Tiro Finale
             </div>
             
           </div>

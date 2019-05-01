@@ -30,7 +30,7 @@ export default new Router({
   routes: [
     {
       path: '/hello',
-      name: 'HelloWorld',
+      name: 'helloWorld',
       component: HelloWorld
     },
     {

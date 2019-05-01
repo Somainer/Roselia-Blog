@@ -220,6 +220,13 @@ export default {
             utils.removeLoginData()
           })
         }
+        if(!data.total) {
+          utils.fetchJSONWithSuccess(utils.apiFor('firstrun')).then(s => {
+            this.$router.push({
+              name: 'helloWorld'
+            })
+          })
+        }
         this.posts = data.data.map(o => {
           o.deleted = false
           return o

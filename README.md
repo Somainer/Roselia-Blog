@@ -1,9 +1,9 @@
 # Roselia-Blog 3.0
 ## A new trial of blog system. 
 
-A single page app with slight SEO optimization.
+A single page app with slight SEO optimization, can also be deployed as an anti-SE blog.
 
-虽然是一个单页APP，但是也能够做到搜索引擎优化。
+虽然是一个单页APP，但是也能够做到搜索引擎优化，同时正因为是SPA，可以进行反搜索引擎优化部署，阻止搜索引擎爬虫爬取你的文章。
 
 > Demo: [Roselia-Blog](https://roselia.moe/blog/)
 
@@ -109,8 +109,16 @@ R{{
 r{{
 	then(() => getElement(playbtn).style.color = '#66ccff')
 }}
+
+//Or
+
+r{{
+	element(playbtn).then(e => e.style.color = '#66ccff')
+}}
 ```
 遗憾的是，为插入一个元素，就必须有一个r{{}}，因此可能会出现不少的R{{}}影响美观，这个只是好玩的实验功能，不建议滥用，一个博客需要那么多动态因素作甚？
 
 但是，迷你脚本的出现确实大大增加了文章以及评论的灵活性，比起script标签，代码是运行在沙箱环境中的，因此可以受保护地访问某些对象，并且用一些受控的API进行访问，保障了安全性，
 在插件相对匮乏（其实根本没有）的Roselia-Blog里，迷你脚本可以在一定程度上实现部分插件的功能。
+
+比如，对于登陆用户，在其迷你脚本执行的上下文里面就会有`comment`作为其评论的信息对象，用户可以修改除了评论ID等重要信息以外的信息，可以做到神奇的效果，同时执行的脚本运行在沙箱中可以确保一定程度上的安全，而且基于Roselia-Blog的邀请制注册，评论区中脚本的使用是可控的，因此可以放心使用。如果仍然不放心，可以在`config.js`里面把`enableRoseliaScript`设置为`false`从而彻底关闭这个功能。

@@ -1,7 +1,7 @@
 <template>
   <lazy-component text="Load comment">
     <v-container>
-      <v-flex v-if="canAddComment" xs10 sm7 offset-sm2>
+      <v-flex v-if="canAddComment" xs12 sm8 offset-sm2>
         <v-badge>
           <span slot="badge" v-if="commentCount">{{commentCount}}</span>
           <v-icon>
@@ -27,7 +27,7 @@
             <v-text-field small v-else v-model="nickname" label="Nickname"></v-text-field>
           </v-flex>
           <v-spacer></v-spacer>
-          <v-flex xs2>
+          <v-flex xs2 lg1>
             <v-btn color="primary" :disabled="!this.isValid" :loading="loading" @click="addComment" round>
               <v-icon>send</v-icon>
             </v-btn>
@@ -66,7 +66,7 @@
         </div>
         <div v-else>
           <v-divider></v-divider>
-          Tiro finale
+          Tiro Finale
         </div>
           
       </v-layout>
@@ -104,7 +104,7 @@
           <v-btn
             color="error"
             flat="flat"
-            @click="() => {deleteComment(commentToDelete.id); commentToDelete.show = false}"
+            @click="() => {deleteComment(commentToDelete.id); commentToDelete.show = false; commentToDelete.id = 0}"
           >
             Yes, delete<v-icon>delete</v-icon>
           </v-btn>

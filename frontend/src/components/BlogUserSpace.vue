@@ -121,9 +121,10 @@ export default {
       return [
         { icon: 'home', text: 'Home', to: {name: 'console-index'} },
         { divider: true },
-        { heading: 'Writing posts' },
+        { heading: 'Articles' },
         { icon: 'add_circle', text: 'Write a new post', to: {name: 'edit'}, cond: this.userData.role },
         { icon: 'delete', text: 'Remove all drafts', click: this.removeAllDraft },
+        { icon: 'list_alt', text: 'My Timeline', to: {name: 'userTimeline', params: {username: this.userData.username}}},
         { divider: true },
         { heading: 'My Account' },
         { icon: 'account_box', text: 'Account Settings', to: {name: 'setNickname'}},
