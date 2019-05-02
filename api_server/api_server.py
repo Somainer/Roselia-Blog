@@ -11,7 +11,7 @@ from Logger import log
 import AuthLogin
 import time
 import os
-from config import BLOG_INFO, BLOG_LINK, DEBUG, HOST, PORT, UPLOAD_DIR
+from config import BLOG_INFO, BLOG_LINK, DEBUG, HOST, PORT, UPLOAD_DIR, ANTI_SEO
 from ImageConverter import ImageConverter
 from middleware import verify_token, ReverseProxied, make_option_dict, to_json, require_argument
 from urllib.parse import quote
@@ -103,12 +103,13 @@ static_urls = [
      'timeline/<string:p>'
 ]
 
-if DEBUG:
+if DEBUG or ANTI_SEO:
     static_urls.append('/')
     static_urls.append('post')
     static_urls.append('post/<string:post>')
 
 
+if DEBUG:
     def new_index(*args, **kwargs):
         return render_template('index_vue_dev.html')
 

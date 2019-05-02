@@ -2,9 +2,11 @@ from secret import APP_KEY, APP_SALT, GITHUB_CLIENT_ID, GITHUB_CLIENT_SECRET
 BLOG_LINK = "https://roselia.moe/blog/"
 BLOG_INFO = {
     "title": "Roselia-Blog",
-    "motto": "Do what you want to do, be who you want to be."
+    "motto": "Do what you want to do, be who you want to be.",
+    "link": BLOG_LINK
 }
 DEBUG = True
+ANTI_SEO = False
 
 HOST = '0.0.0.0'
 PORT = 5000

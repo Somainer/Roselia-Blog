@@ -553,11 +553,11 @@ export default {
     this.renderer = RoseliaScript.createRenderer(this)
     if(this.$route.params.shareId) this.getPostByShared(this.$route.params.shareId)
     else this.loadContent()
-    window.addEventListener('storage', e => {
+    this.$on('postDestroyed', utils.addEventListener('storage', e => {
       if (e.key === 'loginData') {
         this.userData = utils.getLoginData()
       }
-    })
+    }))
     // console.log(RoseliaScript)
     // this.renderer = RoseliaScript.createRenderer(this)
     if (!window.MathJax) {
@@ -581,6 +581,7 @@ export default {
   },
   destroyed () {
     this.$emit('postUnload')
+    this.$emit('postDestroyed')
   },
   watch: {
     userData () {

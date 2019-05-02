@@ -104,13 +104,14 @@ export default {
   name: 'blog-user-space',
   data () {
     return {
-      userData: null,
+      userData: userData(),
       toast: {
         show: false,
         text: '',
         color: ''
       },
-      drawer: null
+      drawer: null,
+      removeListener: null
     }
   },
   props: {
@@ -155,9 +156,22 @@ export default {
     changeToast (show) {
       this.toast.show = show
     },
-    makeRedirect (to) {
-      utils.setRedirect(this.$route.fullPath)
-      utils.redirectTo(to)
+    ensureLoggedIn() {
+      if (!this.userData) {
+        // this.showToast('Please login first', 'warning')
+        this.$router.push({
+          name: 'login',
+          params: {
+            logout: true,
+            message: 'Login to manage',
+            alert: {
+              color: 'warning',
+              text: 'Please login first'
+            },
+            redirect: this.$route.fullPath
+          }
+        })
+      }
     },
     removeAllDraft () {
       let storage = window.localStorage
@@ -169,21 +183,8 @@ export default {
   },
   mounted () {
     this.userData = utils.getLoginData()
-    if (!this.userData) {
-      // this.showToast('Please login first', 'warning')
-      return this.makeRedirect({
-        name: 'login',
-        params: {
-          logout: true,
-          message: 'Login to manage',
-          alert: {
-            color: 'warning',
-            text: 'Please login first'
-          }
-        }
-      })
-    }
-    window.addEventListener('storage', e => {
+    this.ensureLoggedIn()
+    this.removeListener = utils.addEventListener('storage', e => {
       if (e.key === 'loginData') {
         console.log(e)
         this.userData = utils.getLoginData()
@@ -192,6 +193,12 @@ export default {
   },
   destroyed() {
     utils.removeSUToken()
+    this.removeListener && this.removeListener()
+  },
+  watch: {
+    userData() {
+      this.ensureLoggedIn()
+    }
   }
 }
 </script>

@@ -163,5 +163,14 @@ utils.getToastOption = () => {
     color: ''
   })
 }
+utils.addEventListener = (type, f) => {
+  addEventListener(type, f)
+  return () => {
+    removeEventListener(type, f)
+  }
+}
+utils.addStorageListener = (f) => {
+  return utils.addEventListener('storage', f)
+}
 
 export default utils

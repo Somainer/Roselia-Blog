@@ -29,19 +29,19 @@
             <div data-v-1be1f375="">
               <nav data-v-664eff5e="" data-v-1be1f375="" class="white--text v-toolbar primary" data-booted="true" style="margin-top: 0px; padding-right: 0px; padding-left: 0px; transform: translateY(0px);">
                 <div class="v-toolbar__content" style="height: 48px;">
-                  <div data-v-664eff5e="" class="v-toolbar__title"><a data-v-664eff5e="" href="/" class="white--text no-deco router-link-exact-active router-link-active">Roselia-Blog</a></div>
+                  <div data-v-664eff5e="" class="v-toolbar__title"><a data-v-664eff5e="" href="{{ info.link }}" class="white--text no-deco router-link-exact-active router-link-active">{{ info.title }}</a></div>
                   <div data-v-664eff5e="" class="spacer"></div>
                   <div data-v-664eff5e="" class="v-toolbar__items"><a data-v-664eff5e="" href="/" class="v-btn--active v-btn v-btn--flat v-btn--router theme--dark"><div class="v-btn__content">Index</div></a>
                     <a data-v-664eff5e="" href="/login" class="v-btn v-btn--flat v-btn--router theme--dark"><div class="v-btn__content">Login</div></a></div>
                 </div>
               </nav>
-              <div data-v-1be1f375="" class="v-parallax" dark="" style="height: 500px;">
-                <div class="v-parallax__image-container"><img src="static/img/bg_n3.jpg" class="v-parallax__image" style="display: block; opacity: 0; transform: translate(-50%, 0px);"></div>
+              <div data-v-1be1f375="" class="v-parallax">
+                <div class="v-parallax__image-container"><img src="static/img/bg_n3.jpg" class="v-parallax__image"></div>
                 <div
                   class="v-parallax__content">
                   <div data-v-1be1f375="" class="layout align-center column justify-center">
-                    <h1 data-v-1be1f375="" class="display-2 font-weight-thin mb-3">Roselia-Blog</h1>
-                    <h4 data-v-1be1f375="" class="subheading">Do what you want to do, be who you want to be.</h4>
+                    <h1 data-v-1be1f375="" class="display-2 font-weight-thin mb-3">{{ info.title }}</h1>
+                    <h4 data-v-1be1f375="" class="subheading">{{ info.motto }}</h4>
                   </div>
                 </div>
               </div>
@@ -55,9 +55,8 @@
                       <!---->
                       {% if post.img %}
                       <div data-v-1be1f375=""
-                          class="v-card__media" ripple="true" style="height: 500px;">
-                          <div class="v-card__media__background"
-                            style="background: url('{{ post.img }}') center center / cover no-repeat;"></div>
+                          class="v-card__media" ripple="true">
+                          <img src="{{ post.img }}" />
                           <div class="v-card__media__content">
                             <div data-v-1be1f375="" class="container fill-height fluid">
                               <div data-v-1be1f375="" class="layout align-end fill-height">
@@ -86,7 +85,7 @@
               <div data-v-1be1f375="" class="container">
                 <div data-v-1be1f375="" class="layout">
                   {% if pages.current > 1 %}
-                  <a data-v-1be1f375="" href="/?page={{pages.current - 1}}" class="v-btn v-btn--floating v-btn--router v-btn--small primary">
+                  <a data-v-1be1f375="" href="{{ info.link }}?page={{pages.current - 1}}" class="v-btn v-btn--floating v-btn--router v-btn--small primary">
                     <div
                       class="v-btn__content">
                       <i data-v-1be1f375="" aria-hidden="true" class="v-icon material-icons">chevron_left</i>
@@ -97,7 +96,7 @@
                   {{ pages.current }} / {{ pages.pages }}
                   <div data-v-1be1f375="" class="spacer"></div> 
                   {% if pages.current < pages.pages %}
-                  <a data-v-1be1f375="" href="/?page={{pages.current + 1}}" class="v-btn v-btn--floating v-btn--router v-btn--small primary">
+                  <a data-v-1be1f375="" href="{{ info.link }}?page={{pages.current + 1}}" class="v-btn v-btn--floating v-btn--router v-btn--small primary">
                     <div
                       class="v-btn__content">
                       <i data-v-1be1f375="" aria-hidden="true" class="v-icon material-icons">chevron_right</i>
@@ -114,7 +113,7 @@
               <footer data-v-41aeeb5b="" data-v-1be1f375="" class="v-footer primary lighten-1" style="height: auto;">
                 <div data-v-41aeeb5b="" class="layout justify-center row wrap">
                   <div data-v-41aeeb5b="" class="flex primary lighten-2 py-3 text-xs-center white--text xs12">
-                    ©2018 — <strong data-v-41aeeb5b="">Somainer</strong></div>
+                    ©2019 — <strong data-v-41aeeb5b="">Somainer</strong></div>
                 </div>
               </footer>
             </div>

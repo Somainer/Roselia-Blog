@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
-
+{% set link = 'post/{}'.format(post.display_id) if post.display_id else 'post?p={}'.format(post.id) %}
+{% set absolute_link = '{}{}'.format(info.link, link) %}
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -11,9 +12,11 @@
   <link rel="apple-touch-icon" href="favicon.ico"/>
   <meta name="theme-color" content="#6670ed">
   <meta name="description" content="{{ post.title }} - {{ post.subtitle }}">
+  {% include 'seo_og.html' with context %}
   <link rel="shortcut icon" href=/favicon.ico> <link href="https://fonts.cat.net/css?family=Roboto:100,300,400,500,700,900|Material+Icons"
     rel=stylesheet>
   <link rel=manifest href=/manifest.json>
+  <!-- Replace your built CSS file here.-->
   <link href=/static/css/chunk-vendors.575cc592.css rel=stylesheet>
   <link href=/static/css/app.550f5b3c.css rel=stylesheet>
 </head>
@@ -28,15 +31,15 @@
             <div data-v-c8479e4c="" id="post">
               <nav data-v-664eff5e="" data-v-c8479e4c="" class="white--text v-toolbar primary" data-booted="true" style="margin-top: 0px; padding-right: 0px; padding-left: 0px; transform: translateY(0px);">
                 <div class="v-toolbar__content" style="height: 48px;">
-                  <div data-v-664eff5e="" class="v-toolbar__title"><a data-v-664eff5e="" href="/" class="white--text no-deco router-link-active">Roselia-Blog</a></div>
+                  <div data-v-664eff5e="" class="v-toolbar__title"><a data-v-664eff5e="" href="{{ info.link }}" class="white--text no-deco router-link-active">{{ info.title }}</a></div>
                   <div
                     data-v-664eff5e="" class="spacer"></div>
                   <div data-v-664eff5e="" class="v-toolbar__items"><a data-v-664eff5e="" href="/" class="v-btn v-btn--flat v-btn--router theme--dark"><div class="v-btn__content">Index</div></a>
                     <a data-v-664eff5e="" href="/login" class="v-btn v-btn--flat v-btn--router theme--dark"><div class="v-btn__content">Login</div></a></div>
                 </div>
               </nav>
-              <div data-v-c8479e4c="" class="v-parallax" id="main-pic" dark="" style="height: 500px;">
-                <div class="v-parallax__image-container"><img src="{{ (post.img) if post.img else './static/img/nest.png' }}" class="v-parallax__image" style="display: block; opacity: 0; transform: translate(-50%, 0px);"></div>
+              <div data-v-c8479e4c="" class="v-parallax" id="main-pic">
+                <div class="v-parallax__image-container"><img src="{{ (post.img) if post.img else './static/img/nest.png' }}" class="responsive-img"></div>
                 <div
                   class="v-parallax__content">
                   <div data-v-c8479e4c="" class="layout align-center column justify-center">
@@ -77,7 +80,7 @@
                 <div data-v-c8479e4c="" class="flex row xs12 sm10 offset-sm1">
                   <div data-v-c8479e4c="" class="layout">
                         {% if post.next >=0 %}
-                        <a data-v-1be1f375="" href="./post?p={{post.next}}" class="v-btn v-btn--floating v-btn--router v-btn--small primary">
+                        <a data-v-1be1f375="" href="{{ info.link }}post?p={{post.next}}" class="v-btn v-btn--floating v-btn--router v-btn--small primary">
                           <div
                             class="v-btn__content">
                             <i data-v-1be1f375="" aria-hidden="true" class="v-icon material-icons">chevron_left</i>
@@ -86,7 +89,7 @@
                         {% endif %}
                         <div data-v-1be1f375="" class="spacer"></div>
                         {% if post.prev >=0 %}
-                        <a data-v-1be1f375="" href="./?post={{post.prev}}" class="v-btn v-btn--floating v-btn--router v-btn--small primary">
+                        <a data-v-1be1f375="" href="{{ info.link }}post?p={{post.prev}}" class="v-btn v-btn--floating v-btn--router v-btn--small primary">
                           <div
                             class="v-btn__content">
                             <i data-v-1be1f375="" aria-hidden="true" class="v-icon material-icons">chevron_right</i>
@@ -99,7 +102,7 @@
               <footer data-v-41aeeb5b="" data-v-c8479e4c="" class="v-footer primary lighten-1" style="height: auto;">
                 <div data-v-41aeeb5b="" class="layout justify-center row wrap">
                   <div data-v-41aeeb5b="" class="flex primary lighten-2 py-3 text-xs-center white--text xs12">
-                    ©2018 — <strong data-v-41aeeb5b="">Somainer</strong></div>
+                    ©2019 — <strong data-v-41aeeb5b="">Somainer</strong></div>
                 </div>
               </footer>
             </div>
@@ -108,6 +111,7 @@
       </div>
     </div>
   </div>
+  <!-- Replace your built JS file here.-->
   <script src=/static/js/chunk-vendors.f9a53428.js> </script>
   <script src=/static/js/app.9c8ff30b.js> </script>
 </body>

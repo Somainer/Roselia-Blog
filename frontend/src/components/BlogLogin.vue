@@ -322,8 +322,11 @@ export default {
       let {color, text} = this.$route.params.alert
       this.showToast(text, color)
     }
-    addEventListener('storage', e => {
-      e.key === 'loginData' && e.newValue && this.redirectBack()
+    const removeListener = utils.addStorageListener(e => {
+      if(e.key === 'loginData' && e.newValue) {
+        removeListener()
+        this.redirectBack()
+      }
     })
     let token = utils.getArguments.call(this).token
     token && this.tokenLogin(token).catch(err => {
