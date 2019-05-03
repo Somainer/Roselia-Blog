@@ -13,6 +13,8 @@ class User(database.Model):
     mail = db.Column(db.String(64), unique=True)
     avatar = db.Column(db.String(256))
     totp_code = db.Column(db.String(64))
+    banner = db.Column(db.String(256))
+    motto = db.Column(db.String(256))
 
     def __repr__(self):
         return '<User {}>'.format(self.username)
@@ -25,8 +27,21 @@ class User(database.Model):
             'role': self.role,
             'nickname': self.nickname,
             'mail': self.mail,
+            'avatar': self.avatar
+        }
+    
+    @property
+    def full_dict(self):
+        return {
+            'id': self.user_id,
+            'username': self.username,
+            'role': self.role,
+            'nickname': self.nickname,
+            'mail': self.mail,
             'avatar': self.avatar,
-            'totp': not not self.totp_code
+            'totp': not not self.totp_code,
+            'banner': self.banner,
+            'motto': self.motto
         }
 
     def set_password(self, password):

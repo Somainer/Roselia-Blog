@@ -3,7 +3,7 @@
     <nav-bar :userData="userData" :route="this.$route.fullPath"></nav-bar>
     <v-parallax
       dark
-      :src="config.images.timelineBannerImage"
+      :src="bannerImage"
     >
       <v-layout
         align-center
@@ -24,7 +24,7 @@
         </div>
         <h1 class="display-2 font-weight-regular mb-3">{{ realTitle }}</h1>
         <h2 class="subheading" v-if="userFound">
-          The fate of a person, of course, depends on self-strengthening, but also on the journey of the history.
+          {{ mottoText }}
         </h2>
         <h2 class="subheading" v-else>
           This guy is a mystery.
@@ -131,7 +131,9 @@ export default {
       userInfo: {
         username: '',
         avatar: '',
-        nickname: ''
+        nickname: '',
+        banner: '',
+        motto: ''
       },
       userFound: true
     };
@@ -234,6 +236,12 @@ export default {
   computed: {
     realTitle() {
       return this.userInfo.nickname || this.userInfo.username || this.$route.meta.title
+    },
+    bannerImage() {
+      return (this.userInfo && this.userInfo.banner) || this.config.images.timelineBannerImage
+    },
+    mottoText() {
+      return this.userInfo.motto || 'The fate of a person, of course, depends on self-strengthening, but also on the journey of the history.'
     }
   },
   beforeRouteEnter(to, from, next) {

@@ -1,7 +1,7 @@
 <template>
-<div>
-  <v-card-action>
-    <h2 class="flex text--secondary">Set Nickname</h2>
+<v-container>
+  <div>
+    <h2 class="flex text--secondary">Nickname</h2>
     <v-form v-model="valid" ref="form" @submit.prevent="">
       <v-text-field v-model="nickname" name="nickname" label="Nickname" type="text"
                     autofocus :rules="rules" @keyup.enter="changeNickname"></v-text-field>
@@ -12,10 +12,26 @@
         <v-icon>check</v-icon>
       </v-btn>
     </v-card-actions>
-  </v-card-action>
+  </div>
+  <div>
+    <h2 class="flex text--secondary">Motto</h2>
+    <v-form @submit.prevent="">
+      <v-text-field v-model="motto" name="motto" label="Motto" type="text"
+                    autofocus @keyup.enter="changeMotto"></v-text-field>
+    </v-form>
+    <v-card-actions>
+      <v-spacer></v-spacer>
+      <v-btn v-if="motto" color="primary" v-on:click="changeMotto" :loading="loading">
+        <v-icon>check</v-icon>
+      </v-btn>
+      <v-btn v-else color="error" @click="changeMotto" :loading="loading">
+        <v-icon>remove_circle</v-icon>
+      </v-btn>
+    </v-card-actions>
+  </div>
 
-  <v-card-action>
-    <h2 class="flex text--secondary">Set Avatar</h2>
+  <div>
+    <h2 class="flex text--secondary">Avatar</h2>
     <v-form v-model="avatarValid" ref="formA" @submit.prevent="">
       <v-text-field v-model="avatar" name="avatar" label="Avatar Image URL" type="text"
                     @keyup.enter="changeAvatar(false)"></v-text-field>
@@ -41,8 +57,26 @@
         <v-icon>check</v-icon>
       </v-btn>
     </v-card-actions>
-  </v-card-action>
-</div>
+  </div>
+  <div>
+    <h2 class="flex text--secondary">Banner Image</h2>
+    <v-form>
+      <v-text-field v-model="banner" name="banner" label="Banner Image URL" type="text"
+                    @keyup.enter="changeBanner(false)"></v-text-field>
+    </v-form>
+    <div>
+      <v-img v-if="banner" :src="banner" @load="bannerValid = true"></v-img>
+      <v-btn v-else color="error" @click="changeBanner(true)" :loading="loading">
+        <v-icon>remove_circle</v-icon>
+      </v-btn>
+
+      <v-spacer></v-spacer>
+      <v-btn color="primary" v-on:click="changeBanner" :loading="loading" :disabled="!banner || !bannerValid">
+        <v-icon>check</v-icon>
+      </v-btn>
+    </div>
+  </div>
+</v-container>
 </template>
 
 <script>
@@ -54,12 +88,15 @@ export default {
     return {
       nickname: '',
       avatar: '',
+      banner: '',
+      motto: '',
       loading: false,
       rules: [
         v => !!v || 'Required'
       ],
       valid: false,
-      avatarValid: false
+      avatarValid: false,
+      bannerValid: false
     }
   },
   methods: {
@@ -80,38 +117,44 @@ export default {
     changeNickname() {
       if(!this.valid) return
       this.loading = true
-      utils.fetchJSONWithSuccess(utils.apiFor('user', 'change-meta'), 'POST', {
-        changes: {
-          nickname: this.nickname
-        }
-      }).then(_ => {
-          this.toast('Your nickname has changed!', 'success')
-          this.userData.nickname = this.nickname
-          utils.updateLoginData(d => ({
-              ...d,
-              nickname: this.nickname
-          }))
-          this.loading = false
-          this.nickname = ''
-      }).catch(_ => {
-        this.loading = false
-        this.toast('Emmm... Something is strange', 'error')
+      return this.changeInfo('nickname', this.nickname).then(_ => {
+        this.userData.nickname = this.nickname
+        utils.updateLoginData(d => ({
+            ...d,
+            nickname: this.nickname
+        }))
+        this.nickname = ''
       })
+    },
+    changeMotto() {
+      return this.changeInfo('motto', this.motto)
     },
     changeAvatar(force = false) {
       if(!force && (!this.avatarValid || !this.avatar)) return;
+      return this.changeInfo('avatar', this.avatar).then(_ => {
+        this.avatar = ''
+      })
+    },
+    changeBanner(force = false) {
+      if(!force && (!this.bannerValid || !this.banner)) return;
+      return this.changeInfo('banner', this.banner).then(_ => {
+        this.banner = ''
+      })
+    },
+    changeInfo(key, value) {
       this.loading = true
-      utils.fetchJSONWithSuccess(utils.apiFor('user', 'change-meta'), 'POST', {
+      return utils.fetchJSONWithSuccess(utils.apiFor('user', 'change-meta'), 'POST', {
         changes: {
-          avatar: this.avatar
+          [key]: value
         }
-      }).then(_ => {
-          this.toast('Your avatar has changed!', 'success')
+      }).then(result => {
+          this.toast(`Your ${key} has changed!`, 'success')
           this.loading = false
-          this.avatar = ''
-      }).catch(_ => {
+          return result
+      }).catch(err => {
         this.loading = false
         this.toast('Emmm... Something is strange', 'error')
+        return Promise.reject(err)
       })
     },
     getUserMeta() {
@@ -122,6 +165,8 @@ export default {
         this.loading = false
         this.nickname = data.nickname
         this.avatar = data.avatar
+        this.banner = data.banner || ''
+        this.motto = data.motto || ''
       }).catch(err => {
         this.loading = false
         this.toast(err, 'error')
@@ -131,6 +176,9 @@ export default {
   watch: {
     avatar() {
       this.avatarValid = false
+    },
+    banner() {
+      this.bannerValid = false
     }
   },
   mounted() {

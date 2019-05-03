@@ -95,7 +95,7 @@ class UserManager:
 
     @classmethod
     def get_user_dict(cls, username):
-        return cls.find_user_option(username).map(attrgetter('dict')).get_or(None)
+        return cls.find_user_option(username).map(attrgetter('full_dict')).get_or(None)
 
     @classmethod
     def is_empty(cls):
@@ -166,7 +166,7 @@ class UserManager:
     @classmethod
     @db_mutation_cleanup
     def chage_user_meta(cls, username, info: dict):
-        changeable = ['avatar', 'nickname']
+        changeable = {'avatar', 'nickname', 'banner', 'motto'}
         for k in info.keys():
             if k not in changeable:
                 return False

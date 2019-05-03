@@ -1,5 +1,5 @@
 from models.all import Post, db, database, Tag, Catalog, User, post_tag, post_catalog
-from models import db_mutation_cleanup
+from models import db_mutation_cleanup, empty_query
 from fn.monad import Option
 from operator import *
 from sqlalchemy.sql import operators as sql_ops
@@ -165,7 +165,7 @@ class PostManager:
         if tag:
             tag = self.find_tag(tag)
             if tag is None:
-                return []
+                return empty_query(Post)
             query = query \
                 .join(post_tag) \
                 .filter(post_tag.c.post_id == Post.post_id) \
@@ -174,7 +174,7 @@ class PostManager:
         if catalog:
             catalog = self.find_catalog(catalog) or self.find_catalog_by_link(catalog)
             if not catalog:
-                return []
+                return empty_query(Post)
             query = query \
                 .join(post_catalog) \
                 .filter(post_catalog.c.post_id == Post.post_id) \
@@ -197,7 +197,7 @@ class PostManager:
     def get_posts_from_author(self, user, offset, count=None, level=0, by_user=None):
         user = UserManager.find_user(user)
         if not user:
-            return []
+            return 0, []
         posts = self.filter_post(level, user=by_user).filter(Post.owner == user.user_id)
         return posts.count(), [x.brief_dict
                 for x in posts

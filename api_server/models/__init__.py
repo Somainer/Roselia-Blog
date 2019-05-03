@@ -3,6 +3,7 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from config import DB_PATH, DEBUG
 import functools
+import sqlalchemy
 
 
 class DBModelInjector:
@@ -48,3 +49,7 @@ def db_mutation_cleanup(func):
             db.session.remove()
 
     return wrapper
+
+
+def empty_query(model: db.Model):
+    return model.query.filter(sqlalchemy.false())

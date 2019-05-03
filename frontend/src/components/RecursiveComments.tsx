@@ -92,7 +92,8 @@ export default tsx.componentFactoryOf<RecursiveCommentProps>().create({
                 </VAvatar> : null}
                 <VLayout justify-space-between>
                   <VFlex xs7>
-                    {this.infoLabel(getNickname(comment), comment.color || ((comment as WithAutor).author ? 'secondary' : '#bbbbbb'))}
+                    {this.infoLabel(getNickname(comment), comment.color || ((comment as WithAutor).author ? 'secondary' : '#bbbbbb'), false,
+                      (this.getUsername(comment)) ? { name: 'userTimeline', params: {username: this.getUsername(comment)}} : undefined)}
                     {this.myUsername && caselessEqual(this.getUsername(comment), this.myUsername) ? (
                       this.infoLabel('You', 'accent', true)
                     ) : (
@@ -130,14 +131,17 @@ export default tsx.componentFactoryOf<RecursiveCommentProps>().create({
     getUsername(c: RoseliaComment) {
       return ((cmt: WithAutor) => cmt.author && cmt.author.username)(c as WithAutor)
     },
-    infoLabel(text: string, color: string, outline: boolean = false) {
+    infoLabel(text: string, color: string, outline: boolean = false, to?: object) {
       const calculatingColor = (this as any).$vuetify.theme[color] || color
-      return (
+      const chip = (
         <VChip small color={color} outline={outline} class={{
           'ml-0': true,
           'white--text': !outline && selectByLuminance(calculatingColor, false, true, true)
-        }}>{text}</VChip>
+        }} to={to}>{text}</VChip>
       )
+      return to ? (
+        <router-link to={to}>{chip}</router-link>
+      ) : chip
     }
   }
 })

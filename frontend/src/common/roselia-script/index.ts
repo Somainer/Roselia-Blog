@@ -180,7 +180,7 @@ class RoseliaRenderer {
     })
     this.toInject = v
     // this.injectEvents()
-    Object.defineProperty(v, 'aotoInject', {
+    Object.defineProperty(v, 'autoInject', {
       value: () => {
         v.$mount(document.getElementById(rid)!)
         v.$nextTick(() => this.injectEvents())
