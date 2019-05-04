@@ -1,6 +1,7 @@
 <template>
   <div>
     <nav-bar :userData="userData" :route="this.$route.fullPath"></nav-bar>
+    <div v-wechat-title="realWindowTitle"></div>
     <v-parallax
       dark
       :src="bannerImage"
@@ -44,6 +45,9 @@
             fill-dot
             color="accent"
           >
+            <v-avatar v-if="!userInfo.username && post.author && post.author.avatar" slot="icon">
+              <v-img :src="post.author.avatar"></v-img>
+            </v-avatar>
             <span
               slot="opposite"
               class="headline font-weight-bold"
@@ -242,6 +246,9 @@ export default {
     },
     mottoText() {
       return this.userInfo.motto || 'The fate of a person, of course, depends on self-strengthening, but also on the journey of the history.'
+    },
+    realWindowTitle() {
+      return this.userInfo.username ? `${this.userInfo.nickname}'s Timeline` : this.$route.meta.title
     }
   },
   beforeRouteEnter(to, from, next) {

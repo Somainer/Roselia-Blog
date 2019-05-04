@@ -949,7 +949,7 @@ def get_oauth_bind_url(third, username, role):
     return {
         'success': True,
         'result': adp.get_uri() + '&redirect_uri=' + BLOG_LINK[:-1] + quote(
-            url_for('oauth_callback', username=username, third=third, type='bind')
+            url_for('oauth_callback', username=username, third=third, type='bind', token=request.args.get('token'))
         )
     }
 
@@ -963,7 +963,7 @@ def oauth_callback(third):
     typ = request.args.get('type', '')
 
     if typ == 'bind':
-        return redirect(url_for('oauth_bind', third=third, **request.args))
+        return redirect(BLOG_LINK[:-1] + url_for('oauth_bind', third=third, **request.args.to_dict()))
 
     def login_uri(token):
         if base:
@@ -973,7 +973,7 @@ def oauth_callback(third):
     if not adp or not code:
         return redirect(base or url_for('seo_main'))
     return adp.login_payload(code).map(lambda token: redirect(login_uri(token))).get_or(
-        redirect(base or url_for('seo_main'))
+        redirect((base or url_for('seo_main')) + '?alertText={}&alertColor=error'.format(quote('No such user')))
     )
 
 
@@ -981,11 +981,16 @@ def oauth_callback(third):
 def oauth_bind(username, third):
     adp = oauth_adapters.get(third.lower())
     code = request.args.get('code')
-    if not adp or not code:
-        return redirect('/userspace/oauth-accounts')
-    adp.add_user(username, code)
+    token = request.args.get('token', '')
+    stat, user = token_processor.get_username(token)
+    if not adp or not code or not stat or user['username'].lower() != username.lower():
+        return redirect(BLOG_LINK[:-1] + '/userspace/oauth-accounts?error={}'.format(third))
+    result = adp.add_user(username, code)
+    if result:
+        return redirect(BLOG_LINK[:-1] + '/userspace/oauth-accounts?succeed=' + third)
+    else:
+        return redirect(BLOG_LINK[:-1] + '/userspace/oauth-accounts?error=' + quote('Maybe this user is not available'))
 
-    return redirect('/userspace/oauth-accounts?succeed=' + third)
 
 
 def run_server():

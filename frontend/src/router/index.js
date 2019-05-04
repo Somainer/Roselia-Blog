@@ -84,42 +84,66 @@ export default new Router({
         {
           path: 'change-password',
           name: 'changePassword',
-          component: changePW
+          component: changePW,
+          meta: {
+            title: 'Change Password'
+          }
         },
         {
           path: 'remote-login',
           name: 'remoteLogin',
-          component: RemoteLogin
+          component: RemoteLogin,
+          meta: {
+            title: 'Remote Login'
+          }
         },
         {
           path: 'user-management',
           name: 'userManagement',
-          component: userManagement
+          component: userManagement,
+          meta: {
+            title: 'Manage Users'
+          }
         },
         {
           path: 'token-refresh',
           name: 'tokenRefresh',
-          component: TokenRefresh
+          component: TokenRefresh,
+          meta: {
+            title: 'Refresh Tokens'
+          }
         },
         {
           path: 'account-settings',
           name: 'setNickname',
-          component: SetNickname
+          component: SetNickname,
+          meta: {
+            title: 'Account Settings'
+          }
         },
         {
           path: 'oauth-accounts',
           name: 'oauthAccounts',
-          component: OAuthAccounts
+          component: OAuthAccounts,
+          meta: {
+            title: 'OAuth Accounts'
+          }
         },
         {
           path: '2-step-auth',
           name: 'twoStepAuth',
-          component: TwoStepAuth
+          component: TwoStepAuth,
+          meta: {
+            title: 'Two Factor Authentication'
+          }
         },
         {
           path: '/',
           name: 'console-index',
-          component: ConsoleIndex
+          component: ConsoleIndex,
+          meta: {
+            title: 'Roselia-Blog Console'
+          }
         }
       ]
     },

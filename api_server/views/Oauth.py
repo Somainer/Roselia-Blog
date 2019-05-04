@@ -9,7 +9,6 @@ route = oauth_view.route
 
 @route('/remove-adapter/<string:third>', methods=['POST'])
 @to_json
-@require_argument('token')
 @verify_token(0, True)
 def remove_adapter(third, username, role):
     result = username and OauthManager.remove_adapters(username, third)

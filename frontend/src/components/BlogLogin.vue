@@ -318,6 +318,25 @@ export default {
         this.redirectBack()
       }
     }
+    if (this.$route.query.alertText) {
+      const {alertText, alertColor} = this.$route.query
+      this.$router.replace({
+        ...this.$route,
+        params: {
+          ...this.$route.params,
+          alert: {
+            text: alertText,
+            color: alertColor
+          }
+        },
+        query: {
+          ...this.$route.query,
+          alertColor: undefined,
+          alertText: undefined
+        }
+      })
+      this.showToast(alertText, alertColor)
+    }
     if (this.$route.params.alert) {
       let {color, text} = this.$route.params.alert
       this.showToast(text, color)

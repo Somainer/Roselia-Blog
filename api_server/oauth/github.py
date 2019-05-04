@@ -51,10 +51,10 @@ class GithubOauth:
 
     @classmethod
     def add_record(cls, username, code):
-        return not cls.get_username_by_code_option(code).map(
+        return cls.get_username_by_code_option(code).map(
             lambda embedding: OauthManager.add_adapter(
                 username,
                 cls.adapter_name,
                 embedding
             )
-        ).empty
+        ).get_or(None)

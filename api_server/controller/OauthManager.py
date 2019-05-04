@@ -17,6 +17,9 @@ class OauthManager:
         if user.empty:
             return False
 
+        if Oauth.query.filter(Oauth.oauth_adapter == adapter).filter(Oauth.embedding_user == oauth_user).count():
+            return False
+        
         cls._force_add_record(user.get_or(None), adapter, oauth_user)
         return True
 
