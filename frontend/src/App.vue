@@ -185,6 +185,13 @@ export default {
     will-change: opacity;
   }
 
+  div.highlight {
+    background-color: #f5f5f5;
+    color: #bd4147;
+    box-shadow: 0px 2px 1px -1px rgba(0,0,0,0.2), 0px 1px 1px 0px rgba(0,0,0,0.14), 0px 1px 3px 0px rgba(0,0,0,0.12);
+    font-size: 85%;
+    font-weight: 900;
+  }
   .highlight .hll {
     background-color: #ffffcc
   }

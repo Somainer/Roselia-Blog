@@ -34,7 +34,6 @@
 
 <script>
 import utils from '../../common/utils'
-window.utils = utils
 export default {
   props: ['userData', 'toast'],
   data() {

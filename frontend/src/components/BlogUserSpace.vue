@@ -90,7 +90,7 @@
 
 <script>
 import BlogToolbar from './BlogToolbar'
-import utils from '../common/utils'
+import utils from '@/common/utils'
 const userData = (function () {
   let loginData = utils.getLoginData();
   return () => {

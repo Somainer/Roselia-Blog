@@ -184,7 +184,9 @@ export default {
         }
       })
     },
-    showToast: utils.showToast,
+    showToast(text, color) {
+      return utils.showToast.call(this, text, color)
+    },
     changeToast (show) {
       this.toast.show = show
     },

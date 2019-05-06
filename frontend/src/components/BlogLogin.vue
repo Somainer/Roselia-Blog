@@ -24,7 +24,7 @@
             </v-alert>
             <h2 class="flex text--secondary">{{message}}</h2>
             
-            <v-window :value="currentLayer">
+            <v-window :value="currentLayer" touchless>
               <v-window-item :value="2">
                 <div v-if="loading && !loginCode">
                   <h3 class="display-1">Please standby...</h3>
@@ -189,7 +189,7 @@ export default {
       window.sessionStorage.removeItem('message')
     },
     setLoginData({username, ...rest}) {
-      return utils.fetchJSONWithSuccess(utils.apiFor('user', 'nickname'), 'GET', {username}).then(({nickname}) => {
+      return utils.fetchJSONWithSuccess(utils.apiFor('user', 'user-meta'), 'GET', {username}).then(({username, nickname}) => {
         utils.setLoginData({
           username,
           nickname,

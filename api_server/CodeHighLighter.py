@@ -78,7 +78,7 @@ rules = RoseliaLexer(renderer)
 rules.register_rules()
 # rules.heimu()
 # rules.inline_heimu()
-markdown = mistune.Markdown(renderer=renderer, inline=rules)
+markdown = mistune.Markdown(renderer=renderer, inline=rules, hard_wrap=True)
 
 if __name__ == '__main__':
     print(markdown('~~~fuck~~~'))

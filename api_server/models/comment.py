@@ -1,6 +1,7 @@
 from . import database, db
 from sqlalchemy.sql import func
-from CodeHighLighter import markdown
+# from CodeHighLighter import markdown
+from GFMarkDown import markdown
 from lxml.html.clean import clean_html
 
 

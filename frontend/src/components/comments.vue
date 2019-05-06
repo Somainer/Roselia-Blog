@@ -1,7 +1,7 @@
 <template>
   <lazy-component text="Load comment">
     <v-container>
-      <v-flex v-if="canAddComment" xs12 sm8 offset-sm2>
+      <v-flex xs12 sm8 offset-sm2>
         <v-badge>
           <span slot="badge" v-if="commentCount">{{commentCount}}</span>
           <v-icon>
@@ -9,9 +9,27 @@
           </v-icon>
         </v-badge>
         <v-divider class="my-3"></v-divider>
-        <v-chip close color="secondary" dark v-if="replyToComment" v-model="chip">
-          @{{ atToNickname }}
-        </v-chip>
+      </v-flex>
+      <v-flex v-if="canAddComment" xs12 sm8 offset-sm2>
+        <v-layout row wrap>
+          <v-chip close color="secondary" dark v-if="replyToComment" v-model="chip">
+            @{{ atToNickname }}
+          </v-chip>
+          <v-spacer></v-spacer>
+          <v-btn color="accent" @click="switchPreviewMode" icon>
+            <v-icon v-if="showPreview">mode_edit</v-icon>
+            <v-icon v-else>visibility</v-icon>
+          </v-btn>
+        </v-layout>
+        <div v-if="showPreview">
+          <recursive-comment
+            ref="previewComment"
+            :comments="[currentCommentObject]"
+            :canAddComment="false"
+            :canDeleteComment="() => false"
+            :myUsername="userData && userData.username"
+          ></recursive-comment>
+        </div>
         <v-textarea
           v-model="comment"
           auto-grow
@@ -20,6 +38,7 @@
           color="primary"
           label="Leave a comment"
           ref="commentText"
+          v-else
         ></v-textarea>
         <v-layout row wrap>
           <v-flex xs4>
@@ -121,6 +140,7 @@ import { mapToUnderline, mapToCamelCase, safeDictGet } from '@/common/helpers';
 import recursiveComment from './RecursiveComments'
 import utils from '@/common/utils';
 import M from 'materialize-css'
+import SimpleMDE from 'simplemde'
 export default {
   components: {lazyComponent, recursiveComment},
   props: ['userData', 'postData', 'toast', 'renderer'],
@@ -146,7 +166,10 @@ export default {
       removeTokens: {
 
       },
-      cachedDraft: {}
+      cachedDraft: {},
+      userMeta: {},
+      userMetaLoaded: false,
+      showPreview: false
     }
   },
   methods: {
@@ -196,6 +219,7 @@ export default {
       this.comment = ''
       this.replyToComment = undefined
       this.commentLeft = false
+      this.showPreview = false
     },
     deleteComment(cid) {
       utils.fetchJSONWithSuccess(utils.apiFor('comment', 'delete'), 'POST', mapToUnderline({
@@ -278,8 +302,8 @@ export default {
     getCommentNickname(comment) {
       return comment.nickname || safeDictGet('author', 'nickname')(comment)
     },
-    processComments() {
-      const commentRef = this.$refs.comments.$el || this.$refs.comments
+    processComments(ref) {
+      const commentRef = ref || this.$refs.comments.$el || this.$refs.comments
       const links = Array.from(commentRef.querySelectorAll('a')).filter(e => !!e.href)
       const personalHosts = [
         'mohuety.com', 'roselia.moe', 'roselia.xyz', 'lisa.moe', 'roselia.app'
@@ -304,24 +328,27 @@ export default {
     },
     renderScript() {
       this.commentList.filter(x => x.author).filter(x => !x.rendered).forEach(c => {
-        Object.defineProperty(c, 'id', {
-          value: c.id,
-          writable: false
-        })
-        c.author = new Proxy(c.author, {
-          set(target, prop, value) {
-            if (prop === 'role') return
-            return Reflect.set(target, prop, value)
-          }
-        })
-        const popContext = this.renderer.pushContext(c, 'comment')
-        c.cleanedContent = this.renderer.cleanScript(c.content)
-        const renderResult = this.renderer.render(c.content)
-        c.content = renderResult
-        c.rendered = true
-        this.renderer.injectEvents()
-        popContext()
+        this.forceRenderScript(c)
       })
+    },
+    forceRenderScript(c) {
+      Object.defineProperty(c, 'id', {
+        value: c.id,
+        writable: false
+      })
+      c.author = new Proxy(c.author, {
+        set(target, prop, value) {
+          if (prop === 'role') return
+          return Reflect.set(target, prop, value)
+        }
+      })
+      const popContext = this.renderer.pushContext(c, 'comment')
+      c.cleanedContent = this.renderer.cleanScript(c.content)
+      const renderResult = this.renderer.render(c.content)
+      c.content = renderResult
+      c.rendered = true
+      this.renderer.injectEvents()
+      popContext()
     },
     onExit(id) {
       if(this.hasUnsafedDraft) {
@@ -339,6 +366,43 @@ export default {
       if (draft) {
         this.comment = draft.comment || this.comment
         this.nickname = draft.nickname || this.nickname
+      }
+    },
+    ensureUserMeta() {
+      if(!this.userData) {
+        this.userMetaLoaded = false
+        this.userMeta = {}
+      }
+      if(this.userMetaLoaded && this.userMeta.username === this.userData.username) return
+      this.userMetaLoaded = false
+      utils.fetchJSONWithSuccess(utils.apiFor('user', 'user-meta'), 'GET', {
+        username: this.userData.username
+      }).then(data => {
+        this.userMeta = mapToCamelCase(data)
+        this.userMetaLoaded = true
+        if(this.showPreview) {
+          this.showPreview = false
+          this.$nextTick(() => {
+            this.showPreview = true
+          })
+        }
+      }).catch(err => {
+        
+      })
+    },
+    switchPreviewMode() {
+      this.showPreview = !this.showPreview
+      if(this.showPreview) {
+        this.ensureUserMeta()
+        this.$nextTick(() => {
+          this.processComments(this.$refs.previewComment.$el || this.$refs.previewComment)
+        })
+      }
+    },
+    highlightLanguage () {
+      if (window.hljs) {
+        window.hljs.initHighlighting.called = false
+        window.hljs.initHighlighting()
       }
     }
   },
@@ -408,6 +472,20 @@ export default {
           replies: []
         }
       ]
+    },
+    currentCommentObject() {
+      const markdown = s => SimpleMDE.prototype.markdown(s)
+      const comment = {
+        content: markdown(this.comment),
+        color: '',
+        createdAt: new Date,
+        replies: [],
+        author: this.userData ? {...(this.userMetaLoaded ? this.userMeta : this.userData)} : undefined,
+        nickname: this.userData ? undefined : this.nickname,
+        id: 0
+      }
+      if(this.showPreview && this.userData) this.forceRenderScript(comment)
+      return comment
     }
   },
   watch: {
@@ -431,6 +509,9 @@ export default {
       this.onExit(ov.id)
       this.cleanUp()
       this.loadDraft(nv.id)
+    },
+    userData() {
+      this.ensureUserMeta()
     }
   },
   mounted() {

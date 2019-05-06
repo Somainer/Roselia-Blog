@@ -38,7 +38,8 @@ type WithNickname = CommentBase & {
 type RoseliaComment = WithAutor | WithNickname
 
 function getNickname(rc: RoseliaComment) {
-  return (rc as WithNickname).nickname || (rc as WithAutor).author.nickname
+  const nickname = (rc as WithNickname).nickname
+  return typeof nickname === 'string' ? nickname : (rc as WithAutor).author.nickname
 }
 
 interface RecursiveCommentProps {

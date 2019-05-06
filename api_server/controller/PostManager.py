@@ -4,7 +4,8 @@ from fn.monad import Option
 from operator import *
 from sqlalchemy.sql import operators as sql_ops
 from sqlalchemy.sql import functions as sql_funcs
-from CodeHighLighter import markdown
+from GFMarkDown import markdown
+# from CodeHighLighter import markdown
 from controller.UserManager import UserManager
 
 

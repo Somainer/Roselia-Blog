@@ -270,11 +270,15 @@ export default {
     }
   }),
   methods: {
-    showToast: utils.showToast,
+    showToast(text, color) {
+      return utils.showToast.call(this, text, color)
+    },
     changeToast (show) {
       this.toast.show = show
     },
-    getArguments: utils.getArguments,
+    getArguments() {
+      return this.$route.query
+    },
     formatDate(date, withTime=false) {
       return utils.formatDate(date, withTime)
     },
@@ -598,4 +602,5 @@ export default {
 </script>
 
 <style scoped>
+
 </style>

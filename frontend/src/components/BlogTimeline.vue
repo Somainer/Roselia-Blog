@@ -40,8 +40,8 @@
         >
         <v-slide-x-transition group>
           <v-timeline-item
-            v-for="(post, i) in postData"
-            :key="i"
+            v-for="(post) in postData"
+            :key="post.id"
             fill-dot
             color="accent"
           >

@@ -1,10 +1,10 @@
+markdown
 lxml
 sqlalchemy
 PyRSS2Gen
 itsdangerous
 Pillow
 pygments
-mistune
 gevent
 werkzeug
 flask
@@ -13,3 +13,4 @@ requests
 pymonad
 Flask-SQLAlchemy
 pyotp
+pymdown-extensions

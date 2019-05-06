@@ -4,7 +4,7 @@
     <h2 class="flex text--secondary">Nickname</h2>
     <v-form v-model="valid" ref="form" @submit.prevent="">
       <v-text-field v-model="nickname" name="nickname" label="Nickname" type="text"
-                    autofocus :rules="rules" @keyup.enter="changeNickname"></v-text-field>
+                    :rules="rules" @keyup.enter="changeNickname"></v-text-field>
     </v-form>
     <v-card-actions>
       <v-spacer></v-spacer>
@@ -17,7 +17,7 @@
     <h2 class="flex text--secondary">Motto</h2>
     <v-form @submit.prevent="">
       <v-text-field v-model="motto" name="motto" label="Motto" type="text"
-                    autofocus @keyup.enter="changeMotto"></v-text-field>
+                    clearable @keyup.enter="changeMotto"></v-text-field>
     </v-form>
     <v-card-actions>
       <v-spacer></v-spacer>
@@ -34,7 +34,7 @@
     <h2 class="flex text--secondary">Avatar</h2>
     <v-form v-model="avatarValid" ref="formA" @submit.prevent="">
       <v-text-field v-model="avatar" name="avatar" label="Avatar Image URL" type="text"
-                    @keyup.enter="changeAvatar(false)"></v-text-field>
+                    clearable @keyup.enter="changeAvatar(false)"></v-text-field>
     </v-form>
     <v-card-actions>
       <div v-if="avatar">
@@ -62,7 +62,7 @@
     <h2 class="flex text--secondary">Banner Image</h2>
     <v-form>
       <v-text-field v-model="banner" name="banner" label="Banner Image URL" type="text"
-                    @keyup.enter="changeBanner(false)"></v-text-field>
+                    clearable @keyup.enter="changeBanner(false)"></v-text-field>
     </v-form>
     <div>
       <v-img v-if="banner" :src="banner" @load="bannerValid = true"></v-img>

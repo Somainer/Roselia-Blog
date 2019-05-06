@@ -3,7 +3,7 @@ import _ from 'lodash'
 import router from '../router/index'
 import config from './config'
 
-let utils = {}
+const utils = {}
 utils.apiBase = config.apiBase
 // utils.apiBase = 'http://localhost:5000/api'
 // utils.apiBase = 'https://roselia.moe/blog/api'
