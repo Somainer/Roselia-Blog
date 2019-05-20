@@ -12,7 +12,7 @@ class TokenProcessor:
         self.token_exp = 3600
         self.rftoken_exp = self.token_exp * 24
         self.serializer = Serializer(secret_key=self.secret_key, salt=self.salt, expires_in=self.token_exp)
-        self.un_serializer = UnlimitedSerializer(secret_key=self.secret_key, salt=self.salt)
+        self.un_serializer = UnlimitedSerializer(secret_key=self.secret_key)  # , salt=self.salt)
 
     def iss_token(self, username, role):
         iss_time = time.time()

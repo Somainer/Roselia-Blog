@@ -178,3 +178,9 @@ class UserManager:
         
         db.session.commit()
         return True
+
+    @classmethod
+    def is_master(cls, username):
+        return cls.find_user_option(username)\
+            .map(lambda u: not User.query.filter(User.role > u.role).count())\
+            .get_or(False)

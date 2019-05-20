@@ -1,8 +1,9 @@
 import os
+import binascii
 
 
 def gen_key():
-    return os.urandom(24)
+    return binascii.b2a_hex(os.urandom(24))
 
 
 APP_KEY = 'MODIFY_OR_EMPTY_WHEN_CHANGE_EVERY_LAUNCH' or gen_key()

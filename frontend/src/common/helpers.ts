@@ -10,14 +10,24 @@ export const tupleToDict = (tuples: [string, any][]) => tuples.reduce((o, arr) =
 
 export const mapKeys = (fn: (s: string) => string) => (obj: object) => tupleToDict(mapEntries((s, a) => [fn(s), a])(obj))
 
+export const deepMapKeys = (fn: (s: string) => string) => (obj: object): object => {
+    if (obj instanceof Array) return obj.map(deepMapKeys(fn))
+    if (obj && typeof obj === 'object') {
+        return tupleToDict(mapEntries((k, v) => {
+            return [fn(k), deepMapKeys(fn)(v)]
+        })(obj))
+    }
+    return obj
+}
+
 // export const mapKeys = (fn: (s: string) => string) => (obj: object) => Object.entries(obj).map(([k, v]) => [fn(k), v]).reduce((o, arr) => ({
 //     ...o,
 //     [arr[0]]: arr[1]
 // }), {})
 
-export const mapToCamelCase = mapKeys(underlineToCamelCase)
+export const mapToCamelCase = deepMapKeys(underlineToCamelCase)
 
-export const mapToUnderline = mapKeys(camelCaseToUnderline)
+export const mapToUnderline = deepMapKeys(camelCaseToUnderline)
 
 export const safeDictGet = (...path: string[]) => (obj: object) => path.reduce((acc, attr) => typeof acc === 'undefined' ? undefined : acc[attr], obj)
 

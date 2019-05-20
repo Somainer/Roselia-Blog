@@ -2,7 +2,7 @@
 <div>
   <v-toolbar
     color="primary"
-    scroll-off-screen
+    scroll-toolbar-off-screen
   >
     <v-toolbar-side-icon dark v-if="shouldHaveToolbar" @click.native="drawer = !drawer"></v-toolbar-side-icon>
     <slot></slot>
@@ -132,5 +132,4 @@ export default {
 </script>
 
 <style scoped>
-
 </style>

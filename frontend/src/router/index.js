@@ -19,6 +19,7 @@ import Timeline from '../components/BlogTimeline'
 import SetNickname from '../components/console/SetNickname'
 import OAuthAccounts from  '../components/console/OauthBind'
 import TwoStepAuth from '../components/console/TwoStepAuth'
+import SystemMonitor from '../components/console/SystemMonitor'
 
 Vue.use(Router)
 
@@ -135,6 +136,14 @@ export default new Router({
           component: TwoStepAuth,
           meta: {
             title: 'Two Factor Authentication'
+          }
+        },
+        {
+          path: 'system-monitor',
+          name: 'systemMonitor',
+          component: SystemMonitor,
+          meta: {
+            title: 'System Monitor'
           }
         },
         {

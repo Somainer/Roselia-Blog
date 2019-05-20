@@ -14,3 +14,4 @@ pymonad
 Flask-SQLAlchemy
 pyotp
 pymdown-extensions
+psutil

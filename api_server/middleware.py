@@ -156,3 +156,17 @@ def catch_exception(func):
             }
 
     return wrapper
+
+
+def transform_to(trans):
+
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            return trans(func(*args, **kwargs))
+
+        wrapper.invoke = func
+        return wrapper
+
+    decorator.invoke = trans
+    return decorator
