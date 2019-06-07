@@ -133,10 +133,11 @@ export default {
       adapters: []
     },
     authLoginCode: '',
-    forceStep: 0
+    forceStep: 0,
+    redirectLock: false
   }),
   props: {
-    source: String
+   userData: Object
   },
   methods: {
     login () {
@@ -173,7 +174,9 @@ export default {
       })
     },
     redirectBack() {
+      if(this.redirectLock) return
       this.$router.push(this.redirection)
+      this.redirectLock = true
     },
     showToast (text, color = 'info') {
       this.toast.show = false
@@ -310,7 +313,7 @@ export default {
     }
   },
   mounted () {
-    if (utils.getLoginData()) {
+    if (this.userData) {
       if (this.$route.params.logout) {
         utils.removeLoginData()
         this.showToast('Logged out!')
@@ -341,12 +344,6 @@ export default {
       let {color, text} = this.$route.params.alert
       this.showToast(text, color)
     }
-    const removeListener = utils.addStorageListener(e => {
-      if(e.key === 'loginData' && e.newValue) {
-        removeListener()
-        this.redirectBack()
-      }
-    })
     let token = utils.getArguments.call(this).token
     token && this.tokenLogin(token).catch(err => {
       this.getAdapters()
@@ -360,6 +357,13 @@ export default {
     })
     if (!token) {
       this.getAdapters()
+    }
+  },
+  watch: {
+    userData(val) {
+      if(val) {
+        this.redirectBack()
+      }
     }
   },
   destroyed () {

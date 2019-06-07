@@ -10,6 +10,10 @@ export const tupleToDict = (tuples: [string, any][]) => tuples.reduce((o, arr) =
 
 export const mapKeys = (fn: (s: string) => string) => (obj: object) => tupleToDict(mapEntries((s, a) => [fn(s), a])(obj))
 
+export function mapValues<T, U>(fn: (s: T[keyof T]) => U) {
+    return (obj: T) => Object.assign({}, ...Object.entries(obj).map(([k, v]) => ({[k]: fn(v)})))
+}
+
 export const deepMapKeys = (fn: (s: string) => string) => (obj: object): object => {
     if (obj instanceof Array) return obj.map(deepMapKeys(fn))
     if (obj && typeof obj === 'object') {

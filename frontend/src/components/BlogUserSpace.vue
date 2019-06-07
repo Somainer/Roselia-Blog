@@ -91,20 +91,11 @@
 <script>
 import BlogToolbar from './BlogToolbar'
 import utils from '@/common/utils'
-const userData = (function () {
-  let loginData = utils.getLoginData();
-  return () => {
-    if (loginData) return loginData;
-    loginData = utils.getLoginData();
-    return loginData || null;
-  };
-})();
 export default {
   components: {BlogToolbar},
   name: 'blog-user-space',
   data () {
     return {
-      userData: userData(),
       toast: {
         show: false,
         text: '',
@@ -115,7 +106,8 @@ export default {
     }
   },
   props: {
-    currentColorScheme: Boolean
+    currentColorScheme: Boolean,
+    userData: Object
   },
   computed: {
     items () {
@@ -124,7 +116,8 @@ export default {
         { divider: true },
         { heading: 'Articles' },
         { icon: 'add_circle', text: 'Write a new post', to: {name: 'edit'}, cond: this.userData.role },
-        { icon: 'delete', text: 'Remove all drafts', click: this.removeAllDraft },
+        // { icon: 'delete', text: 'Remove all drafts', click: this.removeAllDraft },
+        { icon: 'archive', text: 'Manage Drafts', to: {name: 'manageDrafts', cond: this.userData.role }},
         { icon: 'list_alt', text: 'My Timeline', to: {name: 'userTimeline', params: {username: this.userData.username}}},
         { divider: true },
         { heading: 'My Account' },
@@ -183,14 +176,7 @@ export default {
     }
   },
   mounted () {
-    this.userData = utils.getLoginData()
     this.ensureLoggedIn()
-    this.removeListener = utils.addEventListener('storage', e => {
-      if (e.key === 'loginData') {
-        console.log(e)
-        this.userData = utils.getLoginData()
-      }
-    })
   },
   destroyed() {
     utils.removeSUToken()

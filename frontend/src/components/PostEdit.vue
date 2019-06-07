@@ -105,7 +105,10 @@
                   <v-icon>delete</v-icon>
                 </v-btn>
                 <v-btn color="secondary" @click="saveDraft" :loading="loading"><v-icon>archive</v-icon></v-btn>
-                <v-btn color="primary" v-on:click="doEditPost" :loading="loading" :disabled="!valid"><v-icon>cloud_upload</v-icon></v-btn>
+                <v-btn color="primary" v-on:click="doEditPost" :loading="loading" :disabled="!valid">
+                  <v-icon>cloud_upload</v-icon>
+<!--                  <span v-if="!isMobile">({{commandText}}+S)</span>-->
+                </v-btn>
               </v-layout>
 
             </div>
@@ -167,10 +170,12 @@ import SimpleMDE from 'simplemde'
 import 'simplemde/dist/simplemde.min.css'
 import 'github-markdown-css'
 import 'highlight.js/styles/xcode.css'
+import {platform} from '../common/platform'
 
 import {mapToCamelCase, mapToUnderline} from '../common/helpers'
 
 window.hljs = hljs
+window.platform = platform
 
 export default {
   components: {BlogToolbar, markdownEditor},
@@ -198,7 +203,6 @@ export default {
     valid: true,
     markdown: true,
     addPost: 0, //
-    userData: utils.getLoginData(),
     loading: false,
     configs: {
       spellChecker: false,
@@ -207,6 +211,9 @@ export default {
     uploadImages: [],
     doNotSave: false
   }),
+  props: {
+    userData: Object
+  },
   methods: {
     showToast (text, color = 'info') {
       this.toast.text = text
@@ -378,6 +385,15 @@ export default {
     },
     lockIcon () {
       return this.postData.secret ? 'lock' : 'lock_open'
+    },
+    isMac() {
+      return platform.macOS
+    },
+    isMobile() {
+      return platform.mobile
+    },
+    commandText() {
+      return this.isMac ? '⌘' : 'Ctrl'
     }
   },
   mounted () {
@@ -409,14 +425,19 @@ export default {
     if (!loaded && !this.addPost) {
       this.loadContent()
     }
-    addEventListener('storage', e => {
-      e.key === 'loginData' && (e.newValue || this.makeRedirect({
-        name: 'login'
-      }))
-    })
 
     window.addEventListener('beforeunload', e => this.saveDraft())
     this.$emit('forceSwitchToLight', true)
+    let unwatch = utils.addEventListener('keyup', ev => {
+
+    })
+  },
+  watch: {
+    userData(val) {
+      if(!val) this.makeRedirect({
+        name: 'login'
+      })
+    }
   },
   beforeDestroy () {
     if (!this.doNotSave) this.saveDraft()

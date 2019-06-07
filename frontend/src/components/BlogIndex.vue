@@ -144,7 +144,6 @@ export default {
       prevPage: 0,
       nextPage: 0,
       pages: 0,
-      userData: utils.getLoginData(),
       toast: utils.getToastOption(),
       posts: [],
       meta,
@@ -152,6 +151,9 @@ export default {
       realSubtitle: '',
       windowTitle: ''
     }
+  },
+  props: {
+    userData: Object
   },
   methods: {
     makeDirect (frm) {
@@ -190,7 +192,7 @@ export default {
     changeToast (show) {
       this.toast.show = show
     },
-    getPostsOnContex (args) {
+    getPostsOnContext (args) {
       args = args || this.getArguments()
       return this.getPosts(args.page, false, args.tag)
     },
@@ -261,13 +263,7 @@ export default {
     }
   },
   mounted () {
-    this.userData = utils.getLoginData()
-    this.getPostsOnContex()
-    window.addEventListener('storage', e => {
-      if (e.key === 'loginData') {
-        this.userData = utils.getLoginData()
-      }
-    })
+    this.getPostsOnContext()
   },
   computed: {
     
@@ -289,7 +285,7 @@ export default {
   beforeRouteUpdate (to, from, next) {
     this.$vuetify.goTo(0)
     let args = to.query
-    this.getPostsOnContex(args)
+    this.getPostsOnContext(args)
     next()
   }
 }

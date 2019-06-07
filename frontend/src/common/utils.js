@@ -2,6 +2,7 @@ import axios from './ajax-bar-axios'
 import _ from 'lodash'
 import router from '../router/index'
 import config from './config'
+import { userInfoManager } from './UserInfoManager';
 
 const utils = {}
 utils.apiBase = config.apiBase
@@ -31,15 +32,15 @@ utils.redirectTo = url => {
   router.push(url || './')
 }
 
-utils.getLoginData = () => window.localStorage.loginData ? JSON.parse(window.localStorage.loginData) : null
+utils.getLoginData = () => userInfoManager.getPayload()
 
 utils.setLoginData = data => {
-  window.localStorage.loginData = JSON.stringify(data)
+  userInfoManager.setPayload(data)
 }
 
 utils.updateLoginData = (fn) => utils.setLoginData(fn(utils.getLoginData()))
 
-utils.removeLoginData = () => window.localStorage.loginData && window.localStorage.removeItem('loginData')
+utils.removeLoginData = () => userInfoManager.clear()
 
 utils.saveSUToken = function (token) {
   window.sessionStorage.setItem('suToken', token)

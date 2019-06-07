@@ -22,7 +22,7 @@ interface CommentBase {
   color: string
   replyTo: number
 }
-type WithAutor = CommentBase & {
+type WithAuthor = CommentBase & {
   author: {
     id: number,
     nickname: string,
@@ -35,11 +35,16 @@ type WithNickname = CommentBase & {
   nickname: string
 }
 
-type RoseliaComment = WithAutor | WithNickname
+type RoseliaComment = WithAuthor | WithNickname
 
 function getNickname(rc: RoseliaComment) {
-  const nickname = (rc as WithNickname).nickname
-  return typeof nickname === 'string' ? nickname : (rc as WithAutor).author.nickname
+  return hasAuthor(rc) ? rc.author.nickname : rc.nickname;
+  // const nickname = (rc as WithNickname).nickname
+  // return typeof nickname === 'string' ? nickname : (rc as WithAuthor).author.nickname
+}
+
+function hasAuthor(rc: RoseliaComment): rc is WithAuthor {
+  return !!(rc as WithAuthor).author
 }
 
 interface RecursiveCommentProps {
@@ -84,16 +89,16 @@ export default tsx.componentFactoryOf<RecursiveCommentProps>().create({
                 key={comment.id}
                 class="mb-3" fill-dot
                 color={
-                  comment.color || ((comment as WithAutor).author ? 'accent' : '#bbbbbb')
+                  comment.color || ((comment as WithAuthor).author ? 'accent' : '#bbbbbb')
                 }
                 id={`comment-${comment.id}`}
               >
-                {(comment as WithAutor).author && (comment as WithAutor).author.avatar ? <VAvatar slot="icon">
-                  <VImg src={(comment as WithAutor).author.avatar}></VImg>
+                {(comment as WithAuthor).author && (comment as WithAuthor).author.avatar ? <VAvatar slot="icon">
+                  <VImg src={(comment as WithAuthor).author.avatar}></VImg>
                 </VAvatar> : null}
                 <VLayout justify-space-between>
                   <VFlex xs7>
-                    {this.infoLabel(getNickname(comment), comment.color || ((comment as WithAutor).author ? 'secondary' : '#bbbbbb'), false,
+                    {this.infoLabel(getNickname(comment), comment.color || ((comment as WithAuthor).author ? 'secondary' : '#bbbbbb'), false,
                       (this.getUsername(comment)) ? { name: 'userTimeline', params: {username: this.getUsername(comment)}} : undefined)}
                     {this.myUsername && caselessEqual(this.getUsername(comment), this.myUsername) ? (
                       this.infoLabel('You', 'accent', true)
@@ -130,7 +135,7 @@ export default tsx.componentFactoryOf<RecursiveCommentProps>().create({
       )
     },
     getUsername(c: RoseliaComment) {
-      return ((cmt: WithAutor) => cmt.author && cmt.author.username)(c as WithAutor)
+      return ((cmt: WithAuthor) => cmt.author && cmt.author.username)(c as WithAuthor)
     },
     infoLabel(text: string, color: string, outline: boolean = false, to?: object) {
       const calculatingColor = (this as any).$vuetify.theme[color] || color

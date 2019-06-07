@@ -9,6 +9,7 @@
             @forceSwitchToLight="switchToLight"
             @forceSwitchToDark="switchToDark"
             :currentColorScheme="!isNight"
+            :userData="userData"
           ></router-view>
         </v-slide-x-transition>
 
@@ -23,6 +24,7 @@
 <script>
 import ThemeListener from './plugin/ThemeListener'
 import { selectByLuminance } from './common/helpers';
+import {userInfoManager} from "./common/UserInfoManager";
 export default {
   name: 'App',
   components: {
@@ -61,6 +63,9 @@ export default {
     //   //  finish the progress bar
     //   this.$Progress.finish()
     // })
+    userInfoManager.addChangeListener(d => {
+      this.userData = d
+    })
   },
   methods: {
     switchToLight(ev) {
@@ -75,7 +80,8 @@ export default {
       forceLight: false,
       forceDark: false,
       forceTitle: '',
-      preferedLight: undefined
+      preferedLight: undefined,
+      userData: userInfoManager.getPayload()
     }
   },
   computed: {

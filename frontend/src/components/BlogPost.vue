@@ -226,7 +226,8 @@ export default {
   name: 'blog-post',
   props: {
     p: Number,
-    currentColorScheme: Boolean
+    currentColorScheme: Boolean,
+    userData: Object
   },
   data: () => ({
     postData: {
@@ -246,7 +247,6 @@ export default {
       tags: [''],
       date: (new Date()).toDateString()
     },
-    userData: utils.getLoginData(),
     postDigest: [],
     preview: {
       show: false,
@@ -557,11 +557,6 @@ export default {
     this.renderer = RoseliaScript.createRenderer(this)
     if(this.$route.params.shareId) this.getPostByShared(this.$route.params.shareId)
     else this.loadContent()
-    this.$on('postDestroyed', utils.addEventListener('storage', e => {
-      if (e.key === 'loginData') {
-        this.userData = utils.getLoginData()
-      }
-    }))
     // console.log(RoseliaScript)
     // this.renderer = RoseliaScript.createRenderer(this)
     if (!window.MathJax) {

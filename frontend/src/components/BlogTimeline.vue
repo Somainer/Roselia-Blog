@@ -127,7 +127,6 @@ export default {
     return {
       currentPage: 1,
       totalPages: 1,
-      userData: utils.getLoginData(),
       postData: [],
       loading: false,
       hasLeft: false,
@@ -141,6 +140,9 @@ export default {
       },
       userFound: true
     };
+  },
+  props: {
+    userData: Object
   },
   methods: {
     getPostData(page, append = true) {
@@ -224,11 +226,6 @@ export default {
       this.getUserMeta()
     }
     this.getPostData(1, false);
-    window.addEventListener("storage", e => {
-      if (e.key === "loginData") {
-        this.userData = utils.getLoginData();
-      }
-    });
   },
   watch: {
     userData() {

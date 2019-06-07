@@ -20,6 +20,7 @@ import SetNickname from '../components/console/SetNickname'
 import OAuthAccounts from  '../components/console/OauthBind'
 import TwoStepAuth from '../components/console/TwoStepAuth'
 import SystemMonitor from '../components/console/SystemMonitor'
+import DraftManage from '../components/console/DraftManage'
 
 Vue.use(Router)
 
@@ -144,6 +145,14 @@ export default new Router({
           component: SystemMonitor,
           meta: {
             title: 'System Monitor'
+          }
+        },
+        {
+          path: 'manage-drafts',
+          name: 'manageDrafts',
+          component: DraftManage,
+          meta: {
+            title: 'Draft Management'
           }
         },
         {

@@ -23,13 +23,13 @@
             Refresh Loop:
             <span v-if="!!mainTimer">
               On
-              <v-btn icon flat dark @click="destroyTimer">
+              <v-btn icon flat dark @click="stopLoop">
                 <v-icon>pause</v-icon>
               </v-btn>
             </span>
             <span v-else>
               Off
-              <v-btn icon flat dark @click="createTimer">
+              <v-btn icon flat dark @click="startLoop">
                 <v-icon>play_arrow</v-icon>
               </v-btn>
             </span>
@@ -104,11 +104,11 @@
           <h1>Revoke All Issued Tokens</h1>
           <v-flex md12 lg12>
             <v-alert :value="true" type="warning">
-              This will revoke all issed tokens, and you will be logged out after that.
+              This will revoke all issued tokens, and you will be logged out after that.
             </v-alert>
           </v-flex>
-          <v-btn @click="refreshSalt" color="warning">
-            <v-icon>cloud_off</v-icon>Revoke
+          <v-btn @click="refreshSalt" color="warning" @mouseleave="confirmRefresh = false">
+            <v-icon>cloud_off</v-icon> {{ confirmRefresh ? 'Confirm ' : '' }}Revoke
           </v-btn>
         </div>
       </div>
@@ -152,7 +152,8 @@ export default {
       },
       mainTimer: 0,
       removeBlurListener: null,
-      removeFocusListener: null
+      removeFocusListener: null,
+      confirmRefresh: false
     }
   },
   computed: {
@@ -184,13 +185,18 @@ export default {
     },
     readableMemory(bytes) {
       const units = ['B', 'KB', 'MB', 'GB', 'TB', 'TB']
-      const [value, unit] = units.reduce(([byte, unit], idx) => {
+      const [value, unit] = units.reduce(([byte, unit]) => {
         if(byte < 1024) return [byte, unit]
         return [byte / 1024, unit + 1]
       }, [bytes, 0])
       return value.toFixed(2) + units[unit]
     },
     refreshSalt() {
+      if(!this.confirmRefresh) {
+        this.confirmRefresh = true
+        return
+      }
+      this.confirmRefresh = false
       utils.fetchJSONWithSuccess(utils.apiFor('system', 'refresh-salt'), 'POST').then(() => {
         this.toast('Tokens revoked', 'success')
         this.$router.push({
@@ -224,19 +230,34 @@ export default {
         clearInterval(this.mainTimer)
         this.mainTimer = null
       }
+    },
+    setFocusTriggers() {
+      if(!this.removeBlurListener) this.removeBlurListener = utils.addEventListener('blur', this.destroyTimer)
+      if(!this.removeFocusListener) this.removeFocusListener = utils.addEventListener('focus', this.createTimer)
+    },
+    destroyFocusTriggers() {
+      this.removeBlurListener && this.removeBlurListener()
+      this.removeFocusListener && this.removeFocusListener()
+      this.removeBlurListener = this.removeFocusListener = null
+    },
+    startLoop() {
+      this.createTimer()
+      this.setFocusTriggers()
+    },
+    stopLoop() {
+      this.destroyFocusTriggers()
+      this.destroyTimer()
     }
   },
   mounted() {
     this.getBasicInfo()
     this.getDynamicInfo()
     this.createTimer()
-    this.removeBlurListener = utils.addEventListener('blur', this.destroyTimer)
-    this.removeFocusListener = utils.addEventListener('focus', this.createTimer)
+    this.setFocusTriggers()
   },
   beforeDestroy() {
     this.destroyTimer()
-    this.removeBlurListener && this.removeBlurListener()
-    this.removeFocusListener && this.removeFocusListener()
+    this.destroyFocusTriggers()
   }
 }
 </script>
