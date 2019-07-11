@@ -1,5 +1,5 @@
 from . import database
-from CodeHighLighter import markdown
+from GFMarkDown import markdown
 from datetime import datetime
 from .relations import post_catalog, post_tag
 from sqlalchemy.sql import func

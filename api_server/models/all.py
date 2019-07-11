@@ -5,5 +5,6 @@ from .comment import Comment
 from .tag import Tag
 from .relations import post_catalog, post_tag
 from .oauth import Oauth
+from .PluginStorage import PluginStorage
 
 from . import database, db

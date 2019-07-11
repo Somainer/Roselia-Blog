@@ -1,6 +1,5 @@
 from . import database, db
 import hashlib
-import bcrypt
 import binascii
 
 
@@ -76,8 +75,8 @@ class Digest(object):
     def digest(cls, password):
         return cls.hash_func(cls.add_salt(password).encode()).hexdigest()
 
-    @classmethod
-    def bcrypt_digest(cls, password):
-        return binascii.hexlify(bcrypt.kdf(
-            cls.need_byte(password), cls.need_byte(cls.hash_salt), 32, 100
-        ))
+    # @classmethod
+    # def bcrypt_digest(cls, password):
+    #     return binascii.hexlify(bcrypt.kdf(
+    #         cls.need_byte(password), cls.need_byte(cls.hash_salt), 32, 100
+    #     ))
