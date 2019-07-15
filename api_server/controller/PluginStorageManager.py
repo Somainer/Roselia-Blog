@@ -21,12 +21,15 @@ class PluginStorageManager:
             .filter(PluginStorage.user == user)
 
     @classmethod
-    def search_records(cls, application: str, index_key: str, username: str = None):
-        return PluginStorage.query \
+    def search_records(cls, application: str, index_key: str, username: str = None, get_all=True):
+        query = PluginStorage.query \
             .filter(PluginStorage.application == application) \
-            .filter(PluginStorage.index_key == index_key) \
-            .filter(PluginStorage.user == cls.get_user_id(username)) \
-            .all()
+            .filter(PluginStorage.index_key == index_key)
+        if not get_all:
+            query = query.filter(PluginStorage.user == cls.get_user_id(username))
+        return [
+            x.get_dict() for x in query.all()
+        ]
 
     @classmethod
     def get_content(cls, application: str, key: str, username):
@@ -38,7 +41,7 @@ class PluginStorageManager:
     @db_mutation_cleanup
     def new_record(cls, application: str, key: str, value: str, username=None, index_key=None):
         record = cls.raw_query(application, key)
-        if record:
+        if record.count():
             return False
         user = Option(username).map(UserManager.find_user).get_or(None)
         record = PluginStorage()

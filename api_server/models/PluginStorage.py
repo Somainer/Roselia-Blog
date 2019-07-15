@@ -3,12 +3,13 @@ from sqlalchemy.sql import func
 
 
 class PluginStorage(database.Model):
+    record_id = db.Column(db.Integer, primary_key=True)
     application = db.Column(db.String(64), nullable=False)
     user = db.Column(db.Integer, db.ForeignKey('user.user_id'))
 
     index_key = db.Column(db.String(64))
 
-    key = db.Column(db.String(64), nullable=False, unique=True)
+    key = db.Column(db.String(64), nullable=False)
     content = db.Column(db.Text)
 
     create_time = db.Column(db.DateTime, server_default=func.now())

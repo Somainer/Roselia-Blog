@@ -4,8 +4,17 @@ from views.Comment import comment_view
 from views.Oauth import oauth_view
 from views.Post import post_view
 from views.System import system_view
+from views.Plugin import plugin_view
 
-views = [roselia_gbp_view, user_view, comment_view, oauth_view, post_view, system_view]
+views = [
+    roselia_gbp_view, 
+    user_view, 
+    comment_view, 
+    oauth_view, 
+    post_view, 
+    system_view, 
+    plugin_view
+]
 
 
 def register_views(app):
