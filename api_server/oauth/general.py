@@ -1,40 +1,27 @@
-from config import GITHUB_CLIENT_SECRET, GITHUB_CLIENT_ID
 import requests
-from .general import GeneralOauth
-from urllib.parse import quote
+from fn.monad import Option
+from controller.OauthManager import OauthManager
 
 
-class GithubOauth(GeneralOauth):
-    adapter_name = 'github'
+class GeneralOauth:
+    adapter_name = ''
 
     @classmethod
     def available(cls):
-        return GITHUB_CLIENT_SECRET and GITHUB_CLIENT_ID
+        return False
 
     @classmethod
-    def oauth_uri(cls, callback, **kwargs):
-        return 'https://github.com/login/oauth/authorize?client_id={}&scope=user:email&redirect_uri={}'.format(GITHUB_CLIENT_ID, quote(callback))
+    def oauth_uri(cls, **kwargs):
+        return ''
 
     @classmethod
     def get_access_token(cls, code):
-        resp = requests.post('https://github.com/login/oauth/access_token', {
-            'client_id': GITHUB_CLIENT_ID,
-            'client_secret': GITHUB_CLIENT_SECRET,
-            'code': code
-        }, headers={
-            'Accept': 'application/json'
-        })
-        js = resp.json()
-        return js.get('access_token')
+        return ''
 
     @classmethod
     def get_user_information(cls, token):
-        resp = requests.get('https://api.github.com/user', {
-            'access_token': token
-        })
-        js = resp.json()
-        return js.get('login')
-        
+        return ''
+
     @classmethod
     def get_username_by_code_option(cls, code):
         return Option \

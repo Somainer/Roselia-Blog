@@ -931,8 +931,12 @@ def get_oauth_url(third):
         }
     return {
         'success': True,
-        'result': adp.get_uri() + '&redirect_uri=' + BLOG_LINK[:-1] + quote(
-            url_for('oauth_callback', third=third, base=base, redirect=redirection))
+        'result': adp.get_uri(BLOG_LINK[:-1] + quote(
+            url_for('oauth_callback', third=third, base=base, redirect=redirection)), raw_callback=BLOG_LINK[:-1] + quote(
+            url_for('oauth_callback', third=third)), state={
+                'base': base,
+                'redirect': redirection
+            })
     }
 
 
@@ -948,9 +952,13 @@ def get_oauth_bind_url(third, username, role):
         }
     return {
         'success': True,
-        'result': adp.get_uri() + '&redirect_uri=' + BLOG_LINK[:-1] + quote(
+        'result': adp.get_uri(BLOG_LINK[:-1] + quote(
             url_for('oauth_callback', username=username, third=third, type='bind', token=request.args.get('token'))
-        )
+        ), raw_callback=BLOG_LINK[:-1] + quote(url_for('oauth_callback', third=third)), state={
+            'username': username,
+            'token': request.args.get('token'),
+            'type': 'bind'
+        })
     }
 
 
@@ -960,10 +968,13 @@ def oauth_callback(third):
     code = request.args.get('code')
     base = request.args.get('base')
     redirection = request.args.get('redirect')
-    typ = request.args.get('type', '')
+    state = {}
+    if request.args.get('state'):
+        state = json.loads(request.args.get('state'))
+    typ = request.args.get('type', state.get('type', ''))
 
     if typ == 'bind':
-        return redirect(BLOG_LINK[:-1] + url_for('oauth_bind', third=third, **request.args.to_dict()))
+        return redirect(BLOG_LINK[:-1] + url_for('oauth_bind', third=third, **request.args.to_dict(), **state))
 
     def login_uri(token):
         if base:
