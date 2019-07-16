@@ -6,10 +6,10 @@ import time
 from urllib.parse import quote
 import json
 
-last_callback = ''
 
 class MicrosoftOauth(GeneralOauth):
     adapter_name = 'microsoft'
+    last_callback = ''
 
     @classmethod
     def available(cls):
@@ -17,10 +17,10 @@ class MicrosoftOauth(GeneralOauth):
 
     @classmethod
     def oauth_uri(cls, callback, **kwargs):
-        last_callback = callback
-        return 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize?client_id={}&nonce={}&scope=openid+profile+User.Read&response_type=code&redirect_uri={}&state={}'.format(
+        cls.last_callback = kwargs.get('raw_callback', callback)
+        return 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize?client_id={}&nonce={}&scope=openid+profile+User.Read&response_type=code&redirect_uri={}{}'.format(
             MICROSOFT_CLIENT_ID, time.time(), quote(kwargs.get('raw_callback', callback)),
-            Option.from_call(kwargs.get, 'state').map(json.dumps).get_or(''))
+            Option.from_call(kwargs.get, 'state').map(json.dumps).map('&state={}'.format).get_or(''))
 
     @classmethod
     def get_access_token(cls, code):
@@ -29,7 +29,7 @@ class MicrosoftOauth(GeneralOauth):
             'client_secret': MICROSOFT_CLIENT_SECRET,
             'code': code,
             'grant_type': 'authorization_code',
-            'redirect_uri': last_callback
+            'redirect_uri': cls.last_callback
         }, headers={
             'Accept': 'application/json'
         })
@@ -43,27 +43,3 @@ class MicrosoftOauth(GeneralOauth):
         })
         js = resp.json()
         return js.get('id')
-
-    @classmethod
-    def get_username_by_code_option(cls, code):
-        return Option \
-            .from_call(cls.get_access_token, code) \
-            .map(cls.get_user_information)
-
-    @classmethod
-    def get_user_by_code(cls, code):
-        return cls.get_username_by_code_option(code) \
-            .map(
-            lambda u: OauthManager.get_embedding_user(cls.adapter_name, u)
-        ).get_or(None)
-        # return Option.from_call(cls.get_access_token, code).map(cls.get_user_information).get_or(None)
-
-    @classmethod
-    def add_record(cls, username, code):
-        return cls.get_username_by_code_option(code).map(
-            lambda embedding: OauthManager.add_adapter(
-                username,
-                cls.adapter_name,
-                embedding
-            )
-        ).get_or(None)

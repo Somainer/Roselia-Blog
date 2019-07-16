@@ -14,7 +14,7 @@ import os
 from config import BLOG_INFO, BLOG_LINK, DEBUG, HOST, PORT, UPLOAD_DIR, ANTI_SEO
 from ImageConverter import ImageConverter
 from middleware import verify_token, ReverseProxied, make_option_dict, to_json, require_argument
-from urllib.parse import quote
+from urllib.parse import quote, unquote
 
 from external_views import register_views
 from models.all import database
@@ -965,13 +965,16 @@ def get_oauth_bind_url(third, username, role):
 @app.route('/api/login/oauth/<string:third>/callback')
 def oauth_callback(third):
     adp = oauth_adapters.get(third.lower())
-    code = request.args.get('code')
-    base = request.args.get('base')
-    redirection = request.args.get('redirect')
     state = {}
     if request.args.get('state'):
-        state = json.loads(request.args.get('state'))
-    typ = request.args.get('type', state.get('type', ''))
+        state = json.loads(unquote(request.args.get('state')))
+    def get_context(key, default=None):
+        return state.get(key, request.args.get(key, default))
+    code = get_context('code')
+    base = get_context('base')
+    redirection = get_context('redirect')
+
+    typ = get_context('type', '')
 
     if typ == 'bind':
         return redirect(BLOG_LINK[:-1] + url_for('oauth_bind', third=third, **request.args.to_dict(), **state))

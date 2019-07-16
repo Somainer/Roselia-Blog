@@ -21,12 +21,12 @@ export default {
   props: ['show', 'text', 'color'],
   computed: {
     showSelf: {
-        get: function() {
-            return this.show
-        },
-        set: function(value) {
-            this.$emit('showChange', value)
-        }
+      get: function() {
+        return this.show
+      },
+      set: function(value) {
+        this.$emit('showChange', value)
+      }
     }
   }
 }

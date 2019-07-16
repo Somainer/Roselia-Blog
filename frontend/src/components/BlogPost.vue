@@ -5,6 +5,7 @@
       id="main-pic"
       dark
       :src="postData.img || config.images.postBannerImage"
+      v-if="postData.img"
     >
       <v-layout
         align-center
@@ -18,6 +19,21 @@
         <h4 id="author" class="subheading">{{postData.author.nickname}}</h4>
       </v-layout>
     </v-parallax>
+    <v-container
+        v-if="!postData.img"
+    >
+      <v-layout
+        align-center
+        column
+        justify-center
+      >
+        <h1 id="title" class="display-3 font-weight-thin mb-3">{{postData.title}}</h1>
+        <h2 id="subtitle" class="subheading">{{postData.subtitle}}</h2>
+        <h4 id="date" class="">{{formatDate(postData.created) || postData.date}}</h4>
+        <h4 id="author" class="subheading">{{postData.author.nickname}}</h4>
+      </v-layout>
+      
+    </v-container>
     <v-container grid-list-md fluid fill-height>
       <v-layout>
         <v-flex wrap row xs12 sm10 offset-sm2>

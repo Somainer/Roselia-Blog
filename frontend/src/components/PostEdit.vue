@@ -67,6 +67,9 @@
             :label="postData.darkTitle ? 'Dark' : 'Light'"
             v-model="postData.darkTitle"
           ></v-switch>
+          <v-btn round @click="explorerOpen = true" color="primary" v-if="richPostExtensions.length">
+            +<v-icon>extension</v-icon>Plugins
+          </v-btn>
           <v-combobox
             v-model="postData.tags"
             hide-selected
@@ -154,6 +157,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <plugin-explorer v-model="explorerOpen" :plugins="richPostExtensions.map(p => ({name: p.name, component: p.editPage}))"></plugin-explorer>
 
   </v-container>
   <toast v-bind="toast" @showChange="changeToast"></toast>
@@ -173,12 +177,13 @@ import 'highlight.js/styles/xcode.css'
 import {platform} from '../common/platform'
 
 import {mapToCamelCase, mapToUnderline} from '../common/helpers'
-
-window.hljs = hljs
-window.platform = platform
+import PluginExplorer from './EditPluginExplorer'
+import {plugins} from '../plugins/RoseliaPluginHost'
+// window.hljs = hljs
+// window.platform = platform
 
 export default {
-  components: {BlogToolbar, markdownEditor},
+  components: {BlogToolbar, markdownEditor, PluginExplorer},
   name: 'post-edit',
   data: () => ({
     postData: {
@@ -209,7 +214,8 @@ export default {
       hideIcons: ['guide']
     },
     uploadImages: [],
-    doNotSave: false
+    doNotSave: false,
+    explorerOpen: false
   }),
   props: {
     userData: Object
@@ -394,6 +400,9 @@ export default {
     },
     commandText() {
       return this.isMac ? '⌘' : 'Ctrl'
+    },
+    richPostExtensions() {
+      return plugins.richPostPlugin
     }
   },
   mounted () {

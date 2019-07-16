@@ -1,15 +1,29 @@
 import * as PluginApi from '@/common/api/plugin-storage'
 import Vue, {Component} from 'vue'
 
-abstract class BaseRoseliaPlugin {
+interface RoseliaPlugin {
+    name: string
+    mount(el: Element): void
+    beforeMount(): Promise<boolean>
+    destroyed(): void
+    beforeDestroy(): Promise<boolean>
+    api: typeof PluginApi
+}
+
+class BaseRoseliaPlugin implements RoseliaPlugin {
+    name = ''
     api = PluginApi
-    abstract mount(el: Element): void
+    mount(el: Element) {}
     async beforeMount() {
         return true
     }
     mounted() {}
     async beforeDestroy() { return true }
     destroyed() {}
+}
+
+export interface IContextPlugin<Context> {
+    context: Context
 }
 
 export abstract class StaticRoseliaPlugin extends BaseRoseliaPlugin {
@@ -33,17 +47,29 @@ type IRichPostPlugin = {
     postCreated(postId: number): void;
     beforeEditPost(postId: number): Promise<boolean>;
     postEdited(postId: number): void;
+
+    editPage(): Component
+    postContent: RoseliaPlugin
 }
 
 export abstract class RichPostPlugin extends BaseRoseliaPlugin implements IRichPostPlugin {
+    name = 'richPostPlugin'
     async doNothing() {
         return true
     }
     doNothingSync() {}
+    emptyComponent() {
+        return Vue.extend({
+            render: h => h()
+        })
+    }
     beforeCreatePost = this.doNothing;
     beforeDeletePost = this.doNothing;
     beforeEditPost = this.doNothing;
     postCreated = this.doNothingSync;
     postDeleted = this.doNothingSync;
     postEdited = this.doNothingSync;
+
+    editPage = this.emptyComponent
+    postContent = new BaseRoseliaPlugin
 }

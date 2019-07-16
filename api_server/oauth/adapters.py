@@ -47,7 +47,7 @@ class OAuthAdapter(GeneralAdapter):
         return self.oauth.add_record(username, code)
 
 adapter_list = [
-    OAuthAdapter(GithubOauth()), OAuthAdapter(MicrosoftOauth())
+    OAuthAdapter(GithubOauth), OAuthAdapter(MicrosoftOauth)
 ]
 
 adapters = {

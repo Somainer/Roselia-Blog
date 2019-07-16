@@ -34,27 +34,27 @@ class GithubOauth(GeneralOauth):
         })
         js = resp.json()
         return js.get('login')
-        
-    @classmethod
-    def get_username_by_code_option(cls, code):
-        return Option \
-            .from_call(cls.get_access_token, code) \
-            .map(cls.get_user_information)
-
-    @classmethod
-    def get_user_by_code(cls, code):
-        return cls.get_username_by_code_option(code) \
-            .map(
-            lambda u: OauthManager.get_embedding_user(cls.adapter_name, u)
-        ).get_or(None)
-        # return Option.from_call(cls.get_access_token, code).map(cls.get_user_information).get_or(None)
-
-    @classmethod
-    def add_record(cls, username, code):
-        return cls.get_username_by_code_option(code).map(
-            lambda embedding: OauthManager.add_adapter(
-                username,
-                cls.adapter_name,
-                embedding
-            )
-        ).get_or(None)
+    #
+    # @classmethod
+    # def get_username_by_code_option(cls, code):
+    #     return Option \
+    #         .from_call(cls.get_access_token, code) \
+    #         .map(cls.get_user_information)
+    #
+    # @classmethod
+    # def get_user_by_code(cls, code):
+    #     return cls.get_username_by_code_option(code) \
+    #         .map(
+    #         lambda u: OauthManager.get_embedding_user(cls.adapter_name, u)
+    #     ).get_or(None)
+    #     # return Option.from_call(cls.get_access_token, code).map(cls.get_user_information).get_or(None)
+    #
+    # @classmethod
+    # def add_record(cls, username, code):
+    #     return cls.get_username_by_code_option(code).map(
+    #         lambda embedding: OauthManager.add_adapter(
+    #             username,
+    #             cls.adapter_name,
+    #             embedding
+    #         )
+    #     ).get_or(None)
