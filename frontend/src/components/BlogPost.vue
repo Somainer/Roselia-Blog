@@ -6,12 +6,18 @@
       dark
       :src="postData.img || config.images.postBannerImage"
       v-if="postData.img"
+      :class="{
+        'blur-image': extraDisplaySettings.blurMainImage,
+        'blur-image-transition': true
+      }"
+        
     >
       <v-layout
         align-center
         column
         justify-center
         :class="titleClass"
+        v-if="!extraDisplaySettings.metaBelowImage"
       >
         <h1 id="title" class="display-2 font-weight-thin mb-3">{{postData.title}}</h1>
         <h4 id="subtitle" class="subheading">{{postData.subtitle}}</h4>
@@ -20,7 +26,7 @@
       </v-layout>
     </v-parallax>
     <v-container
-        v-if="!postData.img"
+        v-if="!postData.img || extraDisplaySettings.metaBelowImage"
     >
       <v-layout
         align-center
@@ -283,6 +289,10 @@ export default {
     share: {
       open: false,
       shareId: ''
+    },
+    extraDisplaySettings: {
+      metaBelowImage: false,
+      blurMainImage: false
     }
   }),
   methods: {
@@ -333,6 +343,7 @@ export default {
       // this.$nextTick(_ => {
       //   this.afterContentMounted()
       // })
+      this.extraDisplaySettings.metaBelowImage = this.extraDisplaySettings.blurMainImage = false
       if(this.postData.displayId && (this.$route.params.changeRoute || (this.$route.query.p && !this.isShared))) {
         this.$router.replace({
           name: 'postWithEternalLink',
@@ -471,6 +482,15 @@ export default {
       this.highlightLanguage()
       this.renderWithMathJax()
       this.$emit('postLoaded')
+
+      if(this.postData.img) {
+        const postId = this.postData.id
+        const dom = document.createElement('img')
+        dom.addEventListener('error', ev => {
+          if(postId === this.postData.id) this.postData.img = ''
+        })
+        dom.src = this.postData.img
+      }
     },
     highlightLanguage () {
       if (window.hljs) {
@@ -612,6 +632,13 @@ export default {
 }
 </script>
 
+<style>
+.blur-image:not(:hover) > .v-parallax__image-container {
+  filter: blur(10px) saturate(120%);
+}
+.blur-image-transition > .v-parallax__image-container {
+  transition: 0.5s filter cubic-bezier(0.075, 0.82, 0.165, 1);
+}
+</style>
 <style scoped>
-
 </style>

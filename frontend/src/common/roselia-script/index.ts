@@ -610,6 +610,16 @@ class RoseliaScript {
     this.app.$emit('forceSwitchToLight', false)
     this.app.$emit('forceSwitchToDark', false)
   }
+
+  changeExtraDisplaySettings(settings: Partial<{
+    metaBelowImage: boolean,
+    blurMainImage: boolean
+  }>) {
+    this.app.extraDisplaySettings = {
+      ...this.app.extraDisplaySettings,
+      ...settings
+    }
+  }
 }
 
 export default {

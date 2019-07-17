@@ -1,13 +1,14 @@
 import * as PluginApi from '@/common/api/plugin-storage'
 import Vue, {Component} from 'vue'
 
+type SatisfactoryChecker = boolean | string
+
 interface RoseliaPlugin {
     name: string
-    mount(el: Element): void
-    beforeMount(): Promise<boolean>
-    destroyed(): void
-    beforeDestroy(): Promise<boolean>
-    api: typeof PluginApi
+    mounted?(el: Element): void
+    beforeMount?(): Promise<SatisfactoryChecker>
+    destroyed?(): void
+    beforeDestroy?(): Promise<SatisfactoryChecker>
 }
 
 class BaseRoseliaPlugin implements RoseliaPlugin {
@@ -41,12 +42,12 @@ export abstract class VueRoseliaPlugin extends BaseRoseliaPlugin {
 }
 
 type IRichPostPlugin = {
-    beforeDeletePost(postId: number): Promise<boolean>;
-    postDeleted(postId: number): void;
-    beforeCreatePost(postId: number): Promise<boolean>;
-    postCreated(postId: number): void;
-    beforeEditPost(postId: number): Promise<boolean>;
-    postEdited(postId: number): void;
+    beforeDeletePost?(postId: number): Promise<SatisfactoryChecker>;
+    postDeleted?(postId: number): void;
+    beforeCreatePost?(postId: number): Promise<SatisfactoryChecker>;
+    postCreated?(postId: number): void;
+    beforeEditPost?(postId: number): Promise<SatisfactoryChecker>;
+    postEdited?(postId: number): void;
 
     editPage(): Component
     postContent: RoseliaPlugin
@@ -72,4 +73,11 @@ export abstract class RichPostPlugin extends BaseRoseliaPlugin implements IRichP
 
     editPage = this.emptyComponent
     postContent = new BaseRoseliaPlugin
+}
+
+export function makeBasePlugin<T extends RoseliaPlugin>(plugin: T & ThisType<T & {
+    api: typeof PluginApi
+}>): RoseliaPlugin {
+    plugin['api'] = PluginApi
+    return plugin
 }
