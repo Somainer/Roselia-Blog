@@ -409,6 +409,10 @@ class RoseliaScript {
 
   element (name: RSElementSelector): Promise<HTMLElement> {
     return new Promise((resolve, reject) => {
+      const element = this.getElement(name)
+      if (element) {
+        return resolve(element)
+      }
       this.then(() => {
         const elem = this.getElement(name)
         if(elem) {
@@ -463,7 +467,7 @@ class RoseliaScript {
     return el
   }
 
-  doTo (el, fn) {
+  doTo (el: RSElementSelector, fn: (elem: Element) => void) {
     this.element(el).then(fn)
     return el
   }

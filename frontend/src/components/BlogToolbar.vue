@@ -11,6 +11,9 @@
     </v-toolbar-title>
     <v-spacer></v-spacer>
     <v-toolbar-items v-if="!shouldHaveToolbar">
+      <v-btn dark flat @click="dialog = true">
+        <v-icon>question_answer</v-icon>
+      </v-btn>
       <v-btn dark flat to="/">Index</v-btn>
       <v-btn dark flat to="/timeline">Timeline</v-btn>
       <v-btn dark flat v-if="userData" to="/userspace">{{userData.nickname}}</v-btn>
@@ -79,19 +82,90 @@
         </v-list-tile-content>
       </v-list-tile>
     </v-list>
+    <v-list dense class="pt-0">
+      
+      <v-list-tile @click="dialog = true">
+        <v-list-tile-action>
+          <v-icon>question_answer</v-icon>
+        </v-list-tile-action>
+
+        <v-list-tile-content>
+          <v-list-tile-title>Ask Yukina for help</v-list-tile-title>
+        </v-list-tile-content>
+      </v-list-tile>
+    </v-list>
     </v-navigation-drawer>
+    <v-dialog
+      v-model="dialog"
+      width="500"
+    >
+      <v-card>
+        <v-card-title
+          class="headline"
+          primary-title
+        >
+          What do you want to do?
+          (<v-icon>build</v-icon>
+          Experimental)
+        </v-card-title>
+        <v-container grid-list-md>
+          <v-layout wrap>
+            <v-flex xs12>
+              <v-alert
+                v-model="notUnderstand"
+                type="error"
+                transition="scale-transition"
+                dismissible
+              >
+                Sorry, I don't understand.
+              </v-alert>
+              <v-text-field
+                v-if="!loading"
+                hide-details
+                prepend-icon="question_answer"
+                label="Ask Yukina for help"
+                single-line
+                autofocus
+                v-model="command"
+                @keyup.enter="runCommand"
+              ></v-text-field>
+
+              <div v-else>
+                <v-progress-circular indeterminate color="primary"></v-progress-circular> Practice like you perform, perform like you practice.
+              </div>
+            </v-flex>
+          </v-layout>
+        </v-container>
+        <v-divider></v-divider>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn
+            color="primary"
+            flat
+            @click="dialog = false"
+          >
+            Close
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
 </div>
 </template>
 
 <script>
 import meta from '../common/config'
 import utils from '../common/utils'
+import {executeCommand} from '@/custom-command/luis.ts'
 export default {
   name: 'blog-toolbar',
   props: ['userData', 'route', 'realTitle', 'noDrawer'],
   data () {
     return {
-      drawer: false
+      drawer: false,
+      dialog: false,
+      command: '',
+      loading: false,
+      notUnderstand: false
     }
   },
   methods: {
@@ -113,6 +187,17 @@ export default {
         }
       })
       w.addEventListener('close', unwatch)
+    },
+    runCommand() {
+      this.loading = true
+      executeCommand(this.command).then(understand => {
+        this.notUnderstand = !understand
+        this.loading = false
+        if(understand) this.dialog = false
+      }).catch(err => {
+        this.loading = false
+        this.notUnderstand = true
+      })
     }
   },
   computed: {

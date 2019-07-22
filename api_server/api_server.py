@@ -603,10 +603,12 @@ def delete_post():
         return {
             'success': False, 'msg': 'role error'
         }
-    ppl.remove_post(pid, info.get('role'))
-    log.v("Post deleted.", pid=pid)
+    success = ppl.remove_post(pid, info.get('role'))
+    if success:
+        log.v("Post deleted.", pid=pid)
     return {
-        'success': True
+        'success': success,
+        'msg': 'You are not supposed to delete that post'
     }
 
 

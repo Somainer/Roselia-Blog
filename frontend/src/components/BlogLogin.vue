@@ -355,6 +355,12 @@ export default {
         }
       })
     })
+    if(this.$route.params.credential) {
+      const {username, password} = this.$route.params.credential
+      this.username = username || this.username
+      this.password = password || this.password
+      if(this.username && this.password) this.login()
+    }
     if (!token) {
       this.getAdapters()
     }
