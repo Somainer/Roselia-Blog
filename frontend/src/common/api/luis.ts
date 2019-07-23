@@ -31,3 +31,5 @@ export interface EntityType {
 }
 
 export const roseliaCustomCommand = makeApi<{command: string}, ILuisCommand>('get', 'luis/run-command')
+
+export const askYukina = makeApi<{question: string}, string[]>('get', 'luis/ask-yukina')

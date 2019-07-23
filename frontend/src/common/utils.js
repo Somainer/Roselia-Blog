@@ -81,6 +81,7 @@ utils.refreshToken = function (token) {
 utils.formatDate = (date, withTime = false) => {
   try {
     const dateObj = new Date(date)
+    if (isNaN(dateObj.getTime())) return date
     if (withTime) return dateObj.toLocaleString()
     return dateObj.toLocaleDateString()
   } catch (ex) {

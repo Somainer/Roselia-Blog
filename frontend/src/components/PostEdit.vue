@@ -33,7 +33,10 @@
             label="Eternal link"
             prepend-icon="link"
           ></v-text-field>
-          <span>Language</span>
+          <span>
+            <v-icon>fab fa-{{ markdown ? 'markdown' : 'html5' }}</v-icon>
+            Language
+          </span>
           <v-switch color="accent"
             :label="markdown ? 'Markdown' : 'HTML'"
             v-model="markdown"
@@ -110,7 +113,7 @@
                 <v-btn color="secondary" @click="saveDraft" :loading="loading"><v-icon>archive</v-icon></v-btn>
                 <v-btn color="primary" v-on:click="doEditPost" :loading="loading" :disabled="!valid">
                   <v-icon>cloud_upload</v-icon>
-<!--                  <span v-if="!isMobile">({{commandText}}+S)</span>-->
+                 <span v-if="!isMobile">({{commandText}}+Shift+S)</span>
                 </v-btn>
               </v-layout>
 
@@ -161,6 +164,13 @@
 
   </v-container>
   <toast v-bind="toast" @showChange="changeToast"></toast>
+  <GlobalEvents
+    v-if="isMac"
+    @keyup.meta.83.prevent.capture="doEditPost"
+  />
+  <GlobalEvents
+    @keyup.ctrl.83.prevent.capture="doEditPost"
+  />
   <blog-footer></blog-footer>
 </div>
 </template>
@@ -175,15 +185,17 @@ import 'simplemde/dist/simplemde.min.css'
 import 'github-markdown-css'
 import 'highlight.js/styles/xcode.css'
 import {platform} from '../common/platform'
+import GlobalEvents from 'vue-global-events'
 
 import {mapToCamelCase, mapToUnderline} from '../common/helpers'
 import PluginExplorer from './EditPluginExplorer'
 import {plugins} from '../plugins/RoseliaPluginHost'
+import {pushContext, flushContext} from '../custom-command/luis'
 // window.hljs = hljs
 // window.platform = platform
 
 export default {
-  components: {BlogToolbar, markdownEditor, PluginExplorer},
+  components: {BlogToolbar, markdownEditor, PluginExplorer, GlobalEvents},
   name: 'post-edit',
   data: () => ({
     postData: {
@@ -306,6 +318,7 @@ export default {
       })
     },
     doEditPost () {
+      if(!this.valid) return
       this.loading = true
       return utils.fetchJSONWithSuccess(utils.apiFor('add'), 'POST', this.getRequestForm()).then(data => {
         this.showToast('Success!', 'success')
@@ -437,9 +450,12 @@ export default {
 
     window.addEventListener('beforeunload', e => this.saveDraft())
     this.$emit('forceSwitchToLight', true)
-    let unwatch = utils.addEventListener('keyup', ev => {
-
-    })
+    pushContext({
+      "Utilities.FinishTask": this.doEditPost,
+      "Utilities.Confirm": this.doEditPost,
+      "Utilities.Cancel": this.leave,
+      save: this.doEditPost
+    }, this)
   },
   watch: {
     userData(val) {
@@ -454,6 +470,7 @@ export default {
   destroyed () {
     this.$emit('forceSwitchToLight')
     removeEventListener('beforeunload', e => this.saveDraft())
+    flushContext()
   }
 }
 </script>

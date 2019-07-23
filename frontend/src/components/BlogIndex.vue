@@ -135,6 +135,7 @@ import utils from '../common/utils'
 import {mapToCamelCase} from '../common/helpers'
 // import router from '../router/index'
 import meta from '../common/config'
+import {pushContext, flushContext} from '../custom-command/luis'
 
 export default {
   name: 'blog-index',
@@ -181,7 +182,7 @@ export default {
       this.$vuetify.goTo(0)
       this.$router.push({
         name: 'index',
-        params: {
+        query: {
           page
         }
       })
@@ -264,6 +265,18 @@ export default {
   },
   mounted () {
     this.getPostsOnContext()
+    pushContext({
+      "Utilities.ShowNext" () {
+        if(this.nextPage !== -1) this.showToast('Taking you to the next page...')
+        else this.showToast('No more pages...', 'error')
+        this.shiftPage(1)
+      },
+      "Utilities.ShowPrevious"() {
+        if(this.prevPage !== -1) this.showToast('Taking you to the previous page...')
+        else this.showToast('No more pages...', 'error')
+        this.shiftPage(-1)
+      }
+    }, this)
   },
   computed: {
     
@@ -287,6 +300,9 @@ export default {
     let args = to.query
     this.getPostsOnContext(args)
     next()
+  },
+  destroyed() {
+    flushContext()
   }
 }
 </script>

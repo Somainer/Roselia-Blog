@@ -1,5 +1,6 @@
 <template>
   <v-container fluid fill-height>
+  <blog-toolbar :userData="userData" :shouldHide="true"></blog-toolbar>
     <v-layout align-center justify-center>
       <v-flex xs12 sm8 md4>
         <v-card class="elevation-12">
@@ -108,8 +109,12 @@
 
 import meta from '@/common/config'
 import utils from '../common/utils'
+import BlogToolbar from './BlogToolbar'
 
 export default {
+  components: {
+    BlogToolbar
+  },
   data: () => ({
     loading: false,
     title: meta.title,
@@ -360,6 +365,7 @@ export default {
       this.username = username || this.username
       this.password = password || this.password
       if(this.username && this.password) this.login()
+      if(this.username) this.focusPassword()
     }
     if (!token) {
       this.getAdapters()

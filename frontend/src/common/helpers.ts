@@ -69,3 +69,19 @@ export function selectByLuminance<T>(color: string, onBright: T, onDark: T, defa
     if (typeof result === 'undefined') return defaultValue
     return result ? onBright : onDark
 }
+
+export function selfish<T extends object, U extends object>(target: T, bindContext?: U) {
+    const cache = new WeakMap
+    return new Proxy(target, {
+        get(obj, key) {
+            const result = Reflect.get(obj, key)
+            if(typeof result === 'function') {
+                if(!cache.has(result)) {
+                    cache.set(result, result.bind(bindContext || obj))
+                }
+                return cache.get(result)
+            }
+            return result
+        }
+    })
+}

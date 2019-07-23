@@ -240,6 +240,7 @@ import RoseliaScript from '../common/roselia-script/'
 import {mapToCamelCase} from '../common/helpers'
 import BlogComments from './comments'
 import {escapeRegExp} from 'lodash'
+import {pushContext, flushContext} from '../custom-command/luis'
 export default {
   components: {
     BlogDigestNav,
@@ -605,6 +606,23 @@ export default {
       document.body.appendChild(configNode)
       document.body.appendChild(mathNode)
     }
+    const shiftPage = p => {
+      if(p !== -1) this.$router.push({name: 'post', query: {p}})
+    }
+    pushContext({
+      "Utilities.ShowNext"() {
+        shiftPage(this.postData.prev) // Goes right
+      },
+      "Utilities.ShowPrevious"() {
+        shiftPage(this.postData.next) // Goes left
+      },
+      edit() {
+        this.$router.push({name: 'edit', query: {post: this.postData.id}})
+      },
+      delete() {
+        this.$router.push({name: 'edit', params: {deletePost: true, title: this.postData.title}, query: {post: this.postData.id}})
+      }
+    }, this)
   },
   beforeRouteUpdate (to, from, next) {
     if(to.params.doNotLoad) return next()
@@ -617,6 +635,7 @@ export default {
   destroyed () {
     this.$emit('postUnload')
     this.$emit('postDestroyed')
+    flushContext()
   },
   watch: {
     userData () {
