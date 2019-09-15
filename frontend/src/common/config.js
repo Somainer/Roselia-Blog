@@ -33,6 +33,8 @@ export default {
   theme: roseliaTheme,
   // theme: mohuetyTheme,
   enableRoseliaScript: true,
+  enableAskYukina: false,
+  footerName: 'Somainer',
   urlPrefix,
   images: {
     indexBannerImage: urlPrefix + '/static/img/bg_n3.jpg',

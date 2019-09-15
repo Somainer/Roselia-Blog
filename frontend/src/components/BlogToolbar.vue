@@ -12,7 +12,7 @@
     </v-toolbar-title>
     <v-spacer></v-spacer>
     <v-toolbar-items v-if="!shouldHaveToolbar">
-      <v-btn dark flat @click="dialog = true">
+      <v-btn dark flat @click="dialog = true" v-if="canAskYukina">
         <v-icon>question_answer</v-icon>
       </v-btn>
       <v-btn dark flat to="/">Index</v-btn>
@@ -83,7 +83,7 @@
       </v-list-tile-content>
     </v-list-tile>
   </v-list>
-  <v-list dense class="pt-0">
+  <v-list dense class="pt-0" v-if="canAskYukina">
     
     <v-list-tile @click="dialog = true">
       <v-list-tile-action>
@@ -99,6 +99,7 @@
     <v-dialog
       v-model="dialog"
       :width="responseList.length ? 1000 :500"
+      v-if="canAskYukina"
     >
       <v-card>
         <v-card-title
@@ -158,7 +159,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <GlobalEvents @keyup.ctrl.89="dialog = !dialog" @keyup.esc="dialog = false"/>
+    <GlobalEvents v-if="canAskYukina" @keyup.ctrl.89="dialog = !dialog" @keyup.esc="dialog = false"/>
 </div>
 </template>
 
@@ -253,6 +254,9 @@ export default {
     },
     shouldHaveToolbar() {
       return !this.noDrawer && this.$vuetify.breakpoint.smAndDown
+    },
+    canAskYukina() {
+      return meta.enableAskYukina
     }
   },
   watch: {

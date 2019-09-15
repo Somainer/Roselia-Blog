@@ -16,7 +16,7 @@
         class="themed-text"
         xs12
       >
-        &copy;{{year}} — <strong>Somainer</strong>
+        &copy;{{year}} — <strong>{{ name }}</strong>
       </v-flex>
     </v-layout>
   </v-footer>
@@ -30,7 +30,8 @@ export default {
     return {
       year: (new Date()).getFullYear(),
       title: meta.title,
-      motto: meta.motto
+      motto: meta.motto,
+      name: meta.footerName
     }
   }
 }

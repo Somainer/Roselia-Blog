@@ -1,5 +1,5 @@
 <template>
-  <div id="app">
+  <div id="black-shout">
     <div v-wechat-title="$route.meta.title"></div>
     <theme-listener v-model="preferedLight"></theme-listener>
     <v-app :dark="isNight">

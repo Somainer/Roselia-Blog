@@ -5,3 +5,4 @@ static/*
 scripts/node_modules/*
 *.db
 *.txt
+api_server/secret.py

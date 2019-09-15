@@ -22,7 +22,7 @@ interface CommentBase {
   color: string
   replyTo: number
 }
-type WithAuthor = CommentBase & {
+interface WithAuthor extends CommentBase {
   author: {
     id: number,
     nickname: string,
@@ -31,7 +31,7 @@ type WithAuthor = CommentBase & {
     avatar: string
   }
 }
-type WithNickname = CommentBase & {
+interface WithNickname extends CommentBase {
   nickname: string
 }
 
