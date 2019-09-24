@@ -46,8 +46,10 @@
             <v-text-field small v-else v-model="nickname" label="Nickname"></v-text-field>
           </v-flex>
           <v-spacer></v-spacer>
-          <v-flex xs2 md1>
-            <v-btn color="primary" :disabled="!this.isValid" :loading="loading" @click="addComment" round>
+          <v-flex xs3 md2>
+            <v-btn color="primary" :disabled="!this.isValid" :loading="loading" @click="addComment" 
+              round
+            >
               <v-icon>send</v-icon>
             </v-btn>
           </v-flex>

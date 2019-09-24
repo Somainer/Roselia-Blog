@@ -407,7 +407,7 @@ export default {
           ev.addEventListener('click', e => {
             e.preventDefault()
             if(isFootNotes) {
-              this.$vuetify.goTo(document.getElementById(ev.hash.substring(1)), {offset: -200})
+              this.$vuetify.goTo(document.getElementById(ev.hash.substring(1)), {offset: 200})
               return
             }
             // e.stopImmediatePropagation()
