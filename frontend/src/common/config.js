@@ -1,12 +1,14 @@
-let BLOG_TITLE = 'Roselia-Blog'
-// let BLOG_TITLE = "Somainer's Blog"
+// let BLOG_TITLE = 'Roselia-Blog'
+// let BLOG_TITLE = 'Raspi Blog'
+let BLOG_TITLE = "Somainer's Blog"
 let BLOG_MOTTO = 'Do what you want to do, be who you want to be.'
-const apiBase = '/api'
+// let BLOG_MOTTO = 'Raspi life.'
+// const apiBase = '/api'
 // const apiBase = 'http://localhost:5000/api'
 // const apiBase = 'https://roselia.moe/blog/api'
 const urlPrefix = ''
 // const urlPrefix = '/blog'
-// const apiBase = `${urlPrefix}/api`
+const apiBase = `${urlPrefix}/api`
 const roseliaTheme = {
   primary: '#6670ed',
   secondary: '#890f87',
@@ -26,14 +28,24 @@ const mohuetyTheme = {
   success: '#61BF99'
 }
 
+const raspiTheme = {
+  primary: '#f50057',
+  secondary: '#890f87',
+  accent: '#dd0087',
+  error: '#FF4A4A',
+  warning: '#dd2200',
+  info: '#00aabc',
+  success: '#229977'
+}
+
 export default {
   title: BLOG_TITLE,
   motto: BLOG_MOTTO,
   apiBase: apiBase,
-  theme: roseliaTheme,
-  // theme: mohuetyTheme,
+  // theme: roseliaTheme,
+  theme: mohuetyTheme,
   enableRoseliaScript: true,
-  enableAskYukina: false,
+  enableAskYukina: true,
   footerName: 'Somainer',
   urlPrefix,
   images: {

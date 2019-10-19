@@ -1,21 +1,39 @@
 # Roselia-Blog 3.0
 ## A new trial of blog system. 
 
-A single page app with slight SEO optimization, can also be deployed as an anti-SE blog.
+A single page app with slight SEO optimization, can also be deployed as an anti-SEO blog.
 
 虽然是一个单页APP，但是也能够做到搜索引擎优化，同时正因为是SPA，可以进行反搜索引擎优化部署，阻止搜索引擎爬虫爬取你的文章。
 
 > Demo: [Roselia-Blog](https://roselia.moe/blog/)
 
 ### Usage:
+> * 安装python3 & node & yarn
 > * 设置 api_server/config.py && frontend/src/common/config.js
-> * cd frontend && yarn build
-> * RUN api_server/api_server.py
+> * **!重要!** 在`secret.py`里面填写`APP_KEY`&`APP_SALT`或者改为`gen_key()`每次在启动时改变。
+> * 将你需要的图片放在 static_assets/img 里面
+> * api_server/roselia.py build
+> * RUN api_server/roselia.py run-prod (For production)
 > * Access localhost:5000
 
-然后将front/dist里面的东西拷贝到静态文件服务器就OK了，记得将/api的内容跳转到api_server
+### 关于`api_server/roselia.py`
 
-如果你需要SEO，你需要将template里面的`index_vue.html`和`post_vue.html`中的css和js文件改为正确的路径。
+`roselia.py` 提供了一些指令便于启动或者构件环境。
+用法：`roselia.py [command]`
+
+Commands: 
+> * serve: 根据 `DEBUG` 与否启动开发或者生产环境。
+> * run-dev: 强制启动开发环境
+> * run-prod: 强制启动生产环境
+> * run-gunicorn: 使用`gunicorn`启动环境。
+> * compress-assets: **删除原有的static文件夹**，将`static_assets`复制到`static`，压缩其中的图片
+> * copy-assets 将**已经build完成的**前端文件复制到static，并且替换template中的CSS/JS文件名
+> * build-frontend 编译前端
+> * build = compress-assets + build-frontend + copy-assets
+> * assets = compress-assets + copy-assets
+
+### 关于启动开发环境
+启动开发环境，你需要先启动`yarn serve`，再启动`roselia.py run-dev`
 
 目前正在逐步迁移到`TypeScript`，但是旧的页面不大可能重写，新的页面将会尝试 `JSX`|`TSX` 写法。
 

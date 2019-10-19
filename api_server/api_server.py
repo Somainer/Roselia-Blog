@@ -26,7 +26,7 @@ from gevent.pywsgi import WSGIServer
 
 # monkey.patch_all()
 
-app = Flask(__name__, static_folder='../', static_url_path='')
+app = Flask(__name__, static_folder='../static', static_url_path='/static')
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 app.wsgi_app = ReverseProxied(app.wsgi_app)
 # ppl = PipeLine.PostManager()
