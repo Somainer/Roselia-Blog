@@ -5,20 +5,22 @@
     scroll-off-screen
     v-if="!shouldHide"
   >
-    <v-toolbar-side-icon dark v-if="shouldHaveToolbar" @click.native="drawer = !drawer"></v-toolbar-side-icon>
+    <v-app-bar-nav-icon dark v-if="shouldHaveToolbar" @click.native="drawer = !drawer"></v-app-bar-nav-icon>
     <slot></slot>
     <v-toolbar-title>
       <router-link  class="themed-text no-deco" :to="{name:'index'}">{{title}}</router-link>
     </v-toolbar-title>
     <v-spacer></v-spacer>
     <v-toolbar-items v-if="!shouldHaveToolbar">
-      <v-btn dark flat @click="dialog = true" v-if="canAskYukina">
+      <v-btn dark text @click="dialog = true" v-if="canAskYukina">
         <v-icon>question_answer</v-icon>
       </v-btn>
-      <v-btn dark flat to="/">Index</v-btn>
-      <v-btn dark flat to="/timeline">Timeline</v-btn>
-      <v-btn dark flat v-if="userData" to="/userspace">{{userData.nickname}}</v-btn>
-      <v-btn dark flat v-else tag="a" @click.native="setRedirect" :to="{name: 'login'}" @contextmenu="portedLogin($event)">Login</v-btn>
+      <v-btn dark text to="/">Index</v-btn>
+      <v-btn dark text to="/timeline">Timeline</v-btn>
+      <v-btn dark text v-if="userData" to="/userspace">{{userData.nickname}}</v-btn>
+      <v-btn dark text v-else tag="a" @click.native="setRedirect" :to="{name: 'login'}"
+             @contextmenu="portedLogin($event)">Login
+      </v-btn>
     </v-toolbar-items>
   </v-toolbar>
   <v-navigation-drawer
@@ -150,9 +152,9 @@
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn
-            color="primary"
-            flat
-            @click="dialog = false"
+                  color="primary"
+                  text
+                  @click="dialog = false"
           >
             Close
           </v-btn>

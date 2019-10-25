@@ -3,7 +3,7 @@
 import Vue from 'vue'
 import App from './App.vue'
 import router from './router'
-import './plugins/vuetify'
+import vuetify from './plugins/vuetify'
 import store from './store'
 // import 'material-design-icons-iconfont/dist/material-design-icons.css'
 // import 'vuetify/dist/vuetify.min.css'
@@ -58,9 +58,10 @@ Vue.directive('focus', {
 Vue.config.productionTip = false
 
 /* eslint-disable no-new */
-export default new Vue({
+export default new Vue(<any>{
   router,
   store,
+  vuetify,
   // render: h => h(App)
   render: h => h(App)
 }).$mount('#black-shout')

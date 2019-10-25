@@ -12,12 +12,16 @@
     <div id="black-shout"></div>
   <script>
     function _injectAid() {
-      const node = document.createElement('script')
-      node.src = '//' + location.hostname + ':8080/app.js'
-      node.async = true
-      document.body.appendChild(node)
+      var createNode = function(path) {
+        const node = document.createElement('script')
+        node.src = '//' + location.hostname + ':8080' + path
+        node.async = true
+        document.body.appendChild(node)
+      };
+      ['/static/js/chunk-vendors.js', '/static/js/app.js'].forEach(createNode);
     }
   </script>
-  <script type="text/javascript" src="//localhost:8080/app.js" onerror="_injectAid()"></script>
+  <script type="text/javascript" src="//localhost:8080/static/js/chunk-vendors.js" onerror="_injectAid()"></script>
+  <script type="text/javascript" src="//localhost:8080/static/js/app.js" onerror="_injectAid()"></script>
 </body>
 </html>

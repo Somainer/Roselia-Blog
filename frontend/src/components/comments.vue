@@ -31,14 +31,14 @@
           ></recursive-comment>
         </div>
         <v-textarea
-          v-model="comment"
-          auto-grow
-          outline
-          :placeholder="commentPlaceholer"
-          color="primary"
-          label="Leave a comment"
-          ref="commentText"
-          v-else
+                v-model="comment"
+                auto-grow
+                outlined
+                :placeholder="commentPlaceholer"
+                color="primary"
+                label="Leave a comment"
+                ref="commentText"
+                v-else
         ></v-textarea>
         <v-layout row wrap>
           <v-flex xs4>
@@ -47,8 +47,8 @@
           </v-flex>
           <v-spacer></v-spacer>
           <v-flex xs3 md2>
-            <v-btn color="primary" :disabled="!this.isValid" :loading="loading" @click="addComment" 
-              round
+            <v-btn color="primary" :disabled="!this.isValid" :loading="loading" @click="addComment"
+                   rounded
             >
               <v-icon>send</v-icon>
             </v-btn>
@@ -115,17 +115,17 @@
           <v-spacer></v-spacer>
 
           <v-btn
-            color="info"
-            flat="flat"
-            @click="commentToDelete.show = false"
+                  color="info"
+                  text
+                  @click="commentToDelete.show = false"
           >
             No
           </v-btn>
 
           <v-btn
-            color="error"
-            flat="flat"
-            @click="() => {deleteComment(commentToDelete.id); commentToDelete.show = false; commentToDelete.id = 0}"
+                  color="error"
+                  text
+                  @click="() => {deleteComment(commentToDelete.id); commentToDelete.show = false; commentToDelete.id = 0}"
           >
             Yes, delete<v-icon>delete</v-icon>
           </v-btn>

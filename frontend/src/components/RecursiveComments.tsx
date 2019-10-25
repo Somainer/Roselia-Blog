@@ -108,10 +108,10 @@ export default tsx.componentFactoryOf<RecursiveCommentProps>().create({
                       ) : null
                     )}
                     <div domProps-innerHTML={comment.content}></div>
-                    {this.canAddComment && (<VBtn flat icon onClick={() => this.$emit('reply-comment', comment.id)}>
+                    {this.canAddComment && (<VBtn text icon onClick={() => this.$emit('reply-comment', comment.id)}>
                       <VIcon>reply</VIcon>
                     </VBtn>)}
-                    {this.canDeleteComment(comment) ? (<VBtn flat icon color="error" small onClick={
+                    {this.canDeleteComment(comment) ? (<VBtn text icon color="error" small onClick={
                       () => this.$emit('delete-comment', comment.id)
                     }>
                       <VIcon>delete</VIcon>
@@ -138,7 +138,7 @@ export default tsx.componentFactoryOf<RecursiveCommentProps>().create({
       return ((cmt: WithAuthor) => cmt.author && cmt.author.username)(c as WithAuthor)
     },
     infoLabel(text: string, color: string, outline: boolean = false, to?: object) {
-      const calculatingColor = (this as any).$vuetify.theme[color] || color
+      const calculatingColor = (this as any).$vuetify.theme.currentTheme[color] || color
       const chip = (
         <VChip small color={color} outline={outline} class={{
           'ml-0': true,

@@ -5,10 +5,10 @@
       <v-flex xs12 sm8 md4>
         <v-card class="elevation-12">
           <v-toolbar dark color="primary">
-            <v-btn v-if="this.$route.query.ported" flat fab onclick="window.self.close()">
+            <v-btn v-if="this.$route.query.ported" text fab onclick="window.self.close()">
               <v-icon>close</v-icon>
             </v-btn>
-            <v-btn v-else flat fab to="/">
+            <v-btn v-else text fab to="/">
               <v-icon>arrow_back</v-icon>
             </v-btn>
             <v-toolbar-title>{{title}}</v-toolbar-title>

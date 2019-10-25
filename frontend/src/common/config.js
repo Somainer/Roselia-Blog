@@ -1,6 +1,6 @@
-// let BLOG_TITLE = 'Roselia-Blog'
+let BLOG_TITLE = 'Roselia-Blog'
 // let BLOG_TITLE = 'Raspi Blog'
-let BLOG_TITLE = "Somainer's Blog"
+// let BLOG_TITLE = "Somainer's Blog"
 let BLOG_MOTTO = 'Do what you want to do, be who you want to be.'
 // let BLOG_MOTTO = 'Raspi life.'
 // const apiBase = '/api'
@@ -42,8 +42,8 @@ export default {
   title: BLOG_TITLE,
   motto: BLOG_MOTTO,
   apiBase: apiBase,
-  // theme: roseliaTheme,
-  theme: mohuetyTheme,
+  theme: roseliaTheme,
+  // theme: mohuetyTheme,
   enableRoseliaScript: true,
   enableAskYukina: true,
   footerName: 'Somainer',

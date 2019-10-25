@@ -318,7 +318,9 @@ class RoseliaScript {
     if (externalAttributes) {
       this.extendAttributes(id, externalAttributes)
     }
-    return new RenderResult(`<button id="${id}" class="v-btn ${externalClasses}">${text}</button>`, id)
+    return new RenderResult(
+        `<button id="${id}" class="v-btn v-btn--contained v-size--default ${externalClasses}">${text}</button>`,
+        id)
   }
 
   toast (text: string, color: string) {
@@ -552,13 +554,13 @@ class RoseliaScript {
 
   private forceChangeTheme(theme: Partial<typeof config.theme>, token: Symbol) {
     if (token === innerCallToken) {
-      Object.assign(this.app.$vuetify.theme, theme)
+      Object.assign(this.app.$vuetify.theme.currentTheme, theme)
     }
   }
 
   currentTheme () {
     return {
-      ...this.app.$vuetify.theme
+      ...this.app.$vuetify.theme.currentTheme
     }
   }
 

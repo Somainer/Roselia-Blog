@@ -7,18 +7,12 @@ import re
 from multiprocessing import Process
 import functools
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", "api_server"))
-from config import BLOG_INFO, COLOR
+from config import BLOG_INFO
 from parallel import MultiConsumer, MultiProducer
 
 MX_WIDTH = 1024
 staticPath = os.path.join(os.path.dirname(__file__), "..", "static_assets")
 digestPath = staticPath.replace("static_assets", "static")
-renderFiles = [
-    os.path.join(digestPath, "css", "roselia.css"),
-    os.path.join(digestPath, "js", "utils.js")
-]
-
-REPLACEMENT = dict(BLOG_INFO, **COLOR)
 
 class ScanIMG(MultiProducer):
     def task_put(self):
