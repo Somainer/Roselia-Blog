@@ -1,51 +1,48 @@
 <template>
-  <v-container fluid grid-list-md text-xs-center fill-height>
-    <v-responsive>
+  <v-container fluid grid-list-md class="text-center fill-height">
+    <v-row justify="center" align="center">
+      <v-col cols="12">
+        <h3 class="display-3">Welcome to <strong class="primary--text">{{title}}</strong></h3>
 
-      <v-layout row wrap justify-center align-center>
-        <v-flex xs12>
-          <h3 class="display-3">Welcome to <strong class="primary--text">{{title}}</strong></h3>
+        <span class="subtitle-1">{{motto}}</span>
 
-          <span class="subheading">{{motto}}</span>
+        <v-divider class="my-3"></v-divider>
+        <div v-if="loading">
+          <div class="title mb-3">Please standby...</div>
+          <v-progress-circular
+            indeterminate
+            color="primary"
+          ></v-progress-circular>
+        </div>
 
-          <v-divider class="my-3"></v-divider>
-          <div v-if="loading">
-            <div class="title mb-3">Please standby...</div>
-            <v-progress-circular
-              indeterminate
-              color="primary"
-            ></v-progress-circular>
-          </div>
+        <div v-else-if="isFirstRun">
+          <div class="title mb-3">Add first user to continue.</div>
 
-          <div v-else-if="isFirstRun">
-            <div class="title mb-3">Add first user to continue.</div>
+          <v-btn
+            class="mx-0"
+            color="primary"
+            large
+            :to="{name: 'userManagement', params: {firstRun: true}}"
+          >
+            Add user
+          </v-btn>
+        </div>
 
-            <v-btn
-              class="mx-0"
-              color="primary"
-              large
-              :to="{name: 'userManagement', params: {firstRun: true}}"
-            >
-              Add user
-            </v-btn>
-          </div>
+        <div v-else>
+          <div class="title mb-3">Great! You are now prepared to <strong class="primary--text">{{title}}</strong></div>
+          <v-btn
+            class="mx-0"
+            color="secondary"
+            large
+            :to="{name: 'index'}"
+          >
+            Go to {{title}}
+          </v-btn>
+        </div>
 
-          <div v-else>
-            <div class="title mb-3">Great! You are now prepared to <strong class="primary--text">{{title}}</strong></div>
-            <v-btn
-              class="mx-0"
-              color="secondary"
-              large
-              :to="{name: 'index'}"
-            >
-              Go to {{title}}
-            </v-btn>
-          </div>
+        </v-col>
 
-          </v-flex>
-
-        </v-layout>
-      </v-responsive>
+      </v-row>
     </v-container>
 
 </template>

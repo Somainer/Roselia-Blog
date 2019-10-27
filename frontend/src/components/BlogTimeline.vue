@@ -24,10 +24,10 @@
           <br/><br/>
         </div>
         <h1 class="display-2 font-weight-regular mb-3">{{ realTitle }}</h1>
-        <h2 class="subheading" v-if="userFound">
+        <h2 class="subtitle-1" v-if="userFound">
           {{ mottoText }}
         </h2>
-        <h2 class="subheading" v-else>
+        <h2 class="subtitle-1" v-else>
           This guy is a mystery.
         </h2>
       </v-layout>
@@ -35,7 +35,6 @@
     <v-container>
       <v-card-text class="py-0">
         <v-timeline
-          align-top
           :dense="$vuetify.breakpoint.smAndDown"
         >
         <v-slide-x-transition group>
@@ -48,7 +47,7 @@
             <v-avatar v-if="!userInfo.username && post.author && post.author.avatar" slot="icon">
               <v-img :src="post.author.avatar"></v-img>
             </v-avatar>
-            <span
+            <div
               slot="opposite"
               class="headline font-weight-bold"
             >
@@ -63,7 +62,7 @@
                 </v-avatar>
                 Secret
               </v-chip>
-            </span>
+            </div>
             <div class="py-3"
             :class="{scale: post.clicked, 'scale-finished': post.clicked === 1, 'scale-back': post.clicked === -1}">
               <!-- <h2 class="headline font-weight-light mb-3 primary--text">{{post.title}}</h2>
@@ -73,6 +72,7 @@
               <v-card
                 dark
                 color="primary"
+                elevation="2"
               >
                 <v-card-title class="title">{{post.title}}</v-card-title>
                 
@@ -80,8 +80,8 @@
                   <p>{{post.subtitle}}</p>
                   <v-btn
                     class="mx-0"
-                    outline
-                    round
+                    outlined
+                    rounded
                     color="secondary"
                     @click="manuallyLoadPost(post)"
                   >

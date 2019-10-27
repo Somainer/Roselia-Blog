@@ -71,7 +71,8 @@ class RoseliaSysInfo:
         if psutil.MACOS:
             mac_version = platform.mac_ver()[0]
             os_version = mac_version
-            v0, v1, _ = map(int, mac_version.split('.'))
+            v0, *v1 = map(int, mac_version.split('.'))
+            v1 = v1[0]
             if v0 == 10:
                 if v1 < 8:
                     os_name = 'MAC OS X'

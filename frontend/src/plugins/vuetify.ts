@@ -12,24 +12,29 @@ export default new Vuetify({
     themes: {
       light: meta.theme,
       dark: {}
+    },
+    options: {
+      customProperties: true
     }
   },
   customProperties: true,
-  iconfont: 'md',
   lang: {
     locales: { zhHans },
     current: 'zh-Hans'
   },
   icons: {
-    brand: new Proxy({}, {
-      get (target, key) {
-        if (Reflect.has(target, key)) {
-          return Reflect.get(target, key)
+    values: {
+      brand: new Proxy({}, {
+        get (target, key) {
+          if (Reflect.has(target, key)) {
+            return Reflect.get(target, key)
+          }
+          if (typeof key === 'string') {
+            return `fab fa-${key}`
+          }
         }
-        if (typeof key === 'string') {
-          return `fab fa-${key}`
-        }
-      }
-    })
+      })
+    },
+    iconfont: 'md'
   }
 })

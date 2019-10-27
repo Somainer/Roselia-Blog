@@ -14,19 +14,19 @@
          >
           <v-btn 
             v-if="!isBound"
-            round color="accent" dark 
+            rounded color="accent" dark
             @click="goToBind(adapter)"
             :loading="loading"
           >
-            <v-icon v-if="$vuetify.icons.brand[adapter]">{{$vuetify.icons.brand[adapter]}}</v-icon>
+            <v-icon v-if="$vuetify.icons.values.brand[adapter]">{{$vuetify.icons.values.brand[adapter]}}</v-icon>
             <span v-else>{{ adapter }}</span>
           </v-btn>
           <div v-else>
-            <v-icon v-if="$vuetify.icons.brand[adapter]">{{$vuetify.icons.brand[adapter]}}</v-icon>
+            <v-icon v-if="$vuetify.icons.values.brand[adapter]">{{$vuetify.icons.values.brand[adapter]}}</v-icon>
             <span v-else>{{ adapter }}</span>
             :
             <span>{{ bindUser }}</span>
-            <v-btn icon small flat color="error" @click="removeAdapter(adapter)">
+            <v-btn icon small text color="error" @click="removeAdapter(adapter)">
               <v-icon>clear</v-icon>
             </v-btn>
           </div>

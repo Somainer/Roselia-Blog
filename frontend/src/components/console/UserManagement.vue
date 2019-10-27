@@ -1,6 +1,6 @@
 <template>
   <div>
-    <v-btn flat @click.native="addUser.form = true">
+    <v-btn text @click.native="addUser.form = true">
       <v-icon>person_add</v-icon>
     </v-btn>
     <v-data-table
@@ -10,21 +10,18 @@
       class="elevation-1"
     >
       <v-progress-linear slot="progress" color="blue" indeterminate></v-progress-linear>
-      <template slot="items" slot-scope="props">
-        <td>{{ props.item.username }}</td>
-        <td class="text-xs-right">
-          <v-btn flat icon small :disabled="props.item.role <= 0" @click="shiftRole(props.item, -1)">-</v-btn>
-          {{ props.item.role }}
-          <v-btn flat icon small :disabled="props.item.role + 1 >= userData.role" @click="shiftRole(props.item, 1)">+</v-btn>
-        </td>
-        <td class="text-xs-right">
-          <v-btn icon flat color="secondary" @click="setPasswordForm(props.item.username)">
-            <v-icon>edit</v-icon>
-          </v-btn>
-          <v-btn icon flat color="error" @click="deleteUserForm(props.item.username)">
-            <v-icon>delete</v-icon>
-          </v-btn>
-        </td>
+      <template v-slot:item.role="props">
+        <v-btn icon small :disabled="props.item.role <= 0" @click="shiftRole(props.item, -1)">-</v-btn>
+        {{ props.item.role }}
+        <v-btn icon small :disabled="props.item.role + 1 >= userData.role" @click="shiftRole(props.item, 1)">+</v-btn>
+      </template>
+      <template v-slot:item.action="props">
+        <v-btn icon color="secondary" @click="setPasswordForm(props.item.username)">
+          <v-icon>edit</v-icon>
+        </v-btn>
+        <v-btn icon color="error" @click="deleteUserForm(props.item.username)">
+          <v-icon>delete</v-icon>
+        </v-btn>
       </template>
       <template v-slot:no-data>
         <div>I am sorry to announce that you can manage nobody. :(</div>
@@ -60,8 +57,8 @@
           </v-card-text>
           <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn color="blue darken-1" flat @click.native="addUser.form = false">Close</v-btn>
-            <v-btn color="blue darken-1" flat @click="doAddUser"
+            <v-btn color="blue darken-1" text @click.native="addUser.form = false">Close</v-btn>
+            <v-btn color="blue darken-1" text @click="doAddUser"
                    :disabled="!addUser.valid" :loading="loading">Add</v-btn>
           </v-card-actions>
         </v-card>
@@ -83,8 +80,8 @@
           </v-card-text>
           <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn color="primary" flat @click="leave">Close</v-btn>
-            <v-btn color="info" flat @click="getSUToken">OK</v-btn>
+            <v-btn color="primary" text @click="leave">Close</v-btn>
+            <v-btn color="info" text @click="getSUToken">OK</v-btn>
           </v-card-actions>
         </v-card>
       </v-dialog>
@@ -109,8 +106,8 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="blue darken-1" flat @click.native="setPassword.form = false">Close</v-btn>
-          <v-btn color="blue darken-1" flat @click="doSetPassword"
+          <v-btn color="blue darken-1" text @click.native="setPassword.form = false">Close</v-btn>
+          <v-btn color="blue darken-1" text @click="doSetPassword"
                  :disabled="!setPassword.valid" :loading="loading">Set</v-btn>
         </v-card-actions>
       </v-card>
@@ -136,8 +133,8 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="blue darken-1" flat @click.native="deleteUser.form = false">Close</v-btn>
-          <v-btn color="error" flat @click="doDeleteUser"
+          <v-btn color="blue darken-1" text @click.native="deleteUser.form = false">Close</v-btn>
+          <v-btn color="error" text @click="doDeleteUser"
                  :disabled="!deleteUser.valid" :loading="loading">Delete</v-btn>
         </v-card-actions>
       </v-card>
@@ -164,7 +161,7 @@ export default {
           value: 'username'
         },
         {text: 'Role Level', value: 'role'},
-        {text: 'Action'}
+        {text: 'Action', value: 'action'}
 
       ],
       loginForm: false,

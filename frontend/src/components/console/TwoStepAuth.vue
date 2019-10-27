@@ -10,8 +10,8 @@
         <h4>Account: {{ userData.username }}</h4>
         <h4>Code: {{ totpCode }}</h4>
         <p>
-          <v-btn small round :href="totpUri" color="primary">Bind Now</v-btn>
-          <v-btn small round @click="downloadAuthFile" color="primary">Save</v-btn>
+          <v-btn small rounded :href="totpUri" color="primary">Bind Now</v-btn>
+          <v-btn small rounded @click="downloadAuthFile" color="primary">Save</v-btn>
         </p>
         <vue-qrcode :value="totpUri"></vue-qrcode>
       </div>

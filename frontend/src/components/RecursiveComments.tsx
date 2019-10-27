@@ -1,8 +1,8 @@
 import {
   VTimeline,
-  VTimelineItem, 
-  VFlex, 
-  VLayout, 
+  VTimelineItem,
+  VRow,
+  VCol,
   VChip, 
   VBtn, 
   VSlideXTransition, 
@@ -74,15 +74,15 @@ export default tsx.componentFactoryOf<RecursiveCommentProps>().create({
   },
   render(): VNode {
     return (
-      <VFlex xs10 sm7 offset-sm2>
+      <VCol xs={10} sm={7} offset-sm={2}>
         {this.renderComments(this.comments as RoseliaComment[])}
-      </VFlex>
+      </VCol>
     )
   },
   methods: {
     renderComments(comments: RoseliaComment[]): VNode {
       return (
-        <VTimeline dense>
+        <VTimeline dense align-top>
           <VSlideXTransition group>
             {comments.map(comment => (
               <VTimelineItem
@@ -96,8 +96,8 @@ export default tsx.componentFactoryOf<RecursiveCommentProps>().create({
                 {(comment as WithAuthor).author && (comment as WithAuthor).author.avatar ? <VAvatar slot="icon">
                   <VImg src={(comment as WithAuthor).author.avatar}></VImg>
                 </VAvatar> : null}
-                <VLayout justify-space-between>
-                  <VFlex xs7>
+                <VRow justify={"space-between"}>
+                  <VCol xs={7}>
                     {this.infoLabel(getNickname(comment), comment.color || ((comment as WithAuthor).author ? 'secondary' : '#bbbbbb'), false,
                       (this.getUsername(comment)) ? { name: 'userTimeline', params: {username: this.getUsername(comment)}} : undefined)}
                     {this.myUsername && caselessEqual(this.getUsername(comment), this.myUsername) ? (
@@ -116,18 +116,20 @@ export default tsx.componentFactoryOf<RecursiveCommentProps>().create({
                     }>
                       <VIcon>delete</VIcon>
                     </VBtn>) : null}
-                  </VFlex>
-                  <VFlex xs5 text-xs-right>
+                  </VCol>
+                  <VCol xs={5} class={"text-right"}>
                     {utils.formatDate(comment.createdAt)}
-                  </VFlex>
-                </VLayout>
-                <VFlex>
-                  {comment.replies.length ? (
-                  <div>
-                    {/* <span class="subheading grey--text">{comment.replies.length === 1 ? 'Reply' : 'Replies'}:</span> */}
-                    {this.renderComments(comment.replies)}
-                  </div>) : null}
-                </VFlex>
+                  </VCol>
+                </VRow>
+                <VRow no-gutters dense justify={"start"}>
+                  <VCol cols={12}>
+                    {comment.replies.length ? (
+                        <div>
+                          {/* <span class="subheading grey--text">{comment.replies.length === 1 ? 'Reply' : 'Replies'}:</span> */}
+                          {this.renderComments(comment.replies)}
+                        </div>) : null}
+                  </VCol>
+                </VRow>
               </VTimelineItem>
             ))}
           </VSlideXTransition>
@@ -140,7 +142,7 @@ export default tsx.componentFactoryOf<RecursiveCommentProps>().create({
     infoLabel(text: string, color: string, outline: boolean = false, to?: object) {
       const calculatingColor = (this as any).$vuetify.theme.currentTheme[color] || color
       const chip = (
-        <VChip small color={color} outline={outline} class={{
+        <VChip small color={color} outlined={outline} class={{
           'ml-0': true,
           'white--text': !outline && selectByLuminance(calculatingColor, false, true, true)
         }} to={to}>{text}</VChip>

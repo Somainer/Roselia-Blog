@@ -7,7 +7,7 @@
   >
     {{ text }}
     <v-btn
-      flat
+      text
       @click="showSelf = false"
     >
       Close
@@ -19,6 +19,10 @@
 export default {
   name: 'toast',
   props: ['show', 'text', 'color'],
+  model: {
+    prop: 'show',
+    event: 'showChange'
+  },
   computed: {
     showSelf: {
       get: function() {

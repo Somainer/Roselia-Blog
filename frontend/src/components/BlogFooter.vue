@@ -3,22 +3,18 @@
     height="auto"
     class="oneness"
   >
-    <v-layout
-      justify-center
-      row
+    <v-row
+      justify="center"
       wrap
     >
 
-      <v-flex
-        py-3
-        lighten-2
-        text-xs-center
-        class="themed-text"
-        xs12
+      <v-col
+        class="themed-text text-center lighten-2 py-3"
+        cols="12"
       >
         &copy;{{year}} — <strong>{{ name }}</strong>
-      </v-flex>
-    </v-layout>
+      </v-col>
+    </v-row>
   </v-footer>
 </template>
 

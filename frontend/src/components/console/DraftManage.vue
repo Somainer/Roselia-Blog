@@ -1,25 +1,25 @@
 <template>
 <v-container fluid>
-  <v-layout row wrap>
+  <v-row wrap>
     <div>
       <div>
         <h1>Clear All Drafts</h1>
-        <v-flex md12 lg12>
+        <v-col md="12" lg="12">
           <v-alert :value="true" type="warning">
             This will remove all post drafts and this action can not be undone.
           </v-alert>
-        </v-flex>
+        </v-col>
         <v-btn @click="removeDrafts" color="warning" @mouseleave="confirmClear = false">
           <v-icon>delete_sweep</v-icon> {{ confirmClear ? 'Yes, ' : '' }}Clear
         </v-btn>
       </div>
     </div>
-    <v-flex xs12 sm12>
+    <v-col xs="12" sm="12">
       <div v-if="drafts.length">
         <h1>Manage Drafts</h1>
       </div>
-      <v-layout row wrap>
-        <v-flex md6 sm12>
+      <v-row wrap>
+        <v-col md="6" sm="12">
           <v-scale-transition
                   v-for="post in drafts"
                   :key="post.id">
@@ -27,6 +27,7 @@
                     hover
                     class="round-corner-card primary-card-gradient"
                     dark
+                    shaped
             >
               <v-img v-if="post.img"
                      :src="post.img"
@@ -59,11 +60,11 @@
             </v-card>
           </v-scale-transition>
 
-        </v-flex>
-      </v-layout>
+        </v-col>
+      </v-row>
 
-    </v-flex>
-  </v-layout>
+    </v-col>
+  </v-row>
 </v-container>
 </template>
 

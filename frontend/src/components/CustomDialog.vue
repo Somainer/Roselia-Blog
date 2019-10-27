@@ -23,7 +23,7 @@
 
           <v-btn
             color="primary"
-            flat
+            text
             @click="commitConfirm"
           >
             Agree

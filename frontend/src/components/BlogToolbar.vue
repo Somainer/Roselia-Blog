@@ -1,6 +1,6 @@
 <template>
 <div>
-  <v-toolbar
+  <v-app-bar
     color="primary"
     scroll-off-screen
     v-if="!shouldHide"
@@ -22,7 +22,7 @@
              @contextmenu="portedLogin($event)">Login
       </v-btn>
     </v-toolbar-items>
-  </v-toolbar>
+  </v-app-bar>
   <v-navigation-drawer
     v-model="drawer"
     fixed
@@ -32,70 +32,70 @@
   >
     <v-toolbar flat>
     <v-list>
-      <v-list-tile>
-        <v-list-tile-title class="title">
+      <v-list-item>
+        <v-list-item-title class="title">
           {{title}}
-        </v-list-tile-title>
-      </v-list-tile>
+        </v-list-item-title>
+      </v-list-item>
     </v-list>
   </v-toolbar>
   <v-divider></v-divider>
 
   <v-list dense class="pt-0">
-    <v-list-tile to="/">
-      <v-list-tile-action>
+    <v-list-item to="/">
+      <v-list-item-action>
         <v-icon>home</v-icon>
-      </v-list-tile-action>
+      </v-list-item-action>
 
-      <v-list-tile-content>
-        <v-list-tile-title>Index</v-list-tile-title>
-      </v-list-tile-content>
-    </v-list-tile>
+      <v-list-item-content>
+        <v-list-item-title>Index</v-list-item-title>
+      </v-list-item-content>
+    </v-list-item>
   </v-list>
   <v-list dense class="pt-0">
-    <v-list-tile to="/timeline">
-      <v-list-tile-action>
+    <v-list-item to="/timeline">
+      <v-list-item-action>
         <v-icon>list_alt</v-icon>
-      </v-list-tile-action>
+      </v-list-item-action>
 
-      <v-list-tile-content>
-        <v-list-tile-title>Timeline</v-list-tile-title>
-      </v-list-tile-content>
-    </v-list-tile>
+      <v-list-item-content>
+        <v-list-item-title>Timeline</v-list-item-title>
+      </v-list-item-content>
+    </v-list-item>
   </v-list>
   <v-list dense class="pt-0" v-if="userData">
-    <v-list-tile to="/userspace">
-      <v-list-tile-action>
+    <v-list-item to="/userspace">
+      <v-list-item-action>
         <v-icon>account_circle</v-icon>
-      </v-list-tile-action>
+      </v-list-item-action>
 
-      <v-list-tile-content>
-        <v-list-tile-title>{{userData.nickname}}</v-list-tile-title>
-      </v-list-tile-content>
-    </v-list-tile>
+      <v-list-item-content>
+        <v-list-item-title>{{userData.nickname}}</v-list-item-title>
+      </v-list-item-content>
+    </v-list-item>
   </v-list>
   <v-list dense class="pt-0" v-else>
-    <v-list-tile to="/login" @click="setRedirect">
-      <v-list-tile-action>
+    <v-list-item to="/login" @click="setRedirect">
+      <v-list-item-action>
         <v-icon>person</v-icon>
-      </v-list-tile-action>
+      </v-list-item-action>
 
-      <v-list-tile-content>
-        <v-list-tile-title>Login</v-list-tile-title>
-      </v-list-tile-content>
-    </v-list-tile>
+      <v-list-item-content>
+        <v-list-item-title>Login</v-list-item-title>
+      </v-list-item-content>
+    </v-list-item>
   </v-list>
   <v-list dense class="pt-0" v-if="canAskYukina">
     
-    <v-list-tile @click="dialog = true">
-      <v-list-tile-action>
+    <v-list-item @click="dialog = true">
+      <v-list-item-action>
         <v-icon>question_answer</v-icon>
-      </v-list-tile-action>
+      </v-list-item-action>
 
-      <v-list-tile-content>
-        <v-list-tile-title>Ask Yukina for Help</v-list-tile-title>
-      </v-list-tile-content>
-    </v-list-tile>
+      <v-list-item-content>
+        <v-list-item-title>Ask Yukina for Help</v-list-item-title>
+      </v-list-item-content>
+    </v-list-item>
   </v-list>
   </v-navigation-drawer>
     <v-dialog

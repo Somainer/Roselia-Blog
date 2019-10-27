@@ -1,13 +1,14 @@
 <template>
 <v-container fluid>
-  <v-layout row wrap>
-    <v-flex xs12 sm12>
+  <v-row wrap>
+    <v-col xs="12" sm="12">
       <div>
         <h1>System Monitor</h1>
       </div>
       <v-card
         class="round-corner-card elevation-5 primary-card-gradient"
         dark
+        shaped
       >
         <v-card-title primary-title>
           <div>
@@ -15,19 +16,19 @@
             <h2>
               {{ basic.os.node }}
             </h2>
-            <span>
+            <span class="subtitle-1">
               <v-icon>desktop_mac</v-icon> {{ basic.os.name }} {{ basic.os.version }} ({{ basic.os.platform }})
             </span>
             <p>{{ basic.os.serverInterpreter }}</p>
             <v-divider></v-divider>
             Refresh Loop:
-            <span v-if="!!mainTimer">
+            <span class="subtitle-2" v-if="!!mainTimer">
               On
               <v-btn icon flat dark @click="stopLoop">
                 <v-icon>pause</v-icon>
               </v-btn>
             </span>
-            <span v-else>
+            <span class="subtitle-2" v-else>
               Off
               <v-btn icon flat dark @click="startLoop">
                 <v-icon>play_arrow</v-icon>
@@ -39,6 +40,7 @@
       <v-card
         class="round-corner-card elevation-5 secondary-card-gradient"
         dark
+        shaped
       >
         <v-card-title primary-title>
           <div>
@@ -46,7 +48,7 @@
             <h2>
               {{ basic.cpu.name }}
             </h2>
-            <span>
+            <span class="subtitle-1">
               {{ basic.cpu.totalCore }} Cores {{ basic.cpu.logicalCore }} Threads
             </span>
           </div>
@@ -60,7 +62,7 @@
               :width="15"
               :value="dynamic.cpu.total"
             >
-              Total: {{ dynamic.cpu.total }} %
+              <span class="subtitle-1">Total: {{ dynamic.cpu.total }} %</span>
             </v-progress-circular>
           </div>
           <div v-if="dynamic.cpu.logic.length > 1">
@@ -72,7 +74,7 @@
               :width="15"
               :value="percent"
             >
-              Core{{ core }}: {{ percent }} %
+              <span class="caption">Core{{ core }}: {{ percent }} % </span>
             </v-progress-circular>
           </div>
         </v-card-title>
@@ -80,6 +82,7 @@
       <v-card
         class="round-corner-card elevation-5 secondary-card-gradient"
         dark
+        shaped
       >
         <v-card-title primary-title>
           <div>
@@ -87,9 +90,9 @@
             <h3>
               Virtual Memory
             </h3>
-            <p>{{ usedMemory }} Used</p>
-            <p>{{ availableMemory }} Available</p>
-            <p>{{ totalMemory }} Total</p>
+            <p class="subtitle-1">{{ usedMemory }} Used</p>
+            <p class="subtitle-1">{{ availableMemory }} Available</p>
+            <p class="subtitle-1">{{ totalMemory }} Total</p>
             <v-icon>memory</v-icon> {{ dynamic.memory.percent }} %
             <v-progress-linear
               background-color="info"
@@ -102,18 +105,18 @@
       <div>
         <div>
           <h1>Revoke All Issued Tokens</h1>
-          <v-flex md12 lg12>
+          <v-col rows="12">
             <v-alert :value="true" type="warning">
               This will revoke all issued tokens, and you will be logged out after that.
             </v-alert>
-          </v-flex>
+          </v-col>
           <v-btn @click="refreshSalt" color="warning" @mouseleave="confirmRefresh = false">
             <v-icon>cloud_off</v-icon> {{ confirmRefresh ? 'Confirm ' : '' }}Revoke
           </v-btn>
         </div>
       </div>
-    </v-flex>
-  </v-layout>
+    </v-col>
+  </v-row>
 </v-container>
 </template>
 

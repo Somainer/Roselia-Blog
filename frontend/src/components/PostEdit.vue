@@ -8,9 +8,11 @@
         <v-layout>
               <v-spacer></v-spacer>
               <v-tooltip bottom>
-                <v-btn slot="activator" color="secondary" fab small :to="{name: 'post', params: {data: getPreviewData()}}">
-                  <v-icon>visibility</v-icon>
-                </v-btn>
+                <template v-slot:activator="{ on }">
+                  <v-btn v-on="on" color="secondary" fab small :to="{name: 'post', params: {data: getPreviewData()}}">
+                    <v-icon>visibility</v-icon>
+                  </v-btn>
+                </template>
                 <span>Preview the post. Note that the link can be used only once.</span>
               </v-tooltip>
               
@@ -391,7 +393,8 @@ export default {
       return {
         ...this.postData,
         id: 'preview',
-        content: this.markdown ? this.simplemde().markdown(this.postData.content) : this.postData.content
+        content: this.markdown ? this.simplemde().markdown(this.postData.content) : this.postData.content,
+        markdownContent: this.markdown ? this.postData.content : undefined
       }
     }
   },

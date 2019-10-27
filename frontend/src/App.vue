@@ -1,7 +1,7 @@
 <template>
   <div id="black-shout">
     <div v-wechat-title="$route.meta.title"></div>
-    <theme-listener v-model="preferedLight"></theme-listener>
+    <theme-listener v-model="preferredLight"></theme-listener>
     <v-app :dark="isNight">
       <v-content>
         <v-slide-x-transition hide-on-leave>
@@ -14,9 +14,9 @@
         </v-slide-x-transition>
 
       </v-content>
+      <go-top-btn></go-top-btn>
     </v-app>
     <vue-progress-bar></vue-progress-bar>
-    <go-top-btn></go-top-btn>
   </div>
 
 </template>
@@ -33,7 +33,7 @@ export default {
   mounted () {
     //  [App.vue specific] When App.vue is finish loading finish the progress bar
     this.$Progress.finish()
-    this.$watch('$vuetify.theme', theme => {
+    this.$watch('$vuetify.theme.currentTheme', theme => {
       document.body.style.setProperty('--theme-color', theme.primary)
       document.body.style.setProperty('--theme-secondary-color', theme.secondary)
       document.body.style.setProperty('--themed-text-color', selectByLuminance(theme.primary, '#000000', '#ffffff', '#ffffff'))
@@ -80,7 +80,7 @@ export default {
       forceLight: false,
       forceDark: false,
       forceTitle: '',
-      preferedLight: undefined,
+      preferredLight: undefined,
       userData: userInfoManager.getPayload()
     }
   },
@@ -92,7 +92,7 @@ export default {
     }
   },
   watch: {
-    preferedLight(val) {
+    preferredLight(val) {
       if(typeof val !== 'undefined') {
         const isDark = !val
         this.forceLight = !isDark
@@ -100,6 +100,12 @@ export default {
       } else {
         this.forceLight = this.forceDark = false
       }
+    },
+    isNight: {
+      handler(dark) {
+        this.$vuetify.theme.isDark = dark
+      },
+      immediate: true
     }
   }
 }
@@ -107,8 +113,8 @@ export default {
 
 <style>
   :root {
-    --theme-color: #6670ed;
-    --theme-secondary-color: #890f87;
+    --theme-color: var(--v-primary-base);
+    --theme-secondary-color: var(--v-secondary-base);
     --themed-text-color: #ffffff;
     /* --theme-color: #0288d1; */
   }

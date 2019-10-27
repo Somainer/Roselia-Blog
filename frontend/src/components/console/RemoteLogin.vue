@@ -15,8 +15,8 @@
         <v-card-text>Will login at {{loginMeta.os}} {{loginMeta.browser}} device on {{loginMeta.ip}}</v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="error" flat @click.native="dialog = false">Nope</v-btn>
-          <v-btn color="info" flat @click="confirmCode">OK</v-btn>
+          <v-btn color="error" text @click.native="dialog = false">Nope</v-btn>
+          <v-btn color="info" text @click="confirmCode">OK</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>

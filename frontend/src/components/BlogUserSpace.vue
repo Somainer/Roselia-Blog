@@ -1,7 +1,7 @@
 <template>
   <v-app :dark="!currentColorScheme">
     <blog-toolbar :userData="userData" :noDrawer="true">
-      <v-toolbar-side-icon dark @click.native="drawer = !drawer"></v-toolbar-side-icon>
+      <v-app-bar-nav-icon dark @click.native="drawer = !drawer"></v-app-bar-nav-icon>
     </blog-toolbar>
     <v-navigation-drawer
       v-model="drawer"
@@ -13,61 +13,61 @@
         dense
       >
         <template v-for="(item, i) in items">
-          <v-layout
+          <v-row
             v-if="item.heading"
             :key="i"
             row
             align-center
           >
-            <v-flex xs6>
-              <v-subheader v-if="item.heading">
+            <v-col xs="6">
+              <v-subheader v-if="item.heading" inset>
                 {{ item.heading }}
               </v-subheader>
-            </v-flex>
-          </v-layout>
+            </v-col>
+          </v-row>
           <v-divider
             v-else-if="item.divider"
             :key="i"
             dark
             class="my-3"
           ></v-divider>
-          <v-list-tile
+          <v-list-item
             v-else-if="!item.click"
             :key="i"
             ripple
             :to="item.to"
           >
-            <v-list-tile-action>
+            <v-list-item-icon>
               <v-icon>{{ item.icon }}</v-icon>
-            </v-list-tile-action>
-            <v-list-tile-content>
-              <v-list-tile-title class="grey--text">
+            </v-list-item-icon>
+            <v-list-item-content>
+              <v-list-item-title class="grey--text">
                 {{ item.text }}
-              </v-list-tile-title>
-            </v-list-tile-content>
-          </v-list-tile>
-          <v-list-tile
+              </v-list-item-title>
+            </v-list-item-content>
+          </v-list-item>
+          <v-list-item
             v-else
             :key="i"
             ripple
             @click="item.click"
           >
-            <v-list-tile-action>
+            <v-list-item-icon>
               <v-icon>{{ item.icon }}</v-icon>
-            </v-list-tile-action>
-            <v-list-tile-content>
-              <v-list-tile-title class="grey--text">
+            </v-list-item-icon>
+            <v-list-item-content>
+              <v-list-item-title class="grey--text">
                 {{ item.text }}
-              </v-list-tile-title>
-            </v-list-tile-content>
-          </v-list-tile>
+              </v-list-item-title>
+            </v-list-item-content>
+          </v-list-item>
         </template>
       </v-list>
     </v-navigation-drawer>
     <v-content>
       <v-container fluid fill-height>
-        <v-layout justify-center align-center>
-          <v-flex shrink>
+        <v-row justify="center" align="center">
+          <v-col cols="10" shrink>
             <!--<h1 class="display-3">Well met, {{userData.username}}!</h1>-->
             <v-alert
               v-model="toast.show"
@@ -79,8 +79,8 @@
             <v-slide-x-transition hide-on-leave>
               <router-view :userData="userData" :toast="showToast"></router-view>
             </v-slide-x-transition>
-          </v-flex>
-        </v-layout>
+          </v-col>
+        </v-row>
       </v-container>
     </v-content>
     <toast v-bind="toast" @showChange="changeToast"></toast>

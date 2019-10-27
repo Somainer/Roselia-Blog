@@ -1,8 +1,8 @@
 <template>
-  <v-container fluid fill-height>
-  <blog-toolbar :userData="userData" :shouldHide="true"></blog-toolbar>
-    <v-layout align-center justify-center>
-      <v-flex xs12 sm8 md4>
+  <v-container fluid class="fill-height">
+    <blog-toolbar :userData="userData" :shouldHide="true"></blog-toolbar>
+    <v-row align="center" justify="center">
+      <v-col cols="12" xs="12" sm="8" md="4">
         <v-card class="elevation-12">
           <v-toolbar dark color="primary">
             <v-btn v-if="this.$route.query.ported" text fab onclick="window.self.close()">
@@ -45,7 +45,7 @@
               </v-window-item>
               <v-window-item :value="1">
                 <v-container v-if="loginCode">
-                  <v-layout align-center justify-center>
+                  <v-row align="center" justify="center">
                     <div v-if="scannedUsername">
                       <h6 class="display-1">Welcome, please confirm:</h6>
                       <h1 class="info--text display-3">{{scannedUsername}}</h1>
@@ -54,41 +54,42 @@
                       <h6 class="display-1">Your login code:</h6>
                       <h1 class="primary--text display-3">{{loginCode}}</h1>
                     </div>
-                  </v-layout>
+                  </v-row>
                 </v-container>
               </v-window-item>
               <v-window-item :value="3">
                 <v-container>
-                  <v-layout align-center justify-center>
+                  <v-row align="center" justify="center">
                     <div>
                       <h6>One more step</h6>
                       <v-text-field v-model="authLoginCode" @keyup.enter="login"></v-text-field>
-                      <v-btn color="primary" @click.native="forceStep = null" small round>Give Up</v-btn>
+                      <v-btn color="primary" @click.native="forceStep = null" small rounded>Give Up</v-btn>
                     </div>
-                  </v-layout>
+                  </v-row>
                 </v-container>
               </v-window-item>
             </v-window>
             
             
-            <v-layout align-center justify-center v-if="!loading && hasOauthAdapter">
+            <v-row align="center" justify="center" v-if="!loading && hasOauthAdapter">
               <h4>Login using</h4>
               <div>
                 <div class="text-xs-center">
-                  <v-btn 
+                  <v-btn
                     v-for="adapter in oauthLogin.adapters" 
                     :key="adapter" 
-                    round color="accent" dark 
+                    rounded color="accent" dark
                     :loading="oauthLogin.loading" 
                     @click="redirectOauthLogin(adapter)"
+                    class="ma-1"
                   >
-                    <v-icon v-if="$vuetify.icons.brand[adapter]">{{$vuetify.icons.brand[adapter]}}</v-icon>
+                    <v-icon v-if="$vuetify.icons.values.brand[adapter]">{{$vuetify.icons.values.brand[adapter]}}</v-icon>
                     <span v-else>{{ adapter }}</span>
                   </v-btn>
                 </div>
               </div>
               
-            </v-layout>
+            </v-row>
           </v-card-text>
           <v-card-actions>
             <div v-if="!oauthLogin.loading">
@@ -99,8 +100,8 @@
             <v-btn color="primary" v-on:click="login" :loading="loading" :disabled="!valid">Login</v-btn>
           </v-card-actions>
         </v-card>
-      </v-flex>
-    </v-layout>
+      </v-col>
+    </v-row>
     <toast v-bind="toast" @showChange="changeToast" v-show="false"></toast>
   </v-container>
 </template>
