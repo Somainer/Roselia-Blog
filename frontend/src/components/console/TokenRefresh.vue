@@ -38,12 +38,6 @@ export default {
   props: ['userData', 'toast'],
   data() {
     return {
-      get loginToken() {
-        return utils.getLoginData().token
-      },
-      set loginToken(val) {
-        return 0
-      },
       get rfToken () {
         return utils.getLoginData().rftoken
       }
@@ -72,7 +66,15 @@ export default {
     },
     isTokenExpired () {
       return this.tokenExpiryDatetime < new Date()
-    }
+    },
+      loginToken: {
+          get() {
+              return utils.getLoginData().token
+          },
+          set() {
+              return 0
+          }
+      }
   },
   methods: {
     makeRedirect (to) {

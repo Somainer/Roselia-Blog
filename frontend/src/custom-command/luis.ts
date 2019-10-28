@@ -14,20 +14,19 @@ export async function executeCommand(command: string) {
             return true
         }
     } catch {
-
-    }
-    const result = await roseliaCustomCommand({command})
-    const intent = result.topScoringIntent.intent
-    const args = getArguments(result.entities)
-    if (args.Password) {
+      const result = await roseliaCustomCommand({command})
+      const intent = result.topScoringIntent.intent
+      const args = getArguments(result.entities)
+      if (args.Password) {
         const entity = result.entities.find(x => x.type === 'Password')!
         args.Password = command.substring(entity.startIndex, entity.endIndex + 1)
-    }
-    if (intent in executors) {
+      }
+      if (intent in executors) {
         executors[intent](args)
         return true
+      }
+      return false
     }
-    return false
 }
 
 export const askYukinaForHelp = async (question: string) => (await askYukina({question}))[0]

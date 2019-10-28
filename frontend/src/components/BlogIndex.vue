@@ -5,14 +5,15 @@
       dark
       :src="meta.images.indexBannerImage"
     >
-      <v-layout
-        align-center
-        column
-        justify-center
+      <v-row
+        align="center"
+        justify="center"
       >
-        <h1 class="display-2 font-weight-thin mb-3">{{realTitle || meta.title}}</h1>
-        <h4 class="subheading">{{realSubtitle || meta.motto}}</h4>
-      </v-layout>
+        <v-col cols="12" class="text-center">
+          <h1 class="display-2 font-weight-thin mb-3">{{realTitle || meta.title}}</h1>
+          <h4 class="subheading">{{realSubtitle || meta.motto}}</h4>
+        </v-col>
+      </v-row>
     </v-parallax>
 
     <v-layout>
@@ -20,66 +21,77 @@
         fluid
         grid-list-lg
       >
-        <v-layout row wrap>
-          <v-flex v-for="post in posts" xs12 sm8 offset-sm2 :key="post.id">
-            <v-card hover :to="getRoute(post)" :class="{'round-corner-card': $vuetify.breakpoint.smAndUp}">
+        <v-row wrap v-if="!posts.length">
+          <v-col v-for="idx in 6" :key="idx" cols="12" xs="12" sm="8" offset-sm="2">
+            <v-skeleton-loader
+                    elevation="2"
+                    :class="{'round-corner-card': $vuetify.breakpoint.smAndUp}"
+                    class="mb-6"
+                    type="card"
+            ></v-skeleton-loader>
+          </v-col>
+        </v-row>
+        <v-row wrap>
+          <v-col v-for="post in posts" cols="12" xs="12" sm="8" offset-sm="2" :key="post.id">
+              <v-card hover :ripple="false" :shaped="$vuetify.breakpoint.smAndUp" :to="getRoute(post)"
+                      :class="{'round-corner-card': $vuetify.breakpoint.smAndUp}">
               <!-- {name: 'post', params: {p: post.id}, query: {p: post.id}} -->
               <v-img v-if="post.img"
                     :src="post.img"
-                    :lazy-src="meta.images.lazyloadBannerImage"
+                    :lazy-src="meta.images.lazyloadImage"
                     ripple="true"
               >
-                <v-container fill-height fluid>
-                  <v-layout align-end fill-height>
-                    <v-flex xs12 align-end flexbox>
+                <v-container class="fill-height" fluid>
+                  <v-row align="end" class="fill-height">
+                    <v-col cols="12" align-self="end" flexbox>
                       <router-link v-for="tag in post.tags" :to="{name: 'index', params: {tag: tag}, query: {tag: tag}}" :key="tag">
-                        <v-chip>{{tag}}</v-chip>
+                        <v-chip class="ma-1">{{tag}}</v-chip>
                       </router-link>
-                      <v-chip v-if="post.secret" color="success" text-color="white">
-                        <v-avatar>
+                      <v-chip class="ma-1" v-if="post.secret" color="success" text-color="white">
+                        <v-avatar left>
                           <v-icon>lock</v-icon>{{post.secret}}
                         </v-avatar>
                         Secret
                       </v-chip>
-                      <v-chip v-if="post.hidden" color="grey" text-color="white">
-                        <v-avatar>
+                      <v-chip class="ma-1" v-if="post.hidden" color="grey" text-color="white">
+                        <v-avatar left>
                           <v-icon>visibility_off</v-icon>
                         </v-avatar>
                         Hidden
                       </v-chip>
-                    </v-flex>
-                  </v-layout>
+                    </v-col>
+                  </v-row>
                 </v-container>
               </v-img>
 
               <v-card-title primary-title>
                 <div>
                   <div class="headline">{{post.title}}</div>
-                  <span class="grey--text">{{post.subtitle}}</span>
+                  <span class="grey--text subtitle-1">{{post.subtitle}}</span>
 
                 </div>
                 <v-spacer></v-spacer>
-                <span class="right">{{formatDate(post.created) || post.date}}</span>
+                <span class="right caption">{{formatDate(post.created) || post.date}}</span>
               </v-card-title>
-              <v-flex xs12 align-end flexbox v-if="!post.img">
+              <v-col cols="12" align-self="end" flexbox v-if="!post.img">
                 <router-link v-for="tag in post.tags" :to="{name: 'index', params: {tag: tag}, query: {tag: tag}}" :key="tag">
-                  <v-chip>{{tag}}</v-chip>
+                  <v-chip class="ma-1">{{tag}}</v-chip>
                 </router-link>
-                <v-chip v-if="post.secret" color="success" text-color="white">
-                  <v-avatar>
+                <v-chip class="ma-1" v-if="post.secret" color="success" text-color="white">
+                  <v-avatar left>
                     <v-icon>lock</v-icon>{{post.secret}}
                   </v-avatar>
                   Secret
                 </v-chip>
-                <v-chip v-if="post.hidden" color="grey" text-color="white">
-                  <v-avatar>
+                <v-chip class="ma-1" v-if="post.hidden" color="grey" text-color="white">
+                  <v-avatar left>
                     <v-icon>visibility_off</v-icon>
                   </v-avatar>
                   Hidden
                 </v-chip>
-              </v-flex>
+              </v-col>
               <v-card-title>
-                <span class="grey--text">{{post.author.nickname}}</span>
+                <span class="grey--text subtitle-1">{{post.author.nickname}}</span>
               </v-card-title>
               <v-card-actions v-if="userData && userData.role && userData.role >= post.author.role">
                 <v-spacer></v-spacer>
@@ -92,13 +104,13 @@
               </v-card-actions>
 
             </v-card>
-          </v-flex>
+          </v-col>
 
-        </v-layout>
+        </v-row>
       </v-container>
     </v-layout>
     <v-container>
-      <div class="text-xs-center">
+      <div class="text-center">
         <v-pagination
           v-model="currentPage"
           :length="pages"
@@ -200,6 +212,7 @@ export default {
     getPosts (page, tried = false, tag) {
       page = page || 1
       // page = page || utils.getArguments().page || 1
+      this.posts = [];
       let fetchData = {
         page: page,
         limit: 6

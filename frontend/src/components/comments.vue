@@ -1,7 +1,7 @@
 <template>
   <lazy-component text="Load comment">
     <v-container>
-      <v-flex xs12 sm8 offset-sm2>
+      <v-col cols="12" sm="8" offset-sm="2">
         <v-badge>
           <span slot="badge" v-if="commentCount">{{commentCount}}</span>
           <v-icon>
@@ -9,10 +9,10 @@
           </v-icon>
         </v-badge>
         <v-divider class="my-3"></v-divider>
-      </v-flex>
-      <v-flex v-if="canAddComment" xs12 sm8 offset-sm2>
-        <v-layout row wrap>
-          <v-chip close color="secondary" dark v-if="replyToComment" v-model="chip">
+      </v-col>
+      <v-col v-if="canAddComment" cols="12" sm="8" offset-sm="2">
+        <v-row row wrap>
+          <v-chip close color="secondary" dark v-if="replyToComment" v-model="chip" @click:close="chip = false">
             @{{ atToNickname }}
           </v-chip>
           <v-spacer></v-spacer>
@@ -20,7 +20,7 @@
             <v-icon v-if="showPreview">mode_edit</v-icon>
             <v-icon v-else>visibility</v-icon>
           </v-btn>
-        </v-layout>
+        </v-row>
         <div v-if="showPreview">
           <recursive-comment
             ref="previewComment"
@@ -31,30 +31,30 @@
           ></recursive-comment>
         </div>
         <v-textarea
-          v-model="comment"
-          auto-grow
-          outline
-          :placeholder="commentPlaceholer"
-          color="primary"
-          label="Leave a comment"
-          ref="commentText"
-          v-else
+                v-model="comment"
+                auto-grow
+                outlined
+                :placeholder="commentPlaceholer"
+                color="primary"
+                label="Leave a comment"
+                ref="commentText"
+                v-else
         ></v-textarea>
-        <v-layout row wrap>
-          <v-flex xs4>
+        <v-row row wrap>
+          <v-col cols="4">
             <span v-if="userData && userData.nickname">{{ userData.nickname }}</span>
             <v-text-field small v-else v-model="nickname" label="Nickname"></v-text-field>
-          </v-flex>
+          </v-col>
           <v-spacer></v-spacer>
-          <v-flex xs3 md2>
-            <v-btn color="primary" :disabled="!this.isValid" :loading="loading" @click="addComment" 
-              round
+          <v-col cols="3" md="2" lg="1">
+            <v-btn color="primary" :disabled="!this.isValid" :loading="loading" @click="addComment"
+                   rounded
             >
               <v-icon>send</v-icon>
             </v-btn>
-          </v-flex>
-        </v-layout>
-      </v-flex>
+          </v-col>
+        </v-row>
+      </v-col>
       <recursive-comment ref="comments"
         :comments="recursiveCommentList" 
         :canAddComment="canAddComment"
@@ -64,33 +64,35 @@
         :postAuthorUsername="postData.author && postData.author.username"
         :myUsername="userData && userData.username"
       ></recursive-comment>
-      <v-layout
-          align-center
+      <v-row
+          align="center"
           column
-          justify-center
+          justify="center"
+          dense
         >
-        <v-chip
-          class="white--text ml-0 center-align"
-          color="secondary"
-          small
-          @click="$vuetify.goTo($refs.commentText)"
-        >
-          <v-icon>add_comment</v-icon>
-        </v-chip>
-        <div v-if="currentPage < totalPages" v-observe-visibility="loadNextPage">
-          <v-btn :loading="loading" small @click="loadNextPage" block color="secondary" dark>
+        <v-col cols="2" class="text-center">
+          <v-chip
+                  class="white--text ml-0 center-align"
+                  color="secondary"
+                  small
+                  @click="$vuetify.goTo($refs.commentText)"
+          >
+            <v-icon>add_comment</v-icon>
+          </v-chip>
+          <div v-if="currentPage < totalPages" v-observe-visibility="loadNextPage">
+            <v-btn :loading="loading" small @click="loadNextPage" block color="secondary" dark>
               <v-icon>keyboard_arrow_down</v-icon>
-          </v-btn>
-        </div>
-        <div v-else-if="loading">
-          <v-progress-circular indeterminate color="primary"></v-progress-circular>
-        </div>
-        <div v-else>
-          <v-divider></v-divider>
-          Tiro Finale
-        </div>
-          
-      </v-layout>
+            </v-btn>
+          </div>
+          <div v-else-if="loading">
+            <v-progress-circular indeterminate color="primary"></v-progress-circular>
+          </div>
+          <div v-else>
+            <v-divider></v-divider>
+            Tiro Finale
+          </div>
+        </v-col>
+      </v-row>
     </v-container>
 
     <v-dialog
@@ -115,17 +117,17 @@
           <v-spacer></v-spacer>
 
           <v-btn
-            color="info"
-            flat="flat"
-            @click="commentToDelete.show = false"
+                  color="info"
+                  text
+                  @click="commentToDelete.show = false"
           >
             No
           </v-btn>
 
           <v-btn
-            color="error"
-            flat="flat"
-            @click="() => {deleteComment(commentToDelete.id); commentToDelete.show = false; commentToDelete.id = 0}"
+                  color="error"
+                  text
+                  @click="() => {deleteComment(commentToDelete.id); commentToDelete.show = false; commentToDelete.id = 0}"
           >
             Yes, delete<v-icon>delete</v-icon>
           </v-btn>

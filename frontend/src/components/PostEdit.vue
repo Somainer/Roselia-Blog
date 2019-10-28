@@ -2,15 +2,17 @@
 <div>
   <blog-toolbar :userData="userData"></blog-toolbar>
   <v-container grid-list-md fluid fill-height>
-    <v-layout>
-      <v-flex xs12 sm8 offset-sm2>
+    <v-row>
+      <v-col cols="12" sm="8" offset-sm="2">
         <h1 class="display-3">{{realTitle}}</h1>
         <v-layout>
               <v-spacer></v-spacer>
               <v-tooltip bottom>
-                <v-btn slot="activator" color="secondary" fab small :to="{name: 'post', params: {data: getPreviewData()}}">
-                  <v-icon>visibility</v-icon>
-                </v-btn>
+                <template v-slot:activator="{ on }">
+                  <v-btn v-on="on" color="secondary" fab small :to="{name: 'post', params: {data: getPreviewData()}}">
+                    <v-icon>visibility</v-icon>
+                  </v-btn>
+                </template>
                 <span>Preview the post. Note that the link can be used only once.</span>
               </v-tooltip>
               
@@ -120,9 +122,9 @@
             </div>
           </v-card-actions>
         </v-form>
-      </v-flex>
+      </v-col>
 
-    </v-layout>
+    </v-row>
 
     <div v-wechat-title="realTitle"></div>
     <v-dialog
@@ -391,7 +393,8 @@ export default {
       return {
         ...this.postData,
         id: 'preview',
-        content: this.markdown ? this.simplemde().markdown(this.postData.content) : this.postData.content
+        content: this.markdown ? this.simplemde().markdown(this.postData.content) : this.postData.content,
+        markdownContent: this.markdown ? this.postData.content : undefined
       }
     }
   },

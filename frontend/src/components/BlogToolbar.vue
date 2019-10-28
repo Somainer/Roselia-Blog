@@ -1,26 +1,28 @@
 <template>
 <div>
-  <v-toolbar
+  <v-app-bar
     color="primary"
     scroll-off-screen
     v-if="!shouldHide"
   >
-    <v-toolbar-side-icon dark v-if="shouldHaveToolbar" @click.native="drawer = !drawer"></v-toolbar-side-icon>
+    <v-app-bar-nav-icon dark v-if="shouldHaveToolbar" @click.native="drawer = !drawer"></v-app-bar-nav-icon>
     <slot></slot>
     <v-toolbar-title>
       <router-link  class="themed-text no-deco" :to="{name:'index'}">{{title}}</router-link>
     </v-toolbar-title>
     <v-spacer></v-spacer>
     <v-toolbar-items v-if="!shouldHaveToolbar">
-      <v-btn dark flat @click="dialog = true" v-if="canAskYukina">
+      <v-btn dark text @click="dialog = true" v-if="canAskYukina">
         <v-icon>question_answer</v-icon>
       </v-btn>
-      <v-btn dark flat to="/">Index</v-btn>
-      <v-btn dark flat to="/timeline">Timeline</v-btn>
-      <v-btn dark flat v-if="userData" to="/userspace">{{userData.nickname}}</v-btn>
-      <v-btn dark flat v-else tag="a" @click.native="setRedirect" :to="{name: 'login'}" @contextmenu="portedLogin($event)">Login</v-btn>
+      <v-btn dark text to="/">Index</v-btn>
+      <v-btn dark text to="/timeline">Timeline</v-btn>
+      <v-btn dark text v-if="userData" to="/userspace">{{userData.nickname}}</v-btn>
+      <v-btn dark text v-else tag="a" @click.native="setRedirect" :to="{name: 'login'}"
+             @contextmenu="portedLogin($event)">Login
+      </v-btn>
     </v-toolbar-items>
-  </v-toolbar>
+  </v-app-bar>
   <v-navigation-drawer
     v-model="drawer"
     fixed
@@ -30,70 +32,70 @@
   >
     <v-toolbar flat>
     <v-list>
-      <v-list-tile>
-        <v-list-tile-title class="title">
+      <v-list-item>
+        <v-list-item-title class="title">
           {{title}}
-        </v-list-tile-title>
-      </v-list-tile>
+        </v-list-item-title>
+      </v-list-item>
     </v-list>
   </v-toolbar>
   <v-divider></v-divider>
 
   <v-list dense class="pt-0">
-    <v-list-tile to="/">
-      <v-list-tile-action>
+    <v-list-item to="/">
+      <v-list-item-action>
         <v-icon>home</v-icon>
-      </v-list-tile-action>
+      </v-list-item-action>
 
-      <v-list-tile-content>
-        <v-list-tile-title>Index</v-list-tile-title>
-      </v-list-tile-content>
-    </v-list-tile>
+      <v-list-item-content>
+        <v-list-item-title>Index</v-list-item-title>
+      </v-list-item-content>
+    </v-list-item>
   </v-list>
   <v-list dense class="pt-0">
-    <v-list-tile to="/timeline">
-      <v-list-tile-action>
+    <v-list-item to="/timeline">
+      <v-list-item-action>
         <v-icon>list_alt</v-icon>
-      </v-list-tile-action>
+      </v-list-item-action>
 
-      <v-list-tile-content>
-        <v-list-tile-title>Timeline</v-list-tile-title>
-      </v-list-tile-content>
-    </v-list-tile>
+      <v-list-item-content>
+        <v-list-item-title>Timeline</v-list-item-title>
+      </v-list-item-content>
+    </v-list-item>
   </v-list>
   <v-list dense class="pt-0" v-if="userData">
-    <v-list-tile to="/userspace">
-      <v-list-tile-action>
+    <v-list-item to="/userspace">
+      <v-list-item-action>
         <v-icon>account_circle</v-icon>
-      </v-list-tile-action>
+      </v-list-item-action>
 
-      <v-list-tile-content>
-        <v-list-tile-title>{{userData.nickname}}</v-list-tile-title>
-      </v-list-tile-content>
-    </v-list-tile>
+      <v-list-item-content>
+        <v-list-item-title>{{userData.nickname}}</v-list-item-title>
+      </v-list-item-content>
+    </v-list-item>
   </v-list>
   <v-list dense class="pt-0" v-else>
-    <v-list-tile to="/login" @click="setRedirect">
-      <v-list-tile-action>
+    <v-list-item to="/login" @click="setRedirect">
+      <v-list-item-action>
         <v-icon>person</v-icon>
-      </v-list-tile-action>
+      </v-list-item-action>
 
-      <v-list-tile-content>
-        <v-list-tile-title>Login</v-list-tile-title>
-      </v-list-tile-content>
-    </v-list-tile>
+      <v-list-item-content>
+        <v-list-item-title>Login</v-list-item-title>
+      </v-list-item-content>
+    </v-list-item>
   </v-list>
   <v-list dense class="pt-0" v-if="canAskYukina">
     
-    <v-list-tile @click="dialog = true">
-      <v-list-tile-action>
+    <v-list-item @click="dialog = true">
+      <v-list-item-action>
         <v-icon>question_answer</v-icon>
-      </v-list-tile-action>
+      </v-list-item-action>
 
-      <v-list-tile-content>
-        <v-list-tile-title>Ask Yukina for Help</v-list-tile-title>
-      </v-list-tile-content>
-    </v-list-tile>
+      <v-list-item-content>
+        <v-list-item-title>Ask Yukina for Help</v-list-item-title>
+      </v-list-item-content>
+    </v-list-item>
   </v-list>
   </v-navigation-drawer>
     <v-dialog
@@ -111,8 +113,8 @@
           Experimental)
         </v-card-title>
         <v-container grid-list-md>
-          <v-layout wrap>
-            <v-flex xs12>
+          <v-row wrap>
+            <v-col cols="12">
               <v-alert
                 v-model="notUnderstand"
                 type="error"
@@ -143,16 +145,16 @@
               <div v-else>
                 <v-progress-circular indeterminate color="primary"></v-progress-circular> Practice like you perform, perform like you practice.
               </div>
-            </v-flex>
-          </v-layout>
+            </v-col>
+          </v-row>
         </v-container>
         <v-divider></v-divider>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn
-            color="primary"
-            flat
-            @click="dialog = false"
+                  color="primary"
+                  text
+                  @click="dialog = false"
           >
             Close
           </v-btn>

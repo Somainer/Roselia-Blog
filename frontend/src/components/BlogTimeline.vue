@@ -6,36 +6,37 @@
       dark
       :src="bannerImage"
     >
-      <v-layout
-        align-center
+      <v-row
+        align="center"
         column
-        justify-center
+        justify="center"
       >
-        <div v-if="userInfo.avatar">
-          <v-avatar
-            size="128px"
-            class="elevation-7"
-          >
-            <v-img
-              :src="userInfo.avatar"
-              :alt="userInfo.username"
-            ></v-img>
-          </v-avatar>
-          <br/><br/>
-        </div>
-        <h1 class="display-2 font-weight-regular mb-3">{{ realTitle }}</h1>
-        <h2 class="subheading" v-if="userFound">
-          {{ mottoText }}
-        </h2>
-        <h2 class="subheading" v-else>
-          This guy is a mystery.
-        </h2>
-      </v-layout>
+        <v-col cols="12" class="text-center">
+          <div v-if="userInfo.avatar">
+            <v-avatar
+                    size="128px"
+                    class="elevation-7"
+            >
+              <v-img
+                      :src="userInfo.avatar"
+                      :alt="userInfo.username"
+              ></v-img>
+            </v-avatar>
+            <br/><br/>
+          </div>
+          <h1 class="display-2 font-weight-regular mb-3">{{ realTitle }}</h1>
+          <h2 class="subtitle-1" v-if="userFound">
+            {{ mottoText }}
+          </h2>
+          <h2 class="subtitle-1" v-else>
+            This guy is a mystery.
+          </h2>
+        </v-col>
+      </v-row>
     </v-parallax>
     <v-container>
       <v-card-text class="py-0">
         <v-timeline
-          align-top
           :dense="$vuetify.breakpoint.smAndDown"
         >
         <v-slide-x-transition group>
@@ -48,7 +49,7 @@
             <v-avatar v-if="!userInfo.username && post.author && post.author.avatar" slot="icon">
               <v-img :src="post.author.avatar"></v-img>
             </v-avatar>
-            <span
+            <div
               slot="opposite"
               class="headline font-weight-bold"
             >
@@ -58,12 +59,12 @@
                   <v-chip>{{tag}}</v-chip>
               </router-link>
               <v-chip v-if="post.secret" color="success" text-color="white">
-                <v-avatar>
+                <v-avatar left>
                   <v-icon>lock</v-icon>{{post.secret}}
                 </v-avatar>
                 Secret
               </v-chip>
-            </span>
+            </div>
             <div class="py-3"
             :class="{scale: post.clicked, 'scale-finished': post.clicked === 1, 'scale-back': post.clicked === -1}">
               <!-- <h2 class="headline font-weight-light mb-3 primary--text">{{post.title}}</h2>
@@ -73,6 +74,7 @@
               <v-card
                 dark
                 color="primary"
+                elevation="2"
               >
                 <v-card-title class="title">{{post.title}}</v-card-title>
                 
@@ -80,8 +82,8 @@
                   <p>{{post.subtitle}}</p>
                   <v-btn
                     class="mx-0"
-                    outline
-                    round
+                    outlined
+                    rounded
                     color="secondary"
                     @click="manuallyLoadPost(post)"
                   >
@@ -93,10 +95,10 @@
           </v-timeline-item>
         </v-slide-x-transition>
         </v-timeline>
-        <v-layout
-          align-center
+        <v-row
+          align="center"
           column
-          justify-center
+          justify="center"
         >
           <div v-observe-visibility="loadNextPage">
             <div v-if="currentPage < totalPages">
@@ -113,7 +115,7 @@
             </div>
             
           </div>
-        </v-layout>
+        </v-row>
       </v-card-text>
     </v-container>
     <blog-footer></blog-footer>

@@ -1,8 +1,12 @@
 **/.DS_Store
 **/.idea/*
+**/.vscode/*
 *.pyc
 static/*
 scripts/node_modules/*
 *.db
 *.txt
 api_server/secret.py
+api_server/config.py
+env/
+frontend/src/common/config.js

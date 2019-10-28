@@ -3,7 +3,7 @@
     v-scroll="recordScroll"
     v-resize="recordHeight"
   >
-    <v-scale-transition origin="center center 0">
+    <v-fab-transition>
       <v-btn
         color="secondary"
         fab
@@ -15,11 +15,11 @@
         :style="{
         bottom: $vuetify.breakpoint.smOnly ? '64px' : ''
       }"
-        v-if="showButton"
+        v-show="showButton"
       >
         <v-icon>keyboard_arrow_up</v-icon>
       </v-btn>
-    </v-scale-transition>
+    </v-fab-transition>
 
   </v-layout>
 

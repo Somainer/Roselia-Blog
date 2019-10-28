@@ -12,82 +12,105 @@
       }"
         
     >
-      <v-layout
-        align-center
+      <v-row
+        align="center"
         column
-        justify-center
+        justify="center"
         :class="titleClass"
         v-if="!extraDisplaySettings.metaBelowImage"
       >
-        <h1 id="title" class="display-2 font-weight-thin mb-3">{{postData.title}}</h1>
-        <h4 id="subtitle" class="subheading">{{postData.subtitle}}</h4>
-        <h4 id="date" class="subheading">{{formatDate(postData.created) || postData.date}}</h4>
-        <h4 id="author" class="subheading">{{postData.author.nickname}}</h4>
-      </v-layout>
+        <v-col cols="12" class="text-center">
+          <h1 id="title" class="display-2 font-weight-thin mb-3">{{postData.title}}</h1>
+          <h4 id="subtitle" class="subtitle-1">{{postData.subtitle}}</h4>
+          <h4 id="date" class="subtitle-1">{{formatDate(postData.created) || postData.date}}</h4>
+          <h4 id="author" class="subtitle-2">{{postData.author.nickname}}</h4>
+        </v-col>
+      </v-row>
     </v-parallax>
     <v-container
         v-if="!postData.img || extraDisplaySettings.metaBelowImage"
     >
-      <v-layout
-        align-center
+      <v-row
+        align="center"
         column
-        justify-center
+        justify="center"
       >
-        <h1 id="title" class="display-3 font-weight-thin mb-3">{{postData.title}}</h1>
-        <h2 id="subtitle" class="subheading">{{postData.subtitle}}</h2>
-        <h4 id="date" class="">{{formatDate(postData.created) || postData.date}}</h4>
-        <h4 id="author" class="subheading">{{postData.author.nickname}}</h4>
-      </v-layout>
+        <v-col cols="12" class="text-center">
+          <h1 id="title" class="display-3 font-weight-thin mb-3">{{postData.title}}</h1>
+          <h2 id="subtitle" class="subtitle-1">{{postData.subtitle}}</h2>
+          <h4 id="date" class="subtitle-1">{{formatDate(postData.created) || postData.date}}</h4>
+          <h4 id="author" class="subtitle-2">{{postData.author.nickname}}</h4>
+        </v-col>
+      </v-row>
       
     </v-container>
-    <v-container grid-list-md fluid fill-height>
-      <v-layout>
-        <v-flex wrap row xs12 sm10 offset-sm2>
-          <v-layout>
+    <v-container grid-list-md fluid class="fill-height">
+      <v-row>
+        <v-col wrap cols="12" sm="10" offset-sm="2">
+          <v-row>
             <router-link v-for="tag in postData.tags" :to="{name: 'index', params: {tag: tag}, query: {tag: tag}}" :key="tag">
-              <v-chip>{{tag}}</v-chip>
+              <v-chip class="ma-1">{{tag}}</v-chip>
             </router-link>
-            <v-chip v-if="postData.secret" color="success" text-color="white">
-              <v-avatar>
+            <v-chip class="ma-1" v-if="postData.secret" color="success" text-color="white">
+              <v-avatar left class="success">
                 <v-icon>lock</v-icon>{{postData.secret}}
               </v-avatar>
               Secret
             </v-chip>
-            <v-chip v-if="postData.id === -1" color="warning" text-color="white">
-              <v-avatar>
+            <v-chip class="ma-1" v-if="postData.id === -1" color="warning" text-color="white">
+              <v-avatar left>
                 <v-icon>error</v-icon>
               </v-avatar>
               404
             </v-chip>
-            <v-chip v-if="postData.hidden" color="grey" text-color="white">
-              <v-avatar>
+            <v-chip class="ma-1" v-if="postData.hidden" color="grey" text-color="white">
+              <v-avatar left>
                 <v-icon>visibility_off</v-icon>
               </v-avatar>
               Hidden
             </v-chip>
             
-          </v-layout>
-          <v-flex xs10 offset xs2>
-            <v-btn v-if="cachedData" color="secondary" fab small @click="$router.go(-1)">
-              <v-icon>arrow_back</v-icon>
-            </v-btn>
-            <v-layout>
+          </v-row>
+          <v-col cols="12" md="10">
+            <v-row>
+              <v-btn v-if="cachedData" color="secondary" fab small @click="$router.go(-1)">
+                <v-icon>arrow_back</v-icon>
+              </v-btn>
               <v-spacer></v-spacer>
               <div v-if="postData.id !== 'preview' && postData.id !== -1 && isEditable">
-                <v-btn color="error" fab small :to="{name: 'edit', params: {deletePost: true, title: postData.title}, query: {post: postData.id}}">
+                <v-btn class="ma-3" color="error" fab small :to="{name: 'edit', params: {deletePost: true, title: postData.title}, query: {post: postData.id}}">
                   <v-icon>delete</v-icon>
                 </v-btn>
-                <v-btn color="primary" fab small :to="{name: 'edit', query: {post: postData.id}}">
+                <v-btn class="ma-3" color="primary" fab small :to="{name: 'edit', query: {post: postData.id}}">
                   <v-icon>mode_edit</v-icon>
                 </v-btn>
               </div>
-              <v-btn fab small color="secondary" @click="sharePost" v-if="isPostFound && !isShared">
+              <v-btn class="ma-3" fab small color="secondary" @click="sharePost" v-if="isPostFound && !isShared">
                 <v-icon>share</v-icon>
               </v-btn>
-            </v-layout>
-          </v-flex>
-          <v-layout>
-            <v-flex :class="{sm8: hasDigest, sm10: !hasDigest}">
+            </v-row>
+            <v-row>
+              <v-col cols="12">
+                <v-alert
+                        v-if="postData.id === 'preview' && !postData.serverRendered && postData.markdownContent"
+                        border="left"
+                        prominent
+                        colored-border
+                        type="info"
+                        elevation="2"
+                >
+                  <v-row align="center">
+                    <v-col>
+                      This page is rendered by your browser.
+                      <v-btn :loading="loading" @click="renderPreviewByServer">Render it via server</v-btn>
+                    </v-col>
+                  </v-row>
+                </v-alert>
+              </v-col>
+            </v-row>
+          </v-col>
+          <v-row>
+            <v-col :sm="hasDigest ? 8 : 10">
               <div id="content" class="flow-text responsive-img" ref="content">
                 <div v-if="rsRendered" ref="rhodonite"></div>
                 <div v-else v-html="postData.content"></div>
@@ -103,21 +126,21 @@
                 </ol>
                 <p><strong>All you need to do is check your input, refresh your token or try to login again.</strong></p>
               </div>
-            </v-flex>
-            <v-flex v-if="hasDigest" sm2>
+            </v-col>
+            <v-col v-if="hasDigest" sm="2">
               <blog-digest-nav :items="postDigest" offset="500" threshold="500"></blog-digest-nav>
-            </v-flex>
+            </v-col>
 
-          </v-layout>
+          </v-row>
 
           <div v-wechat-title="postData.title"></div>
-        </v-flex>
+        </v-col>
 
-      </v-layout>
+      </v-row>
 
     </v-container>
     <v-container v-if="postData.author" fluid>
-      <v-layout row justify-center>
+      <v-row justify="center">
         <div v-if="postData.author.avatar">
           <v-avatar class="elevation-7">
             <v-img
@@ -134,68 +157,82 @@
             </v-chip>
           </router-link>
         </div>
-      </v-layout>
+      </v-row>
       
     </v-container>
     <v-container>
-      <div class="text-xs-center">
-        <h4 class="subheading grey--text">Last edit at: {{formatDate(postData.lastEdit, true)}}</h4>
+      <div class="text-center">
+        <h4 class="subtitle-1 grey--text">Last edit at: {{formatDate(postData.lastEdit, true)}}</h4>
       </div>
     </v-container>
     <v-container>
-      <v-flex row xs12 sm10 offset-sm1>
-        <v-layout>
-          <v-btn color="primary" fab small v-if="postData.next !== -1" :to="{name: 'post', query: {p: postData.next}}">
-            <v-icon>chevron_left</v-icon>
+      <v-col cols="12" sm="10" offset-sm="1">
+        <v-row>
+          <v-btn
+                  color="primary"
+                  :fab="!nextMeta || !shouldDisplayAdjacentMeta"
+                  :rounded="!!nextMeta"
+                  :small="!nextMeta || !shouldDisplayAdjacentMeta"
+                  v-if="postData.next !== -1"
+                  :to="{name: 'post', query: {p: postData.next}}"
+          >
+            <v-icon>chevron_left</v-icon>{{ (shouldDisplayAdjacentMeta && nextMeta) ? nextMeta.title : '' }}
           </v-btn>
           <v-spacer></v-spacer>
-          <v-btn color="primary" fab small v-if="postData.prev !== -1" :to="{name: 'post', query: {p: postData.prev}}">
-            <v-icon>chevron_right</v-icon>
+          <v-btn
+                  color="primary"
+                  :fab="!prevMeta || !shouldDisplayAdjacentMeta"
+                  :rounded="!!prevMeta"
+                  :small="!prevMeta || !shouldDisplayAdjacentMeta"
+                  v-if="postData.prev !== -1"
+                  :to="{name: 'post', query: {p: postData.prev}}"
+          >
+            {{ (shouldDisplayAdjacentMeta && prevMeta) ? prevMeta.title : '' }}<v-icon>chevron_right</v-icon>
           </v-btn>
-        </v-layout>
-      </v-flex>
+        </v-row>
+      </v-col>
       <blog-comments v-if="isPostFound" :userData="userData" :postData="postData" :toast="showToast" :renderer="renderer"></blog-comments>
     </v-container>
-
-    <v-dialog
-      v-model="preview.show"
-      hide-overlay
-      width="300"
-      :lazy="true"
-      :attach="preview.attach"
-      :origin="preview.origin"
-    >
-      <v-card
-        :color="preview.color"
-        dark
+    <v-slide-x-transition>
+      <v-menu
+              v-model="preview.show"
+              offset-y
+              :position-x="preview.x"
+              :position-y="preview.y"
       >
-        <v-img v-if="preview.img" :src="preview.img"/>
-        <v-card-text>
-          <div v-if="!preview.loading">
-            <h1 class="title">
-              <strong>{{preview.title}}</strong>
-            </h1>
-            <v-spacer></v-spacer>
-            <h6 class="subheading text-truncate">{{preview.subtitle}}</h6>
-          </div>
-          
-          <v-progress-linear
-            indeterminate
-            color="white"
-            class="mb-0"
-            v-if="preview.loading"
-          ></v-progress-linear>
-        </v-card-text>
-      </v-card>
-    </v-dialog>
+        <v-card
+                :color="preview.color"
+                dark
+                width="300"
+        >
+          <v-img v-if="preview.img" :src="preview.img"/>
+          <v-card-text>
+            <div v-if="!preview.loading">
+              <h1 class="title">
+                <strong>{{preview.title}}</strong>
+              </h1>
+              <v-spacer></v-spacer>
+              <h6 class="subtitle-1 text-truncate">{{preview.subtitle}}</h6>
+            </div>
 
-    <toast v-bind="toast" @showChange="changeToast"></toast>
+            <v-progress-linear
+                    indeterminate
+                    color="white"
+                    class="mb-0"
+                    v-if="preview.loading"
+            ></v-progress-linear>
+          </v-card-text>
+        </v-card>
+      </v-menu>
+    </v-slide-x-transition>
+
+    <toast v-model="toast.show" :color="toast.color" :text="toast.text" @showChange="changeToast"></toast>
     <blog-footer></blog-footer>
+    <GlobalEvents @mousemove="mouseMoveHandler"></GlobalEvents>
     <v-dialog
       v-model="share.open"
       width="500"
     >
-
       <v-card>
         <v-card-title
           class="headline primary"
@@ -207,7 +244,7 @@
         <v-card-text>
           <v-text-field
             label="Address"
-            outline
+            outlined
             :value="sharePath"
             readonly
           ></v-text-field>
@@ -221,7 +258,7 @@
           <v-spacer></v-spacer>
           <v-btn
             color="accent"
-            flat
+            text
             @click="share.open = false"
           >
             Done
@@ -241,10 +278,13 @@ import {mapToCamelCase} from '../common/helpers'
 import BlogComments from './comments'
 import {escapeRegExp} from 'lodash'
 import {pushContext, flushContext} from '../custom-command/luis'
+import GlobalEvents from 'vue-global-events'
+
 export default {
   components: {
     BlogDigestNav,
-    BlogComments
+    BlogComments,
+    GlobalEvents
   },
   name: 'blog-post',
   props: {
@@ -281,7 +321,9 @@ export default {
       origin: "center center",
       img: "",
       cacheData: null,
-      color: 'secondary'
+      color: 'secondary',
+      x: 0,
+      y: 0
     },
     cachedData: false,
     renderer: null,
@@ -294,7 +336,10 @@ export default {
     extraDisplaySettings: {
       metaBelowImage: false,
       blurMainImage: false
-    }
+    },
+    loading: false,
+    nextMeta: null,
+    prevMeta: null
   }),
   methods: {
     showToast(text, color) {
@@ -322,7 +367,7 @@ export default {
           return
         }
       }
-      const useLink = context && context.params.postLink
+      const useLink = context.name !== 'post';  // context && context.params.postLink
       if (useLink) {
         p = context.params.postLink
       }
@@ -331,11 +376,14 @@ export default {
         this.postData = this.notFoundData()
         return
       }
+      this.loading = true;
       utils.fetchJSON(utils.apiFor(useLink ? 'post-link' : 'post', p)).then(data => {
+        this.loading = false
         if (!data) return Promise.reject(ReferenceError('NPE'))
         this.postData = mapToCamelCase(data)
         return this.processContent()
       }).catch(_ => {
+        this.loading = false
         this.postData = this.notFoundData()
       })
     },
@@ -366,6 +414,7 @@ export default {
           popContext()
         })
       }).then(() => this.$nextTick(async () => this.afterContentMounted()))
+      this.getAdjacentPostMeta()
       // this.rsRendered = false
       // this.renderer.renderVueAsync(this.postData.content).then(v => {
         
@@ -400,12 +449,12 @@ export default {
         let link = ev.href;
         const pidMatchResult = patterns[0].exec(link)
         const displayIdMatchResult = patterns[1].exec(link)
-        if (pidMatchResult || displayIdMatchResult) {
-          let p = (pidMatchResult || displayIdMatchResult)[1];
-          const isFootNotes = ev.hash // && p === this.getPostNum()
+        if (pidMatchResult || displayIdMatchResult || ev.pathname === location.pathname) {
+          let p = (pidMatchResult || displayIdMatchResult || ['', 'preview'])[1];
+          const isFootNotes = ev.hash; // && p === this.getPostNum()
           
           ev.addEventListener('click', e => {
-            e.preventDefault()
+            e.preventDefault();
             if(isFootNotes) {
               this.$vuetify.goTo(document.getElementById(ev.hash.substring(1)), {offset: 200})
               return
@@ -555,11 +604,46 @@ export default {
         })
       }
       this.share.open = true
+    },
+    mouseMoveHandler (ev) {
+      if (!this.preview.show) return;
+      this.preview.x = ev.clientX + 10
+      this.preview.y = ev.clientY + 10
+    },
+    async renderPreviewByServer() {
+      if (this.postData.id !== 'preview' || !this.postData.markdownContent) return;
+      this.loading = true;
+      try {
+        const data = await utils.fetchJSONWithSuccess(utils.apiFor('post', 'render-markdown'), 'POST', {
+          markdown: this.postData.markdownContent
+        })
+        this.$emit('postUnload')
+        // this.$emit('postDestroyed')
+        this.postData.content = data;
+        this.postData.serverRendered = true;
+        this.processContent()
+      } finally {
+        this.loading = false;
+      }
+    },
+    getAdjacentPostMeta() {
+      this.prevMeta = null
+      if (this.postData.prev > 0) {
+        utils.fetchJSONWithSuccess(utils.apiFor('post', 'meta', 'id', this.postData.prev)).then(data => {
+          this.prevMeta = data
+        })
+      }
+      this.nextMeta = null
+      if(this.postData.next > 0) {
+        utils.fetchJSONWithSuccess(utils.apiFor('post', 'meta', 'id', this.postData.next)).then(data => {
+          this.nextMeta = data
+        })
+      }
     }
   },
   computed: {
     hasDigest () {
-      return this.postDigest.length > 0
+      return this.$vuetify.breakpoint.smAndUp && this.postDigest.length > 0
     },
     isTokenExpired () {
       return utils.isTokenExpired(this.userData && this.userData.token)
@@ -588,6 +672,9 @@ export default {
       const a = document.createElement('a')
       a.href = path
       return a.href
+    },
+    shouldDisplayAdjacentMeta() {
+      return this.$vuetify.breakpoint.mdAndUp
     }
   },
   mounted () {

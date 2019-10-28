@@ -318,7 +318,9 @@ class RoseliaScript {
     if (externalAttributes) {
       this.extendAttributes(id, externalAttributes)
     }
-    return new RenderResult(`<button id="${id}" class="v-btn ${externalClasses}">${text}</button>`, id)
+    return new RenderResult(
+        `<button id="${id}" class="v-btn v-btn--contained v-size--default ${externalClasses}">${text}</button>`,
+        id)
   }
 
   toast (text: string, color: string) {
@@ -335,7 +337,7 @@ class RoseliaScript {
 
   formulationEscape () {
     const delims = [['$$', '$$'], ['$', '$'], ['\\(', '\\)']]
-    delims.map(pat => pat.map(s => s.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')).join('\\s*(.*?)\\s*')).map(p => new RegExp(p, 'gms')).forEach(pattern => {
+    delims.map(pat => pat.map(s => s.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')).join('\\s*(.*?)\\s*')).map(p => new RegExp(p, 'gms')).forEach(pattern => {
       this.app.postData.content = this.app.postData.content.replace(pattern, (_sup, form) => {
         // console.log(form, '=>', unescapeToHTML(form))
         return unescapeToHTML(form)
@@ -552,13 +554,14 @@ class RoseliaScript {
 
   private forceChangeTheme(theme: Partial<typeof config.theme>, token: Symbol) {
     if (token === innerCallToken) {
-      Object.assign(this.app.$vuetify.theme, theme)
+      this.app.$vuetify.theme.setTheme(this.app.$vuetify.isDark ? 'dark' : 'light', theme)
+      // Object.assign(this.app.$vuetify.theme.currentTheme, theme)
     }
   }
 
   currentTheme () {
     return {
-      ...this.app.$vuetify.theme
+      ...this.app.$vuetify.theme.currentTheme
     }
   }
 
@@ -573,7 +576,7 @@ class RoseliaScript {
   }
 
   changeThemeOnce(theme: Partial<typeof config.theme>) {
-    Object.assign(this.app.$vuetify.theme, theme)
+    this.forceChangeTheme(theme, innerCallToken)
     this.onceUnload(() => {
       this.forceChangeTheme(savedTheme, innerCallToken)
     })
