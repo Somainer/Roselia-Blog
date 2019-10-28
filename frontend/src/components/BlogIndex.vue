@@ -43,7 +43,7 @@
               >
                 <v-container class="fill-height" fluid>
                   <v-row align="end" class="fill-height">
-                    <v-col xs="12" align-self="end" flexbox>
+                    <v-col cols="12" align-self="end" flexbox>
                       <router-link v-for="tag in post.tags" :to="{name: 'index', params: {tag: tag}, query: {tag: tag}}" :key="tag">
                         <v-chip class="ma-1">{{tag}}</v-chip>
                       </router-link>
@@ -73,18 +73,18 @@
                 <v-spacer></v-spacer>
                 <span class="right caption">{{formatDate(post.created) || post.date}}</span>
               </v-card-title>
-              <v-col xs="12" align-self="end" flexbox v-if="!post.img">
+              <v-col cols="12" align-self="end" flexbox v-if="!post.img">
                 <router-link v-for="tag in post.tags" :to="{name: 'index', params: {tag: tag}, query: {tag: tag}}" :key="tag">
                   <v-chip class="ma-1">{{tag}}</v-chip>
                 </router-link>
                 <v-chip class="ma-1" v-if="post.secret" color="success" text-color="white">
-                  <v-avatar>
+                  <v-avatar left>
                     <v-icon>lock</v-icon>{{post.secret}}
                   </v-avatar>
                   Secret
                 </v-chip>
                 <v-chip class="ma-1" v-if="post.hidden" color="grey" text-color="white">
-                  <v-avatar>
+                  <v-avatar left>
                     <v-icon>visibility_off</v-icon>
                   </v-avatar>
                   Hidden
@@ -110,7 +110,7 @@
       </v-container>
     </v-layout>
     <v-container>
-      <div class="text-xs-center">
+      <div class="text-center">
         <v-pagination
           v-model="currentPage"
           :length="pages"

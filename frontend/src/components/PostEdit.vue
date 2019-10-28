@@ -2,8 +2,8 @@
 <div>
   <blog-toolbar :userData="userData"></blog-toolbar>
   <v-container grid-list-md fluid fill-height>
-    <v-layout>
-      <v-flex xs12 sm8 offset-sm2>
+    <v-row>
+      <v-col cols="12" sm="8" offset-sm="2">
         <h1 class="display-3">{{realTitle}}</h1>
         <v-layout>
               <v-spacer></v-spacer>
@@ -122,9 +122,9 @@
             </div>
           </v-card-actions>
         </v-form>
-      </v-flex>
+      </v-col>
 
-    </v-layout>
+    </v-row>
 
     <div v-wechat-title="realTitle"></div>
     <v-dialog

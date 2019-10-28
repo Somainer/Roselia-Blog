@@ -19,7 +19,7 @@
             row
             align-center
           >
-            <v-col xs="6">
+            <v-col>
               <v-subheader v-if="item.heading" inset>
                 {{ item.heading }}
               </v-subheader>
@@ -67,7 +67,7 @@
     <v-content>
       <v-container fluid fill-height>
         <v-row justify="center" align="center">
-          <v-col cols="10" shrink>
+          <v-col cols="10" class="shrink">
             <!--<h1 class="display-3">Well met, {{userData.username}}!</h1>-->
             <v-alert
               v-model="toast.show"

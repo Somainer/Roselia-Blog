@@ -113,8 +113,8 @@
           Experimental)
         </v-card-title>
         <v-container grid-list-md>
-          <v-layout wrap>
-            <v-flex xs12>
+          <v-row wrap>
+            <v-col cols="12">
               <v-alert
                 v-model="notUnderstand"
                 type="error"
@@ -145,8 +145,8 @@
               <div v-else>
                 <v-progress-circular indeterminate color="primary"></v-progress-circular> Practice like you perform, perform like you practice.
               </div>
-            </v-flex>
-          </v-layout>
+            </v-col>
+          </v-row>
         </v-container>
         <v-divider></v-divider>
         <v-card-actions>

@@ -74,7 +74,7 @@ export default tsx.componentFactoryOf<RecursiveCommentProps>().create({
   },
   render(): VNode {
     return (
-      <VCol xs={10} sm={7} offset-sm={2}>
+      <VCol cols={10} sm={7} offset-sm={2}>
         {this.renderComments(this.comments as RoseliaComment[])}
       </VCol>
     )
@@ -97,7 +97,7 @@ export default tsx.componentFactoryOf<RecursiveCommentProps>().create({
                   <VImg src={(comment as WithAuthor).author.avatar}></VImg>
                 </VAvatar> : null}
                 <VRow justify={"space-between"}>
-                  <VCol xs={7}>
+                  <VCol cols={7}>
                     {this.infoLabel(getNickname(comment), comment.color || ((comment as WithAuthor).author ? 'secondary' : '#bbbbbb'), false,
                       (this.getUsername(comment)) ? { name: 'userTimeline', params: {username: this.getUsername(comment)}} : undefined)}
                     {this.myUsername && caselessEqual(this.getUsername(comment), this.myUsername) ? (
@@ -117,7 +117,7 @@ export default tsx.componentFactoryOf<RecursiveCommentProps>().create({
                       <VIcon>delete</VIcon>
                     </VBtn>) : null}
                   </VCol>
-                  <VCol xs={5} class={"text-right"}>
+                  <VCol cols={5} class={"text-right"}>
                     {utils.formatDate(comment.createdAt)}
                   </VCol>
                 </VRow>

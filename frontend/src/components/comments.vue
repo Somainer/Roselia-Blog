@@ -1,7 +1,7 @@
 <template>
   <lazy-component text="Load comment">
     <v-container>
-      <v-col xs="12" sm="8" offset-sm="2">
+      <v-col cols="12" sm="8" offset-sm="2">
         <v-badge>
           <span slot="badge" v-if="commentCount">{{commentCount}}</span>
           <v-icon>
@@ -10,7 +10,7 @@
         </v-badge>
         <v-divider class="my-3"></v-divider>
       </v-col>
-      <v-col v-if="canAddComment" xs="12" sm="8" offset-sm="2">
+      <v-col v-if="canAddComment" cols="12" sm="8" offset-sm="2">
         <v-row row wrap>
           <v-chip close color="secondary" dark v-if="replyToComment" v-model="chip" @click:close="chip = false">
             @{{ atToNickname }}
@@ -41,12 +41,12 @@
                 v-else
         ></v-textarea>
         <v-row row wrap>
-          <v-col xs="4">
+          <v-col cols="4">
             <span v-if="userData && userData.nickname">{{ userData.nickname }}</span>
             <v-text-field small v-else v-model="nickname" label="Nickname"></v-text-field>
           </v-col>
           <v-spacer></v-spacer>
-          <v-col xs="3" md="2">
+          <v-col cols="3" md="2" lg="1">
             <v-btn color="primary" :disabled="!this.isValid" :loading="loading" @click="addComment"
                    rounded
             >

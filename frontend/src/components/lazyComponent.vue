@@ -1,9 +1,9 @@
 <template>
   <div>
     <div v-if="!visible" v-observe-visibility="setVisible">
-      <v-layout align-center justify-center>
+      <v-row align="center" justify="center">
         <v-btn @click="setVisible">{{ this.text }}</v-btn>
-      </v-layout>
+      </v-row>
     </div>
     <div v-else>
       <slot></slot>

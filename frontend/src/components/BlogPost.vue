@@ -46,7 +46,7 @@
     </v-container>
     <v-container grid-list-md fluid class="fill-height">
       <v-row>
-        <v-col wrap xs="12" sm="10" offset-sm="2">
+        <v-col wrap cols="12" sm="10" offset-sm="2">
           <v-row>
             <router-link v-for="tag in postData.tags" :to="{name: 'index', params: {tag: tag}, query: {tag: tag}}" :key="tag">
               <v-chip class="ma-1">{{tag}}</v-chip>
@@ -71,7 +71,7 @@
             </v-chip>
             
           </v-row>
-          <v-col cols="10" xs="10" offset-xs="2">
+          <v-col cols="12" md="10">
             <v-row>
               <v-btn v-if="cachedData" color="secondary" fab small @click="$router.go(-1)">
                 <v-icon>arrow_back</v-icon>
@@ -100,9 +100,9 @@
                         elevation="2"
                 >
                   <v-row align="center">
-                    <v-col class="grow">This page is rendered by your browser.</v-col>
-                    <v-col class="shrink">
-                      <v-btn @click="renderPreviewByServer">Render it by server</v-btn>
+                    <v-col>
+                      This page is rendered by your browser.
+                      <v-btn :loading="loading" @click="renderPreviewByServer">Render it via server</v-btn>
                     </v-col>
                   </v-row>
                 </v-alert>
@@ -166,7 +166,7 @@
       </div>
     </v-container>
     <v-container>
-      <v-col xs="12" sm="10" offset-sm="1">
+      <v-col cols="12" sm="10" offset-sm="1">
         <v-row>
           <v-btn
                   color="primary"
@@ -204,7 +204,6 @@
                 :color="preview.color"
                 dark
                 width="300"
-                class="text--white"
         >
           <v-img v-if="preview.img" :src="preview.img"/>
           <v-card-text>
@@ -613,17 +612,19 @@ export default {
     },
     async renderPreviewByServer() {
       if (this.postData.id !== 'preview' || !this.postData.markdownContent) return;
-      const data = await utils.fetchJSONWithSuccess(utils.apiFor('post', 'render-markdown'), 'POST', {
-        markdown: this.postData.markdownContent
-      })
-      this.$emit('postUnload')
-      // this.$emit('postDestroyed')
-      this.postData = {
-        ...this.postData,
-        content: data,
-        serverRendered: true
+      this.loading = true;
+      try {
+        const data = await utils.fetchJSONWithSuccess(utils.apiFor('post', 'render-markdown'), 'POST', {
+          markdown: this.postData.markdownContent
+        })
+        this.$emit('postUnload')
+        // this.$emit('postDestroyed')
+        this.postData.content = data;
+        this.postData.serverRendered = true;
+        this.processContent()
+      } finally {
+        this.loading = false;
       }
-      this.processContent()
     },
     getAdjacentPostMeta() {
       this.prevMeta = null
