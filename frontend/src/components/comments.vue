@@ -162,7 +162,7 @@ export default {
       commentCount: 0,
       commentList: [],
       replyToComment: undefined,
-      hasUnsafedDraft: false,
+      hasUnsavedDraft: false,
       commentToDelete: {
         id: 0,
         show: false
@@ -279,7 +279,7 @@ export default {
         this.renderScript()
         this.$nextTick(() => {
           this.processComments()
-          this.hasUnsafedDraft = false
+          this.hasUnsavedDraft = false
         })
       }).catch(err => {
         this.toast(err, 'error')
@@ -310,7 +310,7 @@ export default {
       const commentRef = ref || this.$refs.comments.$el || this.$refs.comments
       const links = Array.from(commentRef.querySelectorAll('a')).filter(e => !!e.href)
       const personalHosts = [
-        'mohuety.com', 'roselia.moe', 'roselia.xyz', 'lisa.moe', 'roselia.app'
+        'mohuety.com', 'roselia.moe', 'roselia.xyz', 'lisa.moe', 'd4dj.moe'
       ].map(x => new RegExp(x))
       links.filter(e => !e.getAttribute('roselia-prevented')).filter(x => x.host !== location.host && !personalHosts.some(y => y.exec(x.host))).forEach(async e => {
         e.setAttribute('roselia-prevented', true)
@@ -331,9 +331,11 @@ export default {
       this.hightlightLanguage()
     },
     renderScript() {
+      const leaveCommentMode = this.renderer.enterCommentMode();
       this.commentList.filter(x => x.author).filter(x => !x.rendered).forEach(c => {
         this.forceRenderScript(c)
       })
+      leaveCommentMode();
     },
     forceRenderScript(c) {
       Object.defineProperty(c, 'id', {
@@ -355,7 +357,7 @@ export default {
       popContext()
     },
     onExit(id) {
-      if(this.hasUnsafedDraft) {
+      if(this.hasUnsavedDraft) {
         this.setCommentDraft({
           commentId: id || this.postData.id,
           comment: {
@@ -495,7 +497,7 @@ export default {
   watch: {
     comment() {
       this.commentLeft = true
-      this.hasUnsafedDraft = true
+      this.hasUnsavedDraft = true
     },
     replyToComment(val) {
       if(val) {

@@ -74,7 +74,7 @@ function render (template, context, delim) { // A not so naive template engine.
       }
       if (!isSingleCall) {
         expr = unescapeToHTML(expr)
-        res = (new Function('data', funcTemplate(expr)))(context)
+        res = (new Function('data', funcTemplate(expr))).call(null, context)
       }
       return handleRenderResult(res)
     } catch (e) {
@@ -94,18 +94,11 @@ function render (template, context, delim) { // A not so naive template engine.
 
 function selfish (target, forbid?: string[]) {
   const cache = new WeakMap()
-  if (forbid) {
-    const err = key => new Proxy({}, {
-      get () {
-        // console.error(`You are not allowed to access ${key} in this context`)
-        return null
-      }
-    })
-    forbid.forEach(k => target[k] = err(k))
-  }
+  const forbidden = new Set(forbid)
 
   const handler = {
     get (target, key) {
+      if (forbidden.has(key)) return null;
       const value = Reflect.get(target, key)
       if (!_.isFunction(value)) return value
       if (!cache.has(value)) {
@@ -131,6 +124,45 @@ function sandbox(target: any) {
   })
 }
 
+function hiddenProxy<T extends object, K extends keyof T>(obj: T, hide: K[]) {
+  const hidden = new Set(hide);
+
+  return [hidden, new Proxy(obj, {
+    get(target, key: K) {
+      if (hidden.has(key)) return null;
+      return Reflect.get(target, key);
+    }
+  })]
+}
+
+function readOnlyProxy<T extends object>(target: T, deep: boolean = false) {
+  return new Proxy(target, {
+    get(target, key) {
+      const result = Reflect.get(target, key);
+      if (deep && typeof result === "object") {
+        return readOnlyProxy(result);
+      }
+      return result;
+    },
+    set(target, key) {
+      return false;
+    },
+    deleteProperty() {
+      return false;
+    }
+  })
+}
+
+export function deepFrozen(obj: Object) {
+  const copied = {...obj}
+  Object.keys(copied).forEach(key => {
+    if (copied.hasOwnProperty(key) && (typeof copied[key] === 'object') && !Object.isFrozen(copied[key])) {
+        copied[key] = deepFrozen(copied[key])
+    }
+  });
+  return Object.freeze(copied)
+}
+
 const innerCallToken = Symbol("yukina") // Verify inner token.
 let savedTheme = {...config.theme}
 
@@ -140,10 +172,14 @@ class RoseliaRenderer {
   scriptEvaluator: RoseliaScript
   toInject: any
   static roseliaScriptDelim = ['(?:Roselia|roselia|r|R){{', '}}']
+  private hiddenFields: Set<keyof RoseliaScript>
   constructor (app) {
     this.app = app
     this.scriptEvaluator = new RoseliaScript(app)
-    this.context = sandbox(selfish(this.scriptEvaluator))
+    const [hiddenFields, context] =
+        hiddenProxy(readOnlyProxy(sandbox(selfish(this.scriptEvaluator, ['app']))), [])
+    this.context = context
+    this.hiddenFields = hiddenFields
   }
   render (template: string) {
     // if (!config.enableRoseliaScript) return template
@@ -206,6 +242,34 @@ class RoseliaRenderer {
 
   pushMethod(method: (rs: RoseliaScript) => (...args: any[]) => any, name: string) {
     return this.pushContext((...args: any[]) => method(this.context)(...args), name)
+  }
+
+  hideAttributes<T extends keyof RoseliaScript>(attrs: T[]) {
+    const toHide = attrs.filter(k => !this.hiddenFields.has(k));
+    toHide.forEach(k => this.hiddenFields.add(k));
+    return () => toHide.forEach(k => this.hiddenFields.delete(k))
+  }
+  clearHiddenAttributes() {
+    this.hiddenFields.clear();
+  }
+
+  enterCommentMode() {
+    return this.hideAttributes([
+        "changeExtraDisplaySettings",
+        'importJS',
+        'request',
+        'roseliaApi',
+        'changeTheme',
+        'changeThemeOnce',
+        'resetTheme',
+        'saveCurrentTheme',
+        'switchToColorMode',
+        "forceSwitchToColorMode",
+        "resetColorMode",
+        "previewColor",
+        "undef",
+        "def"
+    ])
   }
 }
 
@@ -554,8 +618,8 @@ class RoseliaScript {
 
   private forceChangeTheme(theme: Partial<typeof config.theme>, token: Symbol) {
     if (token === innerCallToken) {
-      this.app.$vuetify.theme.setTheme(this.app.$vuetify.isDark ? 'dark' : 'light', theme)
-      // Object.assign(this.app.$vuetify.theme.currentTheme, theme)
+      this.app.$vuetify.theme.setTheme(this.app.$vuetify.theme.dark ? 'dark' : 'light', theme)
+      Object.assign(this.app.$vuetify.theme.currentTheme, theme)
     }
   }
 
@@ -563,6 +627,11 @@ class RoseliaScript {
     return {
       ...this.app.$vuetify.theme.currentTheme
     }
+  }
+
+  currentThemePalette () {
+    const theme = this.app.$vuetify.theme.parsedTheme;
+    return deepFrozen(theme);
   }
 
   changeTheme(theme: Partial<typeof config.theme>) {
@@ -620,12 +689,19 @@ class RoseliaScript {
 
   changeExtraDisplaySettings(settings: Partial<{
     metaBelowImage: boolean,
-    blurMainImage: boolean
+    blurMainImage: boolean,
+    disableSideNavigation: boolean
   }>) {
     this.app.extraDisplaySettings = {
       ...this.app.extraDisplaySettings,
       ...settings
     }
+  }
+
+  Math = Math
+  Object = Object
+  log(...args: any[]) {
+    return console.log(...args)
   }
 }
 

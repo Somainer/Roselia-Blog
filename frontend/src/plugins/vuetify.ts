@@ -11,7 +11,7 @@ export default new Vuetify({
   theme: {
     themes: {
       light: meta.theme,
-      dark: {}
+      dark: meta.theme
     },
     options: {
       customProperties: true

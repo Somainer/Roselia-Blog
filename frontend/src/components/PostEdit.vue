@@ -451,7 +451,7 @@ export default {
       this.loadContent()
     }
 
-    window.addEventListener('beforeunload', e => this.saveDraft())
+    window.addEventListener('beforeunload', this.saveDraft)
     this.$emit('forceSwitchToLight', true)
     pushContext({
       "Utilities.FinishTask": this.doEditPost,
@@ -472,7 +472,7 @@ export default {
   },
   destroyed () {
     this.$emit('forceSwitchToLight')
-    removeEventListener('beforeunload', e => this.saveDraft())
+    window.removeEventListener('beforeunload', this.saveDraft)
     flushContext()
   }
 }

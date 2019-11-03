@@ -101,7 +101,7 @@ export default {
     },
     isNight: {
       handler(dark) {
-        this.$vuetify.theme.isDark = dark
+        this.$vuetify.theme.dark = !!dark
       },
       immediate: true
     }

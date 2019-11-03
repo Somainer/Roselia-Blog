@@ -280,6 +280,12 @@ import {escapeRegExp} from 'lodash'
 import {pushContext, flushContext} from '../custom-command/luis'
 import GlobalEvents from 'vue-global-events'
 
+const extraDisplaySettings = {
+  metaBelowImage: false,
+  blurMainImage: false,
+  disableSideNavigation: false
+};
+
 export default {
   components: {
     BlogDigestNav,
@@ -334,8 +340,7 @@ export default {
       shareId: ''
     },
     extraDisplaySettings: {
-      metaBelowImage: false,
-      blurMainImage: false
+      ...extraDisplaySettings
     },
     loading: false,
     nextMeta: null,
@@ -392,7 +397,7 @@ export default {
       // this.$nextTick(_ => {
       //   this.afterContentMounted()
       // })
-      this.extraDisplaySettings.metaBelowImage = this.extraDisplaySettings.blurMainImage = false
+      this.resetExtraDisplaySettings();
       if(this.postData.displayId && (this.$route.params.changeRoute || (this.$route.query.p && !this.isShared))) {
         this.$router.replace({
           name: 'postWithEternalLink',
@@ -639,11 +644,16 @@ export default {
           this.nextMeta = data
         })
       }
+    },
+    resetExtraDisplaySettings() {
+      this.extraDisplaySettings = {...extraDisplaySettings}
     }
   },
   computed: {
     hasDigest () {
-      return this.$vuetify.breakpoint.smAndUp && this.postDigest.length > 0
+      return !this.extraDisplaySettings.disableSideNavigation &&
+              this.$vuetify.breakpoint.smAndUp &&
+              this.postDigest.length > 0;
     },
     isTokenExpired () {
       return utils.isTokenExpired(this.userData && this.userData.token)
