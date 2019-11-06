@@ -1,26 +1,47 @@
 import Vue from 'vue'
 import Router from 'vue-router'
-import HelloWorld from '../components/HelloWorld'
-import BlogIndex from '../components/BlogIndex'
-import BlogLogin from '../components/BlogLogin'
-import BlogPost from '../components/BlogPost'
-import EditPost from '../components/PostEdit'
-import NotFound from '../components/BlogError'
-import BlogUserSpace from '../components/BlogUserSpace'
-import meta from '../common/config'
-import VueWechatTitle from 'vue-wechat-title'
 
-import changePW from '../components/console/ChangePassword'
-import RemoteLogin from '../components/console/RemoteLogin'
-import userManagement from '../components/console/UserManagement'
-import ConsoleIndex from '../components/console/ConsoleIndex'
-import TokenRefresh from '../components/console/TokenRefresh'
-import Timeline from '../components/BlogTimeline'
-import SetNickname from '../components/console/SetNickname'
-import OAuthAccounts from  '../components/console/OauthBind'
-import TwoStepAuth from '../components/console/TwoStepAuth'
-import SystemMonitor from '../components/console/SystemMonitor'
-import DraftManage from '../components/console/DraftManage'
+import VueWechatTitle from 'vue-wechat-title'
+import meta from '../common/config'
+
+/* Must be imported components */
+import BlogIndex from '../components/BlogIndex'
+import BlogPost from '../components/BlogPost'
+
+/* Can be loaded later, but still important. */// import BlogLogin from '../components/BlogLogin'
+const BlogLogin = () => import(/* webpackChunkName: "ringing-bloom" */ '../components/BlogLogin')
+// import NotFound from '../components/BlogError'
+const NotFound = () => import(/* webpackChunkName: "ringing-bloom" */ '../components/BlogError')
+// import Timeline from '../components/BlogTimeline'
+const Timeline = () => import(/* webpackChunkName: "ringing-bloom" */ '../components/BlogTimeline')
+
+/* Only for logged-ins */
+// import EditPost from '../components/PostEdit'
+const EditPost = () => import(/* webpackChunkName: "fire-bird" */ '../components/PostEdit')
+// import HelloWorld from '../components/HelloWorld'
+const HelloWorld = () => import(/* webpackChunkName: "fire-bird" */ '../components/HelloWorld')
+// import BlogUserSpace from '../components/BlogUserSpace'
+const BlogUserSpace = () => import(/* webpackChunkName: "fire-bird" */ '../components/BlogUserSpace')
+// import changePW from '../components/console/ChangePassword'
+const changePW = () => import(/* webpackChunkName: "fire-bird" */ '../components/console/ChangePassword')
+// import RemoteLogin from '../components/console/RemoteLogin'
+const RemoteLogin = () => import(/* webpackChunkName: "fire-bird" */ '../components/console/RemoteLogin')
+// import userManagement from '../components/console/UserManagement'
+const userManagement = () => import(/* webpackChunkName: "fire-bird" */ '../components/console/UserManagement')
+// import ConsoleIndex from '../components/console/ConsoleIndex'
+const ConsoleIndex = () => import(/* webpackChunkName: "fire-bird" */ '../components/console/ConsoleIndex')
+// import TokenRefresh from '../components/console/TokenRefresh'
+const TokenRefresh = () => import(/* webpackChunkName: "fire-bird" */ '../components/console/TokenRefresh')
+// import SetNickname from '../components/console/SetNickname'
+const SetNickname = () => import(/* webpackChunkName: "fire-bird" */ '../components/console/SetNickname')
+// import OAuthAccounts from  '../components/console/OauthBind'
+const OAuthAccounts = () => import(/* webpackChunkName: "fire-bird" */ '../components/console/OauthBind')
+// import TwoStepAuth from '../components/console/TwoStepAuth'
+const TwoStepAuth = () => import(/* webpackChunkName: "fire-bird" */ '../components/console/TwoStepAuth')
+// import SystemMonitor from '../components/console/SystemMonitor'
+const SystemMonitor = () => import(/* webpackChunkName: "fire-bird" */ '../components/console/SystemMonitor')
+// import DraftManage from '../components/console/DraftManage'
+const DraftManage = () => import(/* webpackChunkName: "fire-bird" */ '../components/console/DraftManage')
 
 Vue.use(Router)
 

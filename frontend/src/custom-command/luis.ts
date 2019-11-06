@@ -14,25 +14,26 @@ export async function executeCommand(command: string) {
             return true
         }
     } catch {
-      const result = await roseliaCustomCommand({command})
-      const intent = result.topScoringIntent.intent
-      const args = getArguments(result.entities)
-      if (args.Password) {
+        console.log("Fallback to default.");
+    }
+    const result = await roseliaCustomCommand({command})
+    const intent = result.topScoringIntent.intent
+    const args = getArguments(result.entities)
+    if (args.Password) {
         const entity = result.entities.find(x => x.type === 'Password')!
         args.Password = command.substring(entity.startIndex, entity.endIndex + 1)
-      }
-      if (intent in executors) {
+    }
+    if (intent in executors) {
         executors[intent](args)
         return true
-      }
-      return false
     }
+    return false
 }
 
 export const askYukinaForHelp = async (question: string) => (await askYukina({question}))[0]
 
-const preludeExecutors = {
-    login({Username, Password}: ExecutorArgument) {
+const preludeExecutors: Record<string, (ex: ExecutorArgument) => void> = {
+    login({Username, Password}) {
         router.push({
             name: 'login',
             params: {
@@ -43,7 +44,7 @@ const preludeExecutors = {
             } as any
         })
     },
-    newPost({PostID}: ExecutorArgument) {
+    newPost({PostID}) {
         router.push({
             name: 'edit',
             query: {
@@ -51,7 +52,7 @@ const preludeExecutors = {
             } as any
         })
     },
-    search({PostTag}: ExecutorArgument) {
+    search({PostTag}) {
         router.push({
             name: 'index',
             query: {
@@ -59,7 +60,7 @@ const preludeExecutors = {
             } as any
         })
     },
-    showTimeline({Username}: ExecutorArgument) {
+    showTimeline({Username}) {
         router.push({
             name: Username ? 'userTimeline' : 'timeline',
             params: {

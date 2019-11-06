@@ -38,9 +38,6 @@ export default {
   props: ['userData', 'toast'],
   data() {
     return {
-      get rfToken () {
-        return utils.getLoginData().rftoken
-      }
     }
   },
   computed: {
@@ -67,14 +64,12 @@ export default {
     isTokenExpired () {
       return this.tokenExpiryDatetime < new Date()
     },
-      loginToken: {
-          get() {
-              return utils.getLoginData().token
-          },
-          set() {
-              return 0
-          }
-      }
+    loginToken() {
+      return this.userData.token;
+    },
+    rfToken() {
+      return this.userData.rftoken;
+    }
   },
   methods: {
     makeRedirect (to) {
@@ -84,7 +79,7 @@ export default {
     refreshToken () {
       utils.refreshToken().then(data => {
         this.toast('+1h O..O', 'success')
-        ++this.loginToken
+        // this.loginToken = this.userData.token;
       }).catch(reason => {
         this.toast(reason, 'error')
         this.makeRedirect({name: 'login'})
