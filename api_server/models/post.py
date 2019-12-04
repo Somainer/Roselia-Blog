@@ -61,6 +61,7 @@ class Post(db.Model):
             self.author = kwargs['author']
         self.cover = kwargs.get('cover', '')
         self.secret = kwargs.get('secret', 0)
+        self.hidden = kwargs.get('hidden', False)
         self.dark_title = kwargs.get('dark_title', False)
         self.enable_comment = kwargs.get('enable_comment', True)
         self.tag = kwargs.get('tags', [])
