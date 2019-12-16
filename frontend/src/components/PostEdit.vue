@@ -181,7 +181,7 @@
 import utils from '../common/utils'
 import BlogToolbar from './BlogToolbar'
 import hljs from 'highlight.js'
-import markdownEditor from 'vue-simplemde/src/markdown-editor'
+import markdownEditor from 'vue-simplemde'
 import SimpleMDE from 'simplemde'
 import 'simplemde/dist/simplemde.min.css'
 import 'github-markdown-css'
