@@ -174,7 +174,8 @@ export default {
       cachedDraft: {},
       userMeta: {},
       userMetaLoaded: false,
-      showPreview: false
+      showPreview: false,
+      globalAddLock: {} // Designed to prevent duplicate adds.
     }
   },
   methods: {
@@ -209,22 +210,30 @@ export default {
           replyTo: this.replyToComment
         }
         this.removeCommentDraft(this.postData.id)
-        this.cleanUp()
-        this.loadNextPage()
+        // this.cleanUp()
+        // this.loadNextPage()
+        this.resetState()
+        this.addCommentById(d.commentId)
       }).catch(err => {
         this.toast(err, 'error')
         this.loading = false
       })
     },
-    cleanUp() {
-      this.currentPage = 0
-      this.totalPages = 1
-      this.commentCount = 0
-      this.commentList = []
+    resetState() {
       this.comment = ''
       this.replyToComment = undefined
       this.commentLeft = false
       this.showPreview = false
+    },
+    cleanComments() {
+      this.currentPage = 0
+      this.totalPages = 1
+      this.commentCount = 0
+      this.commentList = []
+    },
+    cleanUp() {
+      this.cleanComments()
+      this.resetState()
     },
     deleteComment(cid) {
       utils.fetchJSONWithSuccess(utils.apiFor('comment', 'delete'), 'POST', mapToUnderline({
@@ -232,7 +241,7 @@ export default {
         removeToken: this.removeTokens[cid]
       })).then(succ => {
         this.commentList = this.commentList.filter(x => x.id !== cid)
-        --this.commentCount
+        this.commentCount = this.commentList.length
         this.removeTokens[cid] = undefined
         if(this.cachedDraft[cid]) {
           const {nickname, comment, replyTo} = this.cachedDraft[cid]
@@ -411,6 +420,22 @@ export default {
         window.hljs.initHighlighting.called = false
         window.hljs.initHighlighting()
       }
+    },
+    addCommentById(id) {
+      if (this.globalAddLock[id]) return;
+      this.globalAddLock[id] = true;
+      utils.fetchJSONWithSuccess(utils.apiFor('comment', 'comment', id)).then(data => {
+        const comment = mapToCamelCase(data)
+        this.commentList = [comment].concat(this.commentList)
+        this.commentCount = this.commentList.length
+        this.renderScript()
+        this.$nextTick(() => {
+          this.processComments()
+        })
+        this.globalAddLock[id] = false
+      }).catch(err => {
+        this.globalAddLock[id] = false
+      })
     }
   },
   computed: {
@@ -527,10 +552,9 @@ export default {
     if(WsBus.globalBus) {
       this.$once('destroyed', WsBus.globalBus.addEventListener('comment_added', data => {
         const id = data['post_id']
-        // const commentId = data['comment_id']
+        const commentId = data['comment_id']
         if (id == this.postData.id) {
-          this.cleanUp()
-          this.loadNextPage()
+          this.addCommentById(commentId)
         }
       }))
 

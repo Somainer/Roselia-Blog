@@ -749,8 +749,8 @@ def scan_code(code):
             return False, "No code"
         if not token:
             return False, "No token"
-        vaild, user = token_processor.get_username(token)
-        if not vaild:
+        valid, user = token_processor.get_username(token)
+        if not valid:
             return False, "Invalid token"
         stat, info = auth_login.get_code(code)
         if not stat:
