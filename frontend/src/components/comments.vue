@@ -145,6 +145,7 @@ import recursiveComment from './RecursiveComments'
 import utils from '@/common/utils';
 import M from 'materialize-css'
 import SimpleMDE from 'simplemde'
+import WsBus from '../plugins/ws-bus'
 export default {
   components: {lazyComponent, recursiveComment},
   props: ['userData', 'postData', 'toast', 'renderer'],
@@ -522,6 +523,21 @@ export default {
   },
   mounted() {
     this.loadDraft()
+    
+    if(WsBus.globalBus) {
+      this.$once('destroyed', WsBus.globalBus.addEventListener('comment_added', data => {
+        const id = data['post_id']
+        // const commentId = data['comment_id']
+        if (id == this.postData.id) {
+          this.cleanUp()
+          this.loadNextPage()
+        }
+      }))
+
+      this.$once('destroyed', WsBus.globalBus.addEventListener('comment_removed', ({id}) => {
+        this.commentList = this.commentList.filter(x => x.id !== id)
+      }))
+    }
   },
   beforeDestroy() {
     this.onExit()

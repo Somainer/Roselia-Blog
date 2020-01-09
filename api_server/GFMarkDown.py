@@ -2,7 +2,10 @@ import markdown as pymarkdown
 from markdown.extensions import Extension
 from markdown.util import etree
 from markdown.inlinepatterns import Pattern
-# from CodeHilite import CodeHiliteExtension
+from markdown.extensions.codehilite import CodeHiliteExtension
+from extensions.lisa import LisaLexer
+
+LisaLexer.register()
 
 
 class HeimuPattern(Pattern):
@@ -38,7 +41,7 @@ renderer = pymarkdown.Markdown(extensions=[
     'pymdownx.mark',
     'pymdownx.keys',
     'pymdownx.highlight',
-    # CodeHiliteExtension(css_class='highlight', guess_lang=False)
+    CodeHiliteExtension(guess_lang=True)
     # 'fenced_code',
 ])
 

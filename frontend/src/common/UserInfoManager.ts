@@ -1,6 +1,6 @@
 import { RoseliaStorage } from "./RoseliaStorage";
 
-interface IRoseliaUserData {
+export interface IRoseliaUserData {
     username: string
     nickname: string
     role: number

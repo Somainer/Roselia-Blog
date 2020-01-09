@@ -3,8 +3,11 @@ from fn.monad import Option
 
 from controller.UserManager import UserManager
 from controller.CommentManager import CommentManager
+from controller.PostManager import PostManager
 from middleware import require_argument, to_json, verify_token
 from tokenProcessor import DeleteCommentToken
+from .socket import main_ns
+emit = main_ns.emit
 
 comment_view = Blueprint('comment_view', __name__, url_prefix='/api/comment')
 
@@ -37,6 +40,20 @@ def add_comment(username, role, content, to_post, raw_payload):
     state, msg = CommentManager.add_comment(to_post, content, raw_payload.get('to_comment'), username, nickname)
     if state:
         token = dct_processor.iss_remove_token(msg)
+        emit('comment_added', {
+            'post_id': to_post,
+            'comment_id': msg
+        })
+        raw_post = PostManager().get_db_post(to_post)
+        author = raw_post.author.username
+        if not nickname:
+            name = UserManager.find_user(username).nickname
+        emit('post_commented', {
+            'post_id': raw_post.post_id,
+            'title': raw_post.title,
+            'by_name': name
+        }, room=author)
+
     else:
         token = ''
     return {
@@ -63,6 +80,10 @@ def remove_comment(comment, username, role, raw_payload):
             stat = False
     else:
         stat = False
+    if stat:
+        emit('comment_removed', {
+            'id': int(comment)
+        })
     return {
         'success': stat
     }

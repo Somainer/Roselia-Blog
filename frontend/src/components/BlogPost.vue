@@ -279,6 +279,7 @@ import BlogComments from './comments'
 import {escapeRegExp} from 'lodash'
 import {pushContext, flushContext} from '../custom-command/luis'
 import GlobalEvents from 'vue-global-events'
+import WsBus from '../plugins/ws-bus'
 
 const extraDisplaySettings = {
   metaBelowImage: false,
@@ -720,6 +721,13 @@ export default {
         this.$router.push({name: 'edit', params: {deletePost: true, title: this.postData.title}, query: {post: this.postData.id}})
       }
     }, this)
+    if(WsBus.globalBus) {
+      this.$once('destroyed', WsBus.globalBus.addEventListener('post_edited', ({id}) => {
+        if (id == this.postData.id) {
+          this.loadContent()
+        }
+      }))
+    }
   },
   beforeRouteUpdate (to, from, next) {
     if(to.params.doNotLoad) return next()
