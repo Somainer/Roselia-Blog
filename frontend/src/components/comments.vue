@@ -240,8 +240,12 @@ export default {
         comment: cid,
         removeToken: this.removeTokens[cid]
       })).then(succ => {
+        const previousLength = this.commentList.length
         this.commentList = this.commentList.filter(x => x.id !== cid)
-        this.commentCount = this.commentList.length
+        if(previousLength !== this.commentList.length) {
+          --this.commentCount
+        }
+        if (this.commentCount < 0) this.commentCount = this.commentList.length
         this.removeTokens[cid] = undefined
         if(this.cachedDraft[cid]) {
           const {nickname, comment, replyTo} = this.cachedDraft[cid]
@@ -427,7 +431,7 @@ export default {
       utils.fetchJSONWithSuccess(utils.apiFor('comment', 'comment', id)).then(data => {
         const comment = mapToCamelCase(data)
         this.commentList = [comment].concat(this.commentList)
-        this.commentCount = this.commentList.length
+        ++this.commentCount;
         this.renderScript()
         this.$nextTick(() => {
           this.processComments()
@@ -527,14 +531,14 @@ export default {
     },
     replyToComment(val) {
       if(val) {
-        this.$vuetify.goTo(this.$refs.commentText)
         this.chip = true
+        this.$vuetify.goTo(this.$refs.commentText)
       }
     },
     chip (val) {
       if(!val) {
-        this.$vuetify.goTo('#comment-' + this.replyToComment)
         this.replyToComment = undefined
+        this.$vuetify.goTo('#comment-' + this.replyToComment)
       }
     },
     postData(nv, ov) {
@@ -559,7 +563,14 @@ export default {
       }))
 
       this.$once('destroyed', WsBus.globalBus.addEventListener('comment_removed', ({id}) => {
+        const previousLength = this.commentList.length
+        if(id === this.replyToComment) {
+          this.replyToComment = undefined
+        }
         this.commentList = this.commentList.filter(x => x.id !== id)
+        if (previousLength !== this.commentList.length) {
+          --this.commentCount
+        }
       }))
     }
   },

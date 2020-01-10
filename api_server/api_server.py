@@ -42,8 +42,6 @@ auth_login = AuthLogin.AuthLogin()
 register_views(app)
 register_plugins(app)
 
-database.set_app(app).inject()
-
 
 def log_time(item):
     def decorator(func):

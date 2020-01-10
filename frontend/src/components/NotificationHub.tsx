@@ -5,39 +5,36 @@ import { mapToCamelCase } from '../common/helpers'
 
 interface IToast {
   time?: number
-  message: VNode
+  message: VNode | string
   color?: string
   id?: number
   show?: boolean
 }
 
-export default Vue.extend({
-  components: {
+export default class NotificationHub extends Vue {
+  private notifications: IToast[] = []
+
+  public components = {
     VSnackbar,
     VBtn, VRow, VCol, VSpacer
-  },
-  data(): { notifications: IToast[] } {
-    return {
-      notifications: []
-    }
-  },
-  methods: {
-    notify(notification: IToast): void {
-      this.notifications = this.notifications.concat({
-        ...notification,
-        show: true
-      })
-    },
-    popFirst() {
-      this.notifications = this.notifications.splice(1)
-    }
-  },
-  computed: {
-    currentToast() {
-      return this.notifications[0]
-    }
-  },
-  render() {
+  }
+
+  private notify(notification: IToast): void {
+    this.notifications = this.notifications.concat({
+      ...notification,
+      show: true
+    })
+  }
+
+  private popFirst() {
+    this.notifications = this.notifications.splice(1)
+  }
+
+  private get currentToast() {
+    return this.notifications[0]
+  }
+
+  public render() {
     const first: IToast = this.currentToast
     if (!first) {
       return <div></div>
@@ -60,15 +57,16 @@ export default Vue.extend({
               text
               onClick={() => { first.show = false; this.popFirst() }}
             >
-              Close
+              {this.notifications.length > 1 ? `Next (${this.notifications.length - 1} more)` : 'Close'}
             </v-btn>
           </v-col>
         </v-row>
         
       </v-snackbar>
     </div>)
-  },
-  mounted() {
+  }
+  
+  public mounted() {
     Vue.prototype.$toast = this.notify
     if(WsBus.globalBus) {
       WsBus.globalBus.addEventListener('post_commented', data => {
@@ -92,4 +90,4 @@ export default Vue.extend({
       })
     }
   }
-})
+}

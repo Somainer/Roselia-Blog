@@ -8,6 +8,8 @@ from views.Plugin import plugin_view
 from views.Luis import luis_view
 
 from views.socket import socket_view
+from models import database
+from flask_cors import CORS
 
 views = [
     roselia_gbp_view,
@@ -21,7 +23,9 @@ views = [
 ]
 
 plugins = [
-    socket_view
+    socket_view,
+    database,
+    CORS()
 ]
 
 
