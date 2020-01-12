@@ -1,4 +1,5 @@
 import Vue, { VNode } from 'vue'
+import Component from 'vue-class-component'
 import { VSnackbar, VBtn, VRow, VCol, VSpacer } from 'vuetify/lib'
 import WsBus from '../plugins/ws-bus'
 import { mapToCamelCase } from '../common/helpers'
@@ -11,6 +12,7 @@ interface IToast {
   show?: boolean
 }
 
+@Component
 export default class NotificationHub extends Vue {
   private notifications: IToast[] = []
 

@@ -32,7 +32,7 @@ export default {
       // M.AutoInit()
     },
     getInstance () {
-      return M.ScrollSpy.getInstance(this.targetElements())
+      return M.ScrollSpy.getInstance(this.targetElements)
     }
   },
   computed: {
