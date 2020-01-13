@@ -15,6 +15,6 @@ const autoRefresh = (user: IRoseliaUserData) => {
 }
 
 userInfoManager.addChangeListener(autoRefresh)
-if(!userInfoManager.isEmpty) {
+if(!userInfoManager.isEmpty()) {
     autoRefresh(userInfoManager.getPayload())
 }

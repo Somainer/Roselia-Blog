@@ -8,8 +8,13 @@ class RoseliaWSBus {
     private static storedHandlers: [string, any][] = []
     constructor(token: string, restorePrevious: boolean = true) {
         const baseUri = utils.apiFor('socket')
-        this.connection = io(`${baseUri}?token=${token}`, {
-            path: (new URL(baseUri, location.href)).pathname
+        const namespace = new URL(baseUri, location.href)
+        namespace.pathname = '/api/socket'
+        namespace.searchParams.set('token', token)
+        const connectionUrl = new URL(baseUri, location.href)
+        this.connection = io(namespace.href, {
+            path: connectionUrl.pathname,
+            host: connectionUrl.host
         })
         if (restorePrevious) {
             RoseliaWSBus.storedHandlers.forEach(([e, h]) => this.addListenerUnchecked(e, h))

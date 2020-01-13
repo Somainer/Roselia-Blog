@@ -1,4 +1,4 @@
-import * as _ from 'lodash'
+import * as _ from '../fake-lodash'
 import config from '../config'
 import utils from '../utils'
 import axios from '../ajax-bar-axios'

@@ -1,5 +1,4 @@
 import axios from './ajax-bar-axios'
-import _ from 'lodash'
 import router from '../router/index'
 import config from './config'
 import { userInfoManager } from './UserInfoManager';
@@ -99,7 +98,7 @@ utils.setPosts = function (data) {
 
 utils.apiFor = (...uri) => `${utils.apiBase}/${uri.join('/')}`
 
-utils.encodeArgs = args => _.map(args, (v, k) => `${k}=${v}`).join('&')
+utils.encodeArgs = args => Object.entries(args).map(([v, k]) => `${k}=${v}`).join('&')
 
 utils.processPosts = function (callback) {
   let post = window.localStorage.postData
