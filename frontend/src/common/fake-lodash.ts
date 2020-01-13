@@ -1,6 +1,3 @@
-import _ from 'lodash'
-
-
 const getTag = (value: any) => {
     if (value == null) {
         return value === undefined ? '[object Undefined]' : '[object Null]'
@@ -23,21 +20,17 @@ export const isObject = (value: any): value is object => {
 }
 
 const baseExtend = (dst: any, objs: any[], deep: boolean) => {
-    for (var i = 0, ii = objs.length; i < ii; ++i) {
-        var obj = objs[i];
-        if (!isObject(obj) && !isFunction(obj)) continue;
-        var keys = Object.keys(obj);
-        for (var j = 0, jj = keys.length; j < jj; j++) {
-            var key = keys[j];
-            var src = obj[key];
+    objs.forEach(obj => {
+        if (!isObject(obj) && !isFunction(obj)) return;
+        Object.entries(obj).forEach(([key, src]) => {
             if (deep && isObject(src)) {
                 if (!isObject(dst[key])) dst[key] = isArray(src) ? [] : {};
                 baseExtend(dst[key], [src], true);
             } else {
                 dst[key] = src;
             }
-        }
-    }
+        })
+    })
 
     return dst;
 }
@@ -47,5 +40,5 @@ export const merge = (to: any, ...source: any[]): any => {
 }
 
 export const omit = <T extends object, K extends keyof T>(obj: T, keys: K[]): Omit<T, K> => {
-    return Object.fromEntries(Object.entries(obj).filter(([key]) => keys.indexOf(key as K) === -1)) as any
+    return Object.fromEntries(Object.entries(obj).filter(([key]) => !keys.includes(key as K))) as any
 }
