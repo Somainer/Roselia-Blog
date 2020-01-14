@@ -1,5 +1,5 @@
 from flask import request
-from flask_socketio import SocketIO, emit, Namespace
+from flask_socketio import SocketIO, emit, Namespace, ConnectionRefusedError
 from fn.monad import Option
 from operator import itemgetter, attrgetter
 
@@ -78,7 +78,7 @@ class RoseliaSocketNS(Namespace):
             self.enter_room(self.sid, username)
         else:
             self.emit('reject', 'You should login first.')
-            return False
+            raise ConnectionRefusedError('Not Authorized', 'Missing token or token expired.')
 
     def on_disconnect(self):
         self.session.remove_sid(self.sid)
