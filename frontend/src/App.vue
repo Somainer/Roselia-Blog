@@ -15,6 +15,7 @@
 
       </v-content>
       <go-top-btn></go-top-btn>
+      <notification-hub/>
     </v-app>
     <vue-progress-bar></vue-progress-bar>
   </div>
@@ -25,10 +26,14 @@
 import ThemeListener from './plugin/ThemeListener'
 import { selectByLuminance } from './common/helpers';
 import {userInfoManager} from "./common/UserInfoManager";
+import wsBus from './plugins/ws-bus'
+import NotificationHub from './components/NotificationHub'
+
 export default {
   name: 'App',
   components: {
-    'theme-listener': ThemeListener
+    'theme-listener': ThemeListener,
+    NotificationHub
   },
   mounted () {
     //  [App.vue specific] When App.vue is finish loading finish the progress bar

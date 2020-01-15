@@ -7,7 +7,7 @@ import sqlalchemy
 
 
 class DBModelInjector:
-    def __init__(self, app: Flask=None):
+    def __init__(self, app: Flask = None):
         self.app = None
         if app:
             self.set_app(app)
@@ -19,6 +19,9 @@ class DBModelInjector:
         self.app.config['SQLALCHEMY_ECHO'] = DEBUG
         return self
 
+    def init_app(self, app: Flask):
+        self.set_app(app).inject()
+
     def inject(self):
         self.db.init_app(self.app)
         with self.app.app_context():
@@ -26,7 +29,6 @@ class DBModelInjector:
 
     def context(self):
         return self.app.app_context()
-
 
     @property
     def Model(self):

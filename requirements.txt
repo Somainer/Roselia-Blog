@@ -16,3 +16,8 @@ pyotp
 pymdown-extensions
 wheel
 psutil
+graphene
+graphene-sqlalchemy
+Flask-GraphQL
+flask-socketio
+gevent-websocket

@@ -11,15 +11,18 @@ from Logger import log
 import AuthLogin
 import time
 import os
-from config import BLOG_INFO, BLOG_LINK, DEBUG, HOST, PORT, UPLOAD_DIR, ANTI_SEO
+from config import BLOG_INFO, BLOG_LINK, DEBUG, HOST, PORT, UPLOAD_DIR, ANTI_SEO, APP_KEY
 from ImageConverter import ImageConverter
 from middleware import verify_token, ReverseProxied, make_option_dict, to_json, require_argument
 from urllib.parse import quote, unquote
 
-from external_views import register_views
+from external_views import register_views, register_plugins
 from models.all import database
 from controller.UserManager import UserManager
 from controller.PostManager import PostManager
+from views.socket import main_ns as socket_namespace
+
+emit = socket_namespace.emit
 
 # from gevent import monkey
 from gevent.pywsgi import WSGIServer
@@ -28,6 +31,7 @@ from gevent.pywsgi import WSGIServer
 
 app = Flask(__name__, static_folder='../static', static_url_path='/static')
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
+app.config['SECRET_KEY'] = APP_KEY
 app.wsgi_app = ReverseProxied(app.wsgi_app)
 # ppl = PipeLine.PostManager()
 ppl = PostManager()
@@ -36,8 +40,7 @@ acm = UserManager
 token_processor = TokenProcessor()
 auth_login = AuthLogin.AuthLogin()
 register_views(app)
-
-database.set_app(app).inject()
+register_plugins(app)
 
 
 def log_time(item):
@@ -542,7 +545,9 @@ def login():
                 'msg': '{} two step auth.'.format('Wrong' if login_code else 'Missing'),
                 'totp': True
             }
+    username = acm.find_user(username).username
     log.v("User logged in successfully!", username=username, role=code)
+    emit('user_login', conn_info(), room=username)
     return {
         'success': True, 'token': token_processor.iss_token(username, code)[1]['token'],
         'role': code,
@@ -639,6 +644,10 @@ def add_edit_post():
         state = ppl.add_post(data, info['username'], markdown)
     else:
         state = ppl.edit_post(pid, data, info.get('role', 0), markdown)
+        if state:
+            emit('post_edited', {
+                'id': pid
+            })  # Broadcast to all clients.
     return {
         'success': state
     }
@@ -738,8 +747,8 @@ def scan_code(code):
             return False, "No code"
         if not token:
             return False, "No token"
-        vaild, user = token_processor.get_username(token)
-        if not vaild:
+        valid, user = token_processor.get_username(token)
+        if not valid:
             return False, "Invalid token"
         stat, info = auth_login.get_code(code)
         if not stat:
@@ -1011,7 +1020,9 @@ def oauth_bind(username, third):
 
 def run_server():
     if DEBUG:
-        app.run(host='0.0.0.0', threaded=True, debug=DEBUG)
+        from views.socket import socket_view
+        socket_view.run(app, host='0.0.0.0', debug=DEBUG)
+        # app.run(host='0.0.0.0', threaded=True, debug=DEBUG)
     else:
         log.info("{} ran on {}:{}".format(BLOG_INFO["title"], HOST, PORT))
         http_server = WSGIServer((HOST, PORT), app)

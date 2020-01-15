@@ -145,6 +145,7 @@ import recursiveComment from './RecursiveComments'
 import utils from '@/common/utils';
 import M from 'materialize-css'
 import SimpleMDE from 'simplemde'
+import WsBus from '../plugins/ws-bus'
 export default {
   components: {lazyComponent, recursiveComment},
   props: ['userData', 'postData', 'toast', 'renderer'],
@@ -173,7 +174,8 @@ export default {
       cachedDraft: {},
       userMeta: {},
       userMetaLoaded: false,
-      showPreview: false
+      showPreview: false,
+      globalAddLock: {} // Designed to prevent duplicate adds.
     }
   },
   methods: {
@@ -208,30 +210,42 @@ export default {
           replyTo: this.replyToComment
         }
         this.removeCommentDraft(this.postData.id)
-        this.cleanUp()
-        this.loadNextPage()
+        // this.cleanUp()
+        // this.loadNextPage()
+        this.resetState()
+        this.addCommentById(d.commentId)
       }).catch(err => {
         this.toast(err, 'error')
         this.loading = false
       })
     },
-    cleanUp() {
-      this.currentPage = 0
-      this.totalPages = 1
-      this.commentCount = 0
-      this.commentList = []
+    resetState() {
       this.comment = ''
       this.replyToComment = undefined
       this.commentLeft = false
       this.showPreview = false
+    },
+    cleanComments() {
+      this.currentPage = 0
+      this.totalPages = 1
+      this.commentCount = 0
+      this.commentList = []
+    },
+    cleanUp() {
+      this.cleanComments()
+      this.resetState()
     },
     deleteComment(cid) {
       utils.fetchJSONWithSuccess(utils.apiFor('comment', 'delete'), 'POST', mapToUnderline({
         comment: cid,
         removeToken: this.removeTokens[cid]
       })).then(succ => {
+        const previousLength = this.commentList.length
         this.commentList = this.commentList.filter(x => x.id !== cid)
-        --this.commentCount
+        if(previousLength !== this.commentList.length) {
+          --this.commentCount
+        }
+        if (this.commentCount < 0) this.commentCount = this.commentList.length
         this.removeTokens[cid] = undefined
         if(this.cachedDraft[cid]) {
           const {nickname, comment, replyTo} = this.cachedDraft[cid]
@@ -410,6 +424,22 @@ export default {
         window.hljs.initHighlighting.called = false
         window.hljs.initHighlighting()
       }
+    },
+    addCommentById(id) {
+      if (this.globalAddLock[id]) return;
+      this.globalAddLock[id] = true;
+      utils.fetchJSONWithSuccess(utils.apiFor('comment', 'comment', id)).then(data => {
+        const comment = mapToCamelCase(data)
+        this.commentList = [comment].concat(this.commentList)
+        ++this.commentCount;
+        this.renderScript()
+        this.$nextTick(() => {
+          this.processComments()
+        })
+        this.globalAddLock[id] = false
+      }).catch(err => {
+        this.globalAddLock[id] = false
+      })
     }
   },
   computed: {
@@ -501,14 +531,14 @@ export default {
     },
     replyToComment(val) {
       if(val) {
-        this.$vuetify.goTo(this.$refs.commentText)
         this.chip = true
+        this.$vuetify.goTo(this.$refs.commentText)
       }
     },
     chip (val) {
       if(!val) {
-        this.$vuetify.goTo('#comment-' + this.replyToComment)
         this.replyToComment = undefined
+        this.$vuetify.goTo('#comment-' + this.replyToComment)
       }
     },
     postData(nv, ov) {
@@ -522,6 +552,27 @@ export default {
   },
   mounted() {
     this.loadDraft()
+    
+    if(WsBus.globalBus) {
+      this.$once('destroyed', WsBus.globalBus.addEventListener('comment_added', data => {
+        const id = data['post_id']
+        const commentId = data['comment_id']
+        if (id == this.postData.id) {
+          this.addCommentById(commentId)
+        }
+      }))
+
+      this.$once('destroyed', WsBus.globalBus.addEventListener('comment_removed', ({id}) => {
+        const previousLength = this.commentList.length
+        if(id === this.replyToComment) {
+          this.replyToComment = undefined
+        }
+        this.commentList = this.commentList.filter(x => x.id !== id)
+        if (previousLength !== this.commentList.length) {
+          --this.commentCount
+        }
+      }))
+    }
   },
   beforeDestroy() {
     this.onExit()

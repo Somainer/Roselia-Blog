@@ -16,6 +16,8 @@ import fabTop from './components/GotopButton.vue'
 import '@fortawesome/fontawesome-free/css/all.css'
 import { ObserveVisibility } from 'vue-observe-visibility'
 
+import '@/plugins/token-auto-refresh'
+
 Vue.prototype.config = meta
 
 // Vue.use(Vuetify, {

@@ -13,7 +13,10 @@
     <v-spacer></v-spacer>
     <v-toolbar-items v-if="!shouldHaveToolbar">
       <v-btn dark text @click="dialog = true" v-if="canAskYukina">
-        <v-icon>question_answer</v-icon>
+        <v-badge dot color="secondary">
+          <span slot="badge" v-if="notifications.length">{{ notifications.length }}</span>
+          <v-icon>question_answer</v-icon>
+        </v-badge>
       </v-btn>
       <v-btn dark text to="/">Index</v-btn>
       <v-btn dark text to="/timeline">Timeline</v-btn>
@@ -166,6 +169,8 @@
 </template>
 
 <script>
+import Vue from 'vue'
+import { mapState, mapMutations } from 'vuex'
 import meta from '../common/config'
 import utils from '../common/utils'
 import {executeCommand, askYukinaForHelp} from '@/custom-command/luis.ts'
@@ -232,23 +237,28 @@ export default {
       }]
       this.loading = true
       askYukinaForHelp(this.command).then(answer => {
-        this.responseList = [...this.responseList, {
-          id: Math.round(Math.random() * 233),
-          content: answer,
-          replies: [],
-          createdAt: (new Date).toLocaleTimeString(),
-          author: {
-            nickname: 'Yukina (Bot)',
-            avatar: 'https://img.lisa.moe/images/2019/04/15/GQ6GLDt_.jpg'
-          }
-        }]
+        this.addDialog(answer)
         this.loading = false
         this.command = ''
       }).catch(err => {
         this.loading = false
         this.notUnderstand = true
       })
-    }
+    },
+    addDialog(content) {
+      this.responseList = [...this.responseList, {
+          id: Math.round(Math.random() * 233),
+          content: content.content,
+          replies: [],
+          createdAt: (content.time ? new Date(content.time) : new Date).toLocaleTimeString(),
+          author: {
+            nickname: 'Yukina (Bot)',
+            avatar: 'https://img.lisa.moe/images/2019/04/15/GQ6GLDt_.jpg'
+          },
+          color: content.color
+        }]
+    },
+    ...mapMutations(['clearNotifications'])
   },
   computed: {
     title() {
@@ -259,7 +269,8 @@ export default {
     },
     canAskYukina() {
       return meta.enableAskYukina
-    }
+    },
+    ...mapState(['notifications'])
   },
   watch: {
     shouldHaveToolbar(val) {
@@ -275,6 +286,13 @@ export default {
               this.userMeta = mapToCamelCase(data)
             })
         }
+        this.notifications.forEach(n => {
+          this.addDialog({
+            ...n,
+            content: n.message
+          })
+        })
+        this.clearNotifications()
       }
     },
     userData() {

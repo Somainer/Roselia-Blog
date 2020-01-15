@@ -15,6 +15,7 @@ def verify_token(role_require=1, is_post=False):
                 'username': None,
                 'role': None
             }
+            is_post = request.method.upper() != 'GET'
             if is_post:
                 form = request.get_json()
                 if not form:
@@ -113,7 +114,7 @@ def require_argument(xs, is_post=False, need_raw_payload=False):
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
-            # is_post = request.method != 'GET'
+            is_post = request.method.upper() != 'GET'
 
             def get_payload():
                 if is_post:

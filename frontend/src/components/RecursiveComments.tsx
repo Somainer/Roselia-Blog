@@ -16,7 +16,7 @@ import utils from '@/common/utils';
 import { caselessEqual, selectByLuminance } from '@/common/helpers';
 interface CommentBase {
   id: number
-  content: string
+  content: string | VNode
   replies: RoseliaComment[]
   createdAt: Date
   color: string
@@ -107,7 +107,10 @@ export default tsx.componentFactoryOf<RecursiveCommentProps>().create({
                         this.infoLabel('Author', 'accent', true)
                       ) : null
                     )}
-                    <div domProps-innerHTML={comment.content}></div>
+                    { typeof comment.content === 'string' ? (
+                      <div domProps-innerHTML={comment.content}></div>
+                    ) : comment.content }
+                    
                     {this.canAddComment && (<VBtn text icon onClick={() => this.$emit('reply-comment', comment.id)}>
                       <VIcon>reply</VIcon>
                     </VBtn>)}
