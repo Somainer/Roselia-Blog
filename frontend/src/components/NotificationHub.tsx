@@ -1,6 +1,6 @@
 import Vue, { VNode } from 'vue'
 import Component from 'vue-class-component'
-import { VSnackbar, VBtn, VRow, VCol, VSpacer } from 'vuetify/lib'
+import { VSnackbar, VBtn, VRow, VCol, VSpacer, VIcon } from 'vuetify/lib'
 import WsBus from '../plugins/ws-bus'
 import { mapToCamelCase } from '../common/helpers'
 import { INotification as IToast } from '@/common/api/notifications'
@@ -10,7 +10,7 @@ import { mapGetters, mapMutations, mapState } from 'vuex'
 @Component({
   components: {
     VSnackbar,
-    VBtn, VRow, VCol, VSpacer
+    VBtn, VRow, VCol, VSpacer, VIcon
   },
   computed: {
     ...mapGetters(['firstNotification']),
@@ -54,7 +54,9 @@ export default class NotificationHub extends Vue {
         {first.message}
         <v-row>
           <v-col>
-            <v-btn text onClick={(this as any).clearNotifications}>Dismiss All</v-btn>
+            <v-btn text onClick={(this as any).clearNotifications}>
+              <v-icon>delete_sweep</v-icon>
+            </v-btn>
           </v-col>
           <v-spacer></v-spacer>
           <v-col>
@@ -62,7 +64,7 @@ export default class NotificationHub extends Vue {
               text
               onClick={() => { first.show = false; this.popFirst() }}
             >
-              {notifications.length > 1 ? `Next (${notifications.length - 1} more)` : 'Close'}
+              {notifications.length > 1 ? <span><v-icon>navigate_next</v-icon>({notifications.length - 1}+)</span> : <v-icon>close</v-icon>}
             </v-btn>
           </v-col>
         </v-row>

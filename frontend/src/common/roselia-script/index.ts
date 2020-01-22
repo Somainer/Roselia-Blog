@@ -8,6 +8,7 @@ import {
   MusicMetaObject,
   RSElementSelector
 } from './script-types'
+import { INotification } from '@/common/api/notifications'
 import {summonDialog} from './summonDialog'
 import Vue from 'vue';
 import { mapEntries } from '../helpers';
@@ -268,7 +269,8 @@ class RoseliaRenderer {
         "resetColorMode",
         "previewColor",
         "undef",
-        "def"
+        "def",
+        'sendNotification'
     ])
   }
 }
@@ -696,6 +698,10 @@ class RoseliaScript {
       ...this.app.extraDisplaySettings,
       ...settings
     }
+  }
+
+  sendNotification(notification: INotification) {
+    this.app.$store.commit('addNotification', notification)
   }
 
   Math = Math

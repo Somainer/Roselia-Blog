@@ -162,7 +162,8 @@
     </v-container>
     <v-container>
       <div class="text-center">
-        <h4 class="subtitle-1 grey--text">Last edit at: {{formatDate(postData.lastEdit, true)}}</h4>
+        <!-- {{formatDate(postData.lastEdit, true)}} -->
+        <h4 class="subtitle-1 grey--text">Last edit at: <relative-date-time :date="postData.lastEdit" :brief="false" /></h4>
       </div>
     </v-container>
     <v-container>
@@ -280,6 +281,7 @@ import {escapeRegExp} from 'lodash'
 import {pushContext, flushContext} from '../custom-command/luis'
 import GlobalEvents from 'vue-global-events'
 import WsBus from '../plugins/ws-bus'
+import RelativeDateTime from './RelativeTime'
 
 const extraDisplaySettings = {
   metaBelowImage: false,
@@ -291,7 +293,8 @@ export default {
   components: {
     BlogDigestNav,
     BlogComments,
-    GlobalEvents
+    GlobalEvents,
+    RelativeDateTime
   },
   name: 'blog-post',
   props: {
