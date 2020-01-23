@@ -237,7 +237,9 @@ export default {
       }]
       this.loading = true
       askYukinaForHelp(this.command).then(answer => {
-        this.addDialog(answer)
+        this.addDialog({
+          content: answer
+        })
         this.loading = false
         this.command = ''
       }).catch(err => {

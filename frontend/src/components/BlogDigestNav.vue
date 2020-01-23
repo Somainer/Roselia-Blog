@@ -44,7 +44,8 @@ export default {
     this.onCreate()
   },
   destroyed () {
-    this.getInstance().destroy()
+    const instance = this.getInstance()
+    instance && instance.destroy()
   },
   watch: {
     items () {

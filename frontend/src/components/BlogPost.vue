@@ -318,7 +318,8 @@ export default {
       title: 'Loading...',
       subtitle: '',
       tags: [''],
-      date: (new Date()).toDateString()
+      date: (new Date()).toDateString(),
+      lastEdit: new Date
     },
     postDigest: [],
     preview: {

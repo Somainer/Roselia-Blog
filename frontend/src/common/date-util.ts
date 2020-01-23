@@ -13,7 +13,7 @@ export const getWeekNumber = (date: Date) => {
     return weekNo;
 }
 
-export const isSameYear = (x: Date, y: Date) => x.getUTCFullYear() === y.getUTCFullYear()
+export const isSameYear = (x: Date, y: Date) => x.getFullYear() === y.getFullYear()
 export const isSameWeek = (x: Date, y: Date) => isSameYear(x, y) && getWeekNumber(x) === getWeekNumber(y)
 
 export const isSameDate = (x: Date, y: Date) => {
@@ -57,9 +57,11 @@ const relateDateOn = (date: Date, onDate: Date) => {
         return `Last ${weekStr}`
     }
 
-    if (isSameYear(date, onDate)) date.toLocaleString(undefined, {
-        month: "short", day: "numeric"
-    })
+    if (isSameYear(date, onDate)) {
+        return date.toLocaleString(undefined, {
+            month: "short", day: "numeric"
+        })
+    }
     return date.toLocaleDateString()
 }
 
