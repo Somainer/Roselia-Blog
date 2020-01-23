@@ -230,14 +230,16 @@ export default {
         id: Math.round(Math.random() * 233),
         content: this.command,
         replies: [],
-        createdAt: (new Date).toLocaleTimeString(),
+        createdAt: new Date,
         author: this.userMeta.username ? this.userMeta : this.userData,
         nickname: 'New Staff',
         color: 'accent'
       }]
       this.loading = true
       askYukinaForHelp(this.command).then(answer => {
-        this.addDialog(answer)
+        this.addDialog({
+          content: answer
+        })
         this.loading = false
         this.command = ''
       }).catch(err => {
@@ -250,7 +252,7 @@ export default {
           id: Math.round(Math.random() * 233),
           content: content.content,
           replies: [],
-          createdAt: (content.time ? new Date(content.time) : new Date).toLocaleTimeString(),
+          createdAt: content.time ? new Date(content.time) : new Date,
           author: {
             nickname: 'Yukina (Bot)',
             avatar: 'https://img.lisa.moe/images/2019/04/15/GQ6GLDt_.jpg'

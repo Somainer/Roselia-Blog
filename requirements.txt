@@ -21,3 +21,4 @@ graphene-sqlalchemy
 Flask-GraphQL
 flask-socketio
 gevent-websocket
+flask-cors

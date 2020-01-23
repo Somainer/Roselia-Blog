@@ -6,8 +6,10 @@ import {
   PreviewObject, 
   RenderResult, 
   MusicMetaObject,
-  RSElementSelector
+  RSElementSelector,
+  RecursivePartial
 } from './script-types'
+import { INotification } from '@/common/api/notifications'
 import {summonDialog} from './summonDialog'
 import Vue from 'vue';
 import { mapEntries } from '../helpers';
@@ -16,7 +18,7 @@ declare global {
     APlayer: any
   }
 }
-function ensureAPlayer(onload) {
+function ensureAPlayer(onload: () => void) {
   if (!window.APlayer) {
     let playerNode = document.createElement('script')
     let playerStyle = document.createElement('link')
@@ -268,7 +270,8 @@ class RoseliaRenderer {
         "resetColorMode",
         "previewColor",
         "undef",
-        "def"
+        "def",
+        'sendNotification'
     ])
   }
 }
@@ -311,7 +314,7 @@ class RoseliaScript {
   music (meta: MusicMetaObject | Array<MusicMetaObject>, autoplay = false, onPlayerReady?: (ob?: object) => void) {
     ensureAPlayer(() => this.app.$emit('aPlayerLoaded'))
     let id = this.randomID()
-    let player
+    let player: any
     this.then(() => {
       const addPlayer = () => {
         const element = document.getElementById(id)!
@@ -347,11 +350,11 @@ class RoseliaScript {
     })
     return new RenderResult(`<div id="${id}"></div>`, player)
   }
-  heimu (text) {
+  heimu (text: string) {
     const id = this.randomID()
     return new RenderResult(`<span class="heimu" id="${id}">${text}</span>`, id)
   }
-  cite (text, pid) {
+  cite (text: string, pid: number) {
     return `<a href="post?p=${pid}">${text}</a>`
   }
 
@@ -359,11 +362,11 @@ class RoseliaScript {
     return Number(Math.random().toString().substring(3, length) + Date.now()).toString(36)
   }
 
-  onceLoad (fn) {
+  onceLoad (fn: () => void) {
     this.app.$once('postLoaded', fn)
   }
 
-  onceUnload (fn) {
+  onceUnload (fn: () => void) {
     this.app.$once('postUnload', fn)
   }
 
@@ -391,11 +394,11 @@ class RoseliaScript {
     this.app.showToast(text, color || 'info')
   }
 
-  formula (expr) {
+  formula (expr: string) {
     return `$ ${expr} $`
   }
 
-  formulation (expr) {
+  formulation (expr: string) {
     return `$$ ${expr} $$`
   }
 
@@ -490,13 +493,27 @@ class RoseliaScript {
     })
   }
 
-  createElement (type, extend?): HTMLElement {
+  createElement<K extends keyof HTMLElementTagNameMap>(
+    type: K,
+    extend?: RecursivePartial<HTMLElementTagNameMap[K]>,
+    children?: (Node | string)[]
+  ): HTMLElementTagNameMap[K] {
     const el = document.createElement(type)
     el.id = this.randomID()
     extend && this.extendAttributes(el, extend)
+    if (children) {
+      children.forEach(c => {
+        el.appendChild(_.isString(c) ? this.createTextNode(c) : c)
+      })
+    }
     return el
   }
-  setPreview (el, preview: PreviewObject /* :{title, subtitle, img, color} */) {
+
+  createTextNode(text: string) {
+    return document.createTextNode(text)
+  }
+
+  setPreview (el: HTMLElement, preview: PreviewObject /* :{title, subtitle, img, color} */) {
     this.element(el).then((e: HTMLElement) => {
       e.addEventListener('mouseover', ev => {
         ev.preventDefault()
@@ -528,7 +545,7 @@ class RoseliaScript {
     })
   }
 
-  previewed (el, preview: PreviewObject) {
+  previewed (el: HTMLElement, preview: PreviewObject) {
     this.setPreview(el, preview)
     return el
   }
@@ -538,7 +555,7 @@ class RoseliaScript {
     return el
   }
 
-  icon (icn, externalClasses: Array<String>|String = '') {
+  icon (icn: string, externalClasses: Array<String>|String = '') {
     // if (_.isArray(externalClasses)) externalClasses = externalClasses.join(' ')
     if (externalClasses instanceof Array) externalClasses = externalClasses.join(' ')
     if (icn.startsWith('fa')) {
@@ -587,7 +604,7 @@ class RoseliaScript {
     return this.askForAccess('token', 'This post wish to access your personal info', 'This post needs to access your token to make requests.')
   }
 
-  roseliaApi (...args) {
+  roseliaApi (...args: any[]) {
     return async data => {
       await this.askForToken()
       return utils.fetchJSON(utils.apiFor(...args), 'GET', data)
@@ -698,6 +715,10 @@ class RoseliaScript {
     }
   }
 
+  sendNotification(notification: INotification) {
+    this.app.$store.commit('addNotification', notification)
+  }
+
   Math = Math
   Object = Object
   log(...args: any[]) {
@@ -707,7 +728,7 @@ class RoseliaScript {
 
 export default {
   RoseliaRenderer,
-  createRenderer (app) {
+  createRenderer (app: Vue) {
     return new RoseliaRenderer(app)
   }
 }

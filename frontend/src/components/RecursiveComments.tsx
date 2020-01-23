@@ -14,6 +14,7 @@ import * as tsx from 'vue-tsx-support'
 import { VNode } from 'vue';
 import utils from '@/common/utils';
 import { caselessEqual, selectByLuminance } from '@/common/helpers';
+import RelativeDateTime from './RelativeTime';
 interface CommentBase {
   id: number
   content: string | VNode
@@ -121,7 +122,8 @@ export default tsx.componentFactoryOf<RecursiveCommentProps>().create({
                     </VBtn>) : null}
                   </VCol>
                   <VCol cols={5} class={"text-right"}>
-                    {utils.formatDate(comment.createdAt)}
+                    {/* {utils.formatDate(comment.createdAt)} */}
+                    <RelativeDateTime props={{date: comment.createdAt, brief: true}} />
                   </VCol>
                 </VRow>
                 <VRow no-gutters dense justify={"start"}>

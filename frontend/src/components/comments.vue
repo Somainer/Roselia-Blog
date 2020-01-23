@@ -38,6 +38,8 @@
                 color="primary"
                 label="Leave a comment"
                 ref="commentText"
+                @keyup.meta.enter="addComment"
+                @keyup.ctrl.enter="addComment"
                 v-else
         ></v-textarea>
         <v-row row wrap>
@@ -199,6 +201,7 @@ export default {
       }
     },
     addComment() {
+      if (!this.isValid || this.loading) return;
       this.loading = true
       utils.fetchJSONWithSuccess(utils.apiFor('comment', 'add'), 'POST', this.addPostForm).then(mapToCamelCase).then(d => {
         this.toast('Well, you placed a comment!', 'success')
