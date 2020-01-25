@@ -7,7 +7,8 @@ import {
   RenderResult, 
   MusicMetaObject,
   RSElementSelector,
-  RecursivePartial
+  RecursivePartial,
+  RecursiveReadOnly
 } from './script-types'
 import { INotification } from '@/common/api/notifications'
 import {summonDialog} from './summonDialog'
@@ -76,7 +77,7 @@ function render (template, context, delim) { // A not so naive template engine.
       }
       if (!isSingleCall) {
         expr = unescapeToHTML(expr)
-        res = (new Function('data', funcTemplate(expr))).call(null, context)
+        res = (new Function('data', funcTemplate(expr))).call(context, context)
       }
       return handleRenderResult(res)
     } catch (e) {
@@ -94,12 +95,12 @@ function render (template, context, delim) { // A not so naive template engine.
   })
 }
 
-function selfish (target, forbid?: string[]) {
+function selfish<T extends object, K extends keyof T> (target: T, forbid?: K[]): T {
   const cache = new WeakMap()
   const forbidden = new Set(forbid)
 
-  const handler = {
-    get (target, key) {
+  return new Proxy(target, {
+    get (target, key: K) {
       if (forbidden.has(key)) return null;
       const value = Reflect.get(target, key)
       if (!_.isFunction(value)) return value
@@ -108,11 +109,10 @@ function selfish (target, forbid?: string[]) {
       }
       return cache.get(value)
     }
-  }
-  return new Proxy(target, handler)
+  })
 }
 
-function sandbox(target: any) {
+function sandbox<T extends object>(target: T): T {
   return new Proxy(target, {
     has(target, key) {
       return true
@@ -126,7 +126,7 @@ function sandbox(target: any) {
   })
 }
 
-function hiddenProxy<T extends object, K extends keyof T>(obj: T, hide: K[]) {
+function hiddenProxy<T extends object, K extends keyof T>(obj: T, hide: K[]): [Set<K>, Omit<T, K>] {
   const hidden = new Set(hide);
 
   return [hidden, new Proxy(obj, {
@@ -137,7 +137,7 @@ function hiddenProxy<T extends object, K extends keyof T>(obj: T, hide: K[]) {
   })]
 }
 
-function readOnlyProxy<T extends object>(target: T, deep: boolean = false) {
+function readOnlyProxy<T extends object>(target: T, deep: boolean = false): T {
   return new Proxy(target, {
     get(target, key) {
       const result = Reflect.get(target, key);
@@ -155,22 +155,24 @@ function readOnlyProxy<T extends object>(target: T, deep: boolean = false) {
   })
 }
 
-export function deepFrozen(obj: Object) {
+export function deepFrozen<T extends object>(obj: T): RecursiveReadOnly<T> {
   const copied = {...obj}
   Object.keys(copied).forEach(key => {
     if (copied.hasOwnProperty(key) && (typeof copied[key] === 'object') && !Object.isFrozen(copied[key])) {
         copied[key] = deepFrozen(copied[key])
     }
   });
-  return Object.freeze(copied)
+  return Object.freeze(copied) as RecursiveReadOnly<T>
 }
 
 const innerCallToken = Symbol("yukina") // Verify inner token.
-let savedTheme = {...config.theme}
+let savedTheme = { ...config.theme }
+
+type RoseliaScriptContext = Partial<RoseliaScript>
 
 class RoseliaRenderer {
   app: Vue
-  context: RoseliaScript
+  context: RoseliaScriptContext
   scriptEvaluator: RoseliaScript
   toInject: any
   static roseliaScriptDelim = ['(?:Roselia|roselia|r|R){{', '}}']
@@ -242,7 +244,7 @@ class RoseliaRenderer {
     }
   }
 
-  pushMethod(method: (rs: RoseliaScript) => (...args: any[]) => any, name: string) {
+  pushMethod(method: (rs: RoseliaScriptContext) => (...args: any[]) => any, name: string) {
     return this.pushContext((...args: any[]) => method(this.context)(...args), name)
   }
 
@@ -311,7 +313,7 @@ class RoseliaScript {
     this.mounted = true
   }
 
-  music (meta: MusicMetaObject | Array<MusicMetaObject>, autoplay = false, onPlayerReady?: (ob?: object) => void) {
+  music (meta: MusicMetaObject | MusicMetaObject[], autoplay = false, onPlayerReady?: (ob?: object) => void) {
     ensureAPlayer(() => this.app.$emit('aPlayerLoaded'))
     let id = this.randomID()
     let player: any
@@ -463,7 +465,7 @@ class RoseliaScript {
     return document.getElementById(res instanceof Element ? res.id : res)
   }
 
-  raw (s) {
+  raw (s: string) {
     // s = s.split('\n').map(x => `<p>${x}</p>`).join('\n')
     return `<pre>Roselia{{${s}}}</pre>`
   }

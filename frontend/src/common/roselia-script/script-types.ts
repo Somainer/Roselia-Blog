@@ -1,4 +1,4 @@
-interface PreviewObject {
+export interface PreviewObject {
   title: string,
   subtitle?: string
   img?: string,
@@ -6,7 +6,7 @@ interface PreviewObject {
   goTo: number | string | RSElementSelector
 }
 
-interface MusicMetaObject {
+export interface MusicMetaObject {
   name: string,
   artist: string,
   url: string
@@ -17,7 +17,7 @@ interface MusicMetaObject {
 }
 
 
-class RenderResult {
+export class RenderResult {
   template: string
   returnValue: HTMLElement
   constructor (template, ret) {
@@ -26,19 +26,18 @@ class RenderResult {
   }
 }
 
-type RSElementSelector = string | RenderResult | HTMLElement
+export type RSElementSelector = string | RenderResult | HTMLElement
 
-type RecursivePartial<T> = {
+export type RecursivePartial<T> = {
   [P in keyof T]?:
     T[P] extends (infer U)[] ? RecursivePartial<U>[] :
     T[P] extends object ? RecursivePartial<T[P]> :
     T[P];
 };
 
-export {
-  PreviewObject,
-  MusicMetaObject,
-  RenderResult,
-  RSElementSelector,
-  RecursivePartial
+export type RecursiveReadOnly<T> = {
+  readonly [K in keyof T]:
+    T[K] extends (infer U)[] ? readonly U[] :
+    T[K] extends object ? RecursiveReadOnly<T[K]> :
+    T[K];
 }
