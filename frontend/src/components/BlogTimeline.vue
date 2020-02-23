@@ -5,6 +5,10 @@
     <v-parallax
       dark
       :src="bannerImage"
+      :class="{
+        'blur-image': !!userInfo.username,
+        'blur-image-transition': true
+      }"
     >
       <v-row
         align="center"
