@@ -1,7 +1,8 @@
-from pygments.lexer import RegexLexer, words
+from pygments.lexer import RegexLexer, words, include, bygroups
 from pygments.token import *
 
 from pygments.lexers.lisp import SchemeLexer
+from pygments.lexers.python import Python3Lexer
 from pygments.lexers._mapping import LEXERS
 
 __all__ = ['LisaLexer']
@@ -97,6 +98,53 @@ class LisaLexer(RegexLexer):
             # the famous parentheses!
             (r'(\(|\))', Punctuation),
         ],
+        'shebang': [
+            (r'\A(#!).*(?=$)', Comment.HashBang)
+        ],
+        'expression': [
+            include('literals'),
+            include('sexpr')
+        ],
+        'literals': [
+            include('non-symbolic-literals'),
+            include('symbolic-literals')
+        ],
+        'non-symbolic-literals': [
+            include('atoms'),
+            include('strings'),
+            include('boolean-literals'),
+            include('dot-accessors'),
+            include('numbers'),
+            include('static-field-accessors'),
+            include('quoted')
+        ],
+        'symbolic-literals': [
+            include('symbols'),
+            include('positional-args')
+        ],
+        'boolean-literals': [
+            ("(?<![_$[:alnum:]])(?:(?<=\\.\\.\\.)|(?<!\\.))true(?![_$[:alnum:]])(?:(?=\\.\\.\\.)|(?!\\.))",
+             Keyword.Constant),
+            ("(?<![_$[:alnum:]])(?:(?<=\\.\\.\\.)|(?<!\\.))false(?![_$[:alnum:]])(?:(?=\\.\\.\\.)|(?!\\.))",
+             Keyword.Constant)
+        ],
+        'numbers': [
+            (r'\b(([0-9.]*[0-9]+)|(\.[0-9]+))\b', Number)
+        ],
+        'dot-accessors': [
+            (r'(?<!\w)\.' + valid_name + r'\s', Name.Function.Magic)
+        ],
+        'static-field-accessors': [
+            (r'\b([\w\.]+)/(\w+)\b', bygroups(Name.Class, Name.Attribute))
+        ],
+        'atoms': [
+            (r'(?<!\w):[\w\-\/]+\b', String.Symbol),
+            (r'(?<!\w):\"')
+        ],
+        'string-escape': [
+            ("\\\\(x[0-9A-Fa-f]{2}|u[0-9A-Fa-f]{4}|u\\{[0-9A-Fa-f]+\\}|[0-2][0-7]{0,2}|3[0-6][0-7]?|37[0-7]?|[4-7][0-7]?|.|$)",
+             String.Escape)
+        ]
     }
 
     @classmethod
