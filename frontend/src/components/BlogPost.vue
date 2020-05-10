@@ -379,7 +379,7 @@ export default {
       }
       const useLink = context.name !== 'post';  // context && context.params.postLink
       if (useLink) {
-        p = context.params.postLink
+        p = this.resolvePostLink(context.params.postLink)
       }
       this.cachedData = false
       if (p === -1) {
@@ -407,7 +407,7 @@ export default {
         this.$router.replace({
           name: 'postWithEternalLink',
           params: {
-            postLink: this.postData.displayId,
+            postLink: this.postData.displayId.split('/'),
             doNotLoad: true
           }
         })
@@ -652,6 +652,10 @@ export default {
     },
     resetExtraDisplaySettings() {
       this.extraDisplaySettings = {...extraDisplaySettings}
+    },
+    resolvePostLink(link) {
+      if (Array.isArray(link)) return link.join('/')
+      else return link
     }
   },
   computed: {
@@ -735,7 +739,7 @@ export default {
   },
   beforeRouteUpdate (to, from, next) {
     if(to.params.doNotLoad) return next()
-    if (to.query.p === from.query.p && to.params.postLink == from.params.postLink) return next()
+    if (to.query.p === from.query.p && this.resolvePostLink(to.params.postLink) == this.resolvePostLink(from.params.postLink)) return next()
     this.$vuetify.goTo(0)
     this.$emit('postUnload')
     this.loadContent(to.query.p, to)

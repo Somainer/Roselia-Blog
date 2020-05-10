@@ -8,6 +8,7 @@ import re
 
 roselia_base_dir = os.path.realpath(os.path.join(os.path.dirname(__file__), '..'))
 
+
 def copy_built_assets():
     in_relate_dir = lambda *path: os.path.realpath(os.path.join(roselia_base_dir, *path))
 
@@ -29,15 +30,15 @@ def copy_built_assets():
         'index_vue.html',
         'post_vue.html'
     ]
-    
+
     def replace_str_in_file(file_name):
         with open(file_name, 'r+') as f:
             content = f.read()
-            
+
             for asset in assets:
                 name, _, ext = asset.split('.')
                 content = re.sub(r'{}\.\w+\.{}'.format(name, ext), asset, content)
-            
+
             f.seek(0)
             f.write(content)
 
@@ -49,7 +50,7 @@ def copy_built_assets():
 def serve():
     from api_server import run_server
     run_server()
-        
+
 
 def compress_assets():
     sys.path.append(os.path.join(roselia_base_dir, 'scripts'))
@@ -57,9 +58,11 @@ def compress_assets():
 
     build_assets()
 
+
 def assets():
     compress_assets()
     copy_built_assets()
+
 
 def build_frontend():
     frontedn_path = os.path.join(roselia_base_dir, 'frontend')
@@ -69,10 +72,12 @@ def build_frontend():
     os.system('yarn build')
     os.chdir(cur_dir)
 
+
 def build():
     compress_assets()
     build_frontend()
     copy_built_assets()
+
 
 def run_prod():
     import config
@@ -80,11 +85,13 @@ def run_prod():
 
     serve()
 
+
 def run_dev():
     import config
     config.DEBUG = True
 
     serve()
+
 
 def run_gunicorn():
     args = sys.argv[2:]
@@ -95,6 +102,7 @@ def run_gunicorn():
 
 if __name__ == '__main__':
     from config import BLOG_INFO
+
     print('Welcome to', BLOG_INFO['title'], '-', BLOG_INFO['motto'])
     if len(sys.argv) < 2:
         print('No argument')
@@ -111,6 +119,10 @@ if __name__ == '__main__':
             'run-dev': run_dev,
             'run-gunicorn': run_gunicorn
         }
+
+
         def otherwise():
             print("No operation")
+
+
         operate.get(arg, otherwise)()

@@ -109,7 +109,7 @@ static_urls = [
 if DEBUG or ANTI_SEO:
     static_urls.append('/')
     static_urls.append('post')
-    static_urls.append('post/<string:post>')
+    static_urls.append('post/<path:post>')
 
 
 if DEBUG:
@@ -167,8 +167,8 @@ def edit_page():
 
 
 @app.route('/post')
-@app.route('/post/<string:p>')
-@app.route('/post/<string:p>/')
+@app.route('/post/<path:p>')
+@app.route('/post/<path:p>/')
 def getpostpage(p=None):
     p = p or request.args.get("p", -1, int)
     logged_in = True
@@ -457,7 +457,7 @@ def tag_post(t):
 
 
 @app.route('/api/post/<int:p>')
-@app.route('/api/post-link/<string:p>')
+@app.route('/api/post-link/<path:p>')
 @to_json
 def get_post(p):
     logged_in = True
@@ -1017,16 +1017,15 @@ def oauth_bind(username, third):
         return redirect(BLOG_LINK[:-1] + '/userspace/oauth-accounts?error=' + quote('Maybe this user is not available'))
 
 
-
 def run_server():
-    if DEBUG:
-        from views.socket import socket_view
-        socket_view.run(app, host='0.0.0.0', debug=DEBUG)
-        # app.run(host='0.0.0.0', threaded=True, debug=DEBUG)
-    else:
-        log.info("{} ran on {}:{}".format(BLOG_INFO["title"], HOST, PORT))
-        http_server = WSGIServer((HOST, PORT), app)
-        http_server.serve_forever()
+    from views.socket import socket_view
+
+    log.info("{} ran on {}:{}".format(BLOG_INFO["title"], HOST, PORT))
+    socket_view.run(app, host='0.0.0.0', debug=DEBUG)
+    # app.run(host='0.0.0.0', threaded=True, debug=DEBUG)
+
+    # http_server = WSGIServer((HOST, PORT), app)
+    # http_server.serve_forever()
 
 
 if __name__ == '__main__':

@@ -84,7 +84,7 @@ export default new Router({
           component: BlogPost
         },
         {
-          path: ':postLink',
+          path: ':postLink+',
           name: 'postWithEternalLink',
           component: BlogPost
         }

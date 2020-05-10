@@ -264,7 +264,7 @@ export default {
         return {
           name: 'postWithEternalLink',
           params: {
-            postLink: post.displayId
+            postLink: post.displayId.split('/')
           }
         }
       }

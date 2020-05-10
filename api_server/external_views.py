@@ -10,6 +10,8 @@ from views.socket import socket_view
 from models import database
 from flask_cors import CORS
 
+from views.FakePost import fake_post_view
+
 views = [
     user_view,
     comment_view,
@@ -17,7 +19,8 @@ views = [
     post_view,
     system_view,
     plugin_view,
-    luis_view
+    luis_view,
+    fake_post_view  # Comment this if you do not need fake post functionality
 ]
 
 plugins = [
