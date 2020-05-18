@@ -6,17 +6,20 @@
       <v-col cols="12" sm="8" offset-sm="2">
         <h1 class="display-3">{{realTitle}}</h1>
         <v-layout>
-              <v-spacer></v-spacer>
-              <v-tooltip bottom>
-                <template v-slot:activator="{ on }">
-                  <v-btn v-on="on" color="secondary" fab small :to="{name: 'post', params: {data: getPreviewData()}}">
-                    <v-icon>visibility</v-icon>
-                  </v-btn>
-                </template>
-                <span>Preview the post. Note that the link can be used only once.</span>
-              </v-tooltip>
-              
-            </v-layout>
+          <v-spacer></v-spacer>
+          <v-btn class="ma-2" fab small @click="switchDarkMode">
+            <v-icon>{{ currentColorScheme ? 'wb_sunny' : 'nights_stay' }}</v-icon>
+          </v-btn>
+          <v-tooltip bottom>
+            <template v-slot:activator="{ on }">
+              <v-btn v-on="on" class="ma-2" color="secondary" fab small :to="{name: 'post', params: {data: getPreviewData()}}">
+                <v-icon>visibility</v-icon>
+              </v-btn>
+            </template>
+            <span>Preview the post. Note that the link can be used only once.</span>
+          </v-tooltip>
+          
+        </v-layout>
         <v-form ref="form" v-model="valid">
           <v-text-field
             v-model="postData.title"
@@ -67,14 +70,40 @@
             :label="postData.enableComment ? 'Enabled' : 'Disabled'"
             v-model="postData.enableComment"
           ></v-switch>
-          <span>Color of Title</span>
-          <v-switch color="accent"
-            :label="postData.darkTitle ? 'Dark' : 'Light'"
-            v-model="postData.darkTitle"
-          ></v-switch>
+          <v-row>
+            <v-col>
+              <span>Color of Title</span>
+              <v-switch color="accent"
+                :label="postData.darkTitle ? 'Dark' : 'Light'"
+                v-model="postData.darkTitle"
+              ></v-switch>
+            </v-col>
+            <v-col>
+              <span>Paste Option</span>
+              <v-switch color="accent"
+                :label="pasteHtml ? 'HTML' : 'Plain Text'"
+                v-model="pasteHtml"></v-switch>
+            </v-col>
+          </v-row>
           <v-btn round @click="explorerOpen = true" color="primary" v-if="richPostExtensions.length">
             +<v-icon>extension</v-icon>Plugins
           </v-btn>
+          <v-row>
+            <v-select
+              label="Image Upload Channel"
+              :loading="imageUpload.loading"
+              :items="imageUpload.channels"
+              v-model="imageUpload.channel"
+              prepend-icon="camera_roll"
+            ></v-select>
+            <v-checkbox label="To Webp" v-model="imageUpload.convertToWebp"></v-checkbox>
+          </v-row>
+          <v-row v-if="uploadImages.length">
+            <v-row>
+              <span>Uploaded Images</span>
+            </v-row>
+            <uploaded-images v-model="uploadImages" :notify="showToast"></uploaded-images>
+          </v-row>
           <v-combobox
             v-model="postData.tags"
             hide-selected
@@ -94,7 +123,7 @@
           <span>Content</span>
           <markdown-editor
             @keyup.ctrl.s.prevent="saveDraft"
-           id="markdownEditor" ref="markdownEditor" v-model="postData.content" :highlight="true" :configs="configs"></markdown-editor>
+           id="markdownEditor" ref="markdownEditor" v-model="postDataContent" :highlight="true" :configs="configs"></markdown-editor>
 
           <v-card-actions>
             <v-spacer></v-spacer>
@@ -105,20 +134,19 @@
               ></v-progress-circular>
             </div>
             <div v-else>
-              <v-layout>
-                <v-btn v-if="!addPost" color="info" @click="reloadPost">
+              <div>
+                <v-btn class="ma-1" v-if="!addPost" color="info" @click="reloadPost">
                   <v-icon>refresh</v-icon>
                 </v-btn>
-                <v-btn v-if="!addPost" color="error" @click="deleteDialog = true">
+                <v-btn class="ma-1" v-if="!addPost" color="error" @click="deleteDialog = true">
                   <v-icon>delete</v-icon>
                 </v-btn>
-                <v-btn color="secondary" @click="saveDraft" :loading="loading"><v-icon>archive</v-icon></v-btn>
-                <v-btn color="primary" v-on:click="doEditPost" :loading="loading" :disabled="!valid">
+                <v-btn class="ma-1" color="secondary" @click="saveDraft" :loading="loading"><v-icon>archive</v-icon></v-btn>
+                <v-btn class="ma-1" color="primary" v-on:click="doEditPost" :loading="loading" :disabled="!valid">
                   <v-icon>cloud_upload</v-icon>
                  <span v-if="!isMobile">({{commandText}}+Shift+S)</span>
                 </v-btn>
-              </v-layout>
-
+              </div>
             </div>
           </v-card-actions>
         </v-form>
@@ -180,11 +208,11 @@
 <script>
 import utils from '../common/utils'
 import BlogToolbar from './BlogToolbar'
-import hljs from 'highlight.js'
-import markdownEditor from 'vue-simplemde'
-import SimpleMDE from 'simplemde'
-import 'simplemde/dist/simplemde.min.css'
+// import hljs from 'highlight.js'
+import markdownEditor from 'vue-easymde'
+import 'easymde/dist/easymde.min.css'
 import 'github-markdown-css'
+// import 'highlight.js/styles/vs.css'
 import 'highlight.js/styles/xcode.css'
 import {platform} from '../common/platform'
 import GlobalEvents from 'vue-global-events'
@@ -193,11 +221,15 @@ import {mapToCamelCase, mapToUnderline} from '../common/helpers'
 import PluginExplorer from './EditPluginExplorer'
 import {plugins} from '../plugins/RoseliaPluginHost'
 import {pushContext, flushContext} from '../custom-command/luis'
+import { getImageChannels, uploadImage } from '../common/api/images'
+import { handlePaste, handleBeforeChange, handleDrop } from '../common/handle-paste'
+import UploadedImages from './UploadedImages'
+import { markdownAsync, markdown } from '../common/roselia-markdown'
 // window.hljs = hljs
 // window.platform = platform
 
 export default {
-  components: {BlogToolbar, markdownEditor, PluginExplorer, GlobalEvents},
+  components: {BlogToolbar, markdownEditor, PluginExplorer, GlobalEvents, UploadedImages},
   name: 'post-edit',
   data: () => ({
     postData: {
@@ -229,10 +261,18 @@ export default {
     },
     uploadImages: [],
     doNotSave: false,
-    explorerOpen: false
+    explorerOpen: false,
+    imageUpload: {
+      channel: 'roselia',
+      channels: [],
+      loading: true,
+      convertToWebp: false
+    },
+    pasteHtml: false
   }),
   props: {
-    userData: Object
+    userData: Object,
+    currentColorScheme: Boolean
   },
   methods: {
     showToast (text, color = 'info') {
@@ -294,6 +334,7 @@ export default {
       if (dft) {
         this.markdown = dft.markdown
         this.postData = dft.data
+        this.uploadImages = dft.uploadImages || []
       }
       return !!dft
     },
@@ -385,17 +426,75 @@ export default {
     },
     simplemde () {
       let ref = this.$refs.markdownEditor
-      return ref ? ref.simplemde : {
-        markdown: s => s
-      }
+      return ref && ref.easymde
     },
     getPreviewData() {
       return {
         ...this.postData,
         id: 'preview',
-        content: this.markdown ? this.simplemde().markdown(this.postData.content) : this.postData.content,
+        content: this.markdown ? markdown(this.postData.content) : this.postData.content,
         markdownContent: this.markdown ? this.postData.content : undefined
       }
+    },
+    registerPasteListener() {
+      /** @type {CodeMirror} */
+      const editor = this.simplemde().codemirror
+      if (!editor) return;
+      const imageFormatHandler = (source) => {
+        if (this.markdown) return source;
+        return source.replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2">$1</img>')
+      }
+      const handler = async (parts, additionalParts, input) => {
+        if (this.pasteHtml) {
+          input(imageFormatHandler((await additionalParts).join('')))
+        } else {
+          input(imageFormatHandler((await parts).join('')))
+        }
+      }
+      const uploader = async (image, origionalUrl) => {
+        const placeHolder = {
+          url: origionalUrl,
+          channel: this.imageUpload.channel,
+          loading: true,
+          fileName: 'Uploading...'
+        }
+
+        try {
+          this.uploadImages = [...this.uploadImages, placeHolder]
+          const uploaded = await uploadImage(image, this.imageUpload.channel, this.imageUpload.convertToWebp ? 'webp' : undefined)
+          if (!uploaded.success) throw new Error(uploaded.msg);
+          this.uploadImages = this.uploadImages.map(x => {
+            if (x === placeHolder) return uploaded.result
+            return x
+          })
+          await this.$nextTick()
+          const { url } = uploaded.result
+          const cursor = editor.getCursor()
+          this.postData.content = this.postData.content.replace(origionalUrl, url)
+          URL.revokeObjectURL(origionalUrl)
+          await this.$nextTick()
+          editor.setCursor(cursor)
+        } catch (error) {
+          this.showToast(error, 'error')
+          this.uploadImages = this.uploadImages.filter(x => x !== placeHolder)
+        }
+      }
+
+      editor.on('paste', (instance, event) => {
+        handlePaste(instance, event, handler, uploader)
+      })
+      editor.on('drop', (instance, event) => {
+        handleDrop(instance, event, handler, uploader)
+      })
+      editor.on('beforeChange', (instance, event) => {
+        handleBeforeChange(instance, event)
+      })
+    },
+    switchDarkMode() {
+      const isLight = this.currentColorScheme
+      const shouldBeLight = !isLight
+      this.$emit('forceSwitchToLight', !!shouldBeLight)
+      this.$emit('forceSwitchToDark', !shouldBeLight)
     }
   },
   computed: {
@@ -419,6 +518,14 @@ export default {
     },
     richPostExtensions() {
       return plugins.richPostPlugin
+    },
+    postDataContent: {
+      get() {
+        return this.postData.content
+      },
+      set(value) {
+        this.postData.content = value
+      }
     }
   },
   mounted () {
@@ -452,13 +559,21 @@ export default {
     }
 
     window.addEventListener('beforeunload', this.saveDraft)
-    this.$emit('forceSwitchToLight', true)
+    // this.$emit('forceSwitchToLight', true)
     pushContext({
       "Utilities.FinishTask": this.doEditPost,
       "Utilities.Confirm": this.doEditPost,
       "Utilities.Cancel": this.leave,
       save: this.doEditPost
     }, this)
+    getImageChannels().then(channels => {
+      this.imageUpload.channels = channels.map(c => ({
+        text: `${c.name} - ${c.description}`,
+        value: c.id
+      }))
+      this.imageUpload.loading = false;
+    })
+    this.registerPasteListener()
   },
   watch: {
     userData(val) {

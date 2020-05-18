@@ -103,14 +103,13 @@ if DEBUG:
 
 static_urls = [
     'login', 'userspace', 'me', 'edit', 'add', 'hello', 'timeline', 'post/shared/<string:sid>',
-     'timeline/<string:p>'
+    'timeline/<string:p>'
 ]
 
 if DEBUG or ANTI_SEO:
     static_urls.append('/')
     static_urls.append('post')
     static_urls.append('post/<path:post>')
-
 
 if DEBUG:
     def new_index(*args, **kwargs):
@@ -476,7 +475,8 @@ def get_post(p):
     level = logged_in + data['role']
     username = data.get('username')
     if post:
-        return dict(post, prev=ppl.get_prev(post['id'], level, username), next=ppl.get_next(post['id'], level, username)) if level >= post['secret'] else None
+        return dict(post, prev=ppl.get_prev(post['id'], level, username),
+                    next=ppl.get_next(post['id'], level, username)) if level >= post['secret'] else None
     return None
 
 
@@ -712,7 +712,8 @@ def rss_feed():
             title=post['title'],
             description=post['subtitle'],
             author=post['author']['nickname'],
-            link="{}post/{}".format(BLOG_LINK, quote(post['display_id'])) if post['display_id'] else '{}post?p={}'.format(
+            link="{}post/{}".format(BLOG_LINK, quote(post['display_id'])) if post[
+                'display_id'] else '{}post?p={}'.format(
                 BLOG_LINK, post['id']),
             guid=PyRSS2Gen.Guid(
                 "{}post/{}".format(BLOG_LINK, post['display_id']) if post['display_id'] else '{}post?p={}'.format(
@@ -850,9 +851,34 @@ def uploaded_file(filename):
     return send_from_directory(UPLOAD_DIR, filename)
 
 
-@app.route('/api/pic/upload', methods=['POST'])
+from images import image_channels
+
+
+@app.route('/api/pic/channels')
 @to_json
-def upload_pic():
+def get_pic_channels():
+    return {
+        'success': True,
+        'result': [
+            {
+                'id': channel.identifier,
+                'name': channel.display_name,
+                'description': channel.description
+            }
+            for channel in image_channels.values()
+        ]
+    }
+
+
+@app.route('/api/pic/<string:channel>/upload', methods=['POST'])
+@to_json
+def upload_pic_to_channel(channel):
+    if channel not in image_channels:
+        return {
+            'success': False,
+            'msg': f'Channel {channel} not found.'
+        }
+    channel = image_channels[channel]
     file = request.files['file']
     token = request.form.get('token', '')
     convert = request.form.get('to')
@@ -863,13 +889,15 @@ def upload_pic():
     if status:
         msg = ''
         if file and file.filename.split('.')[-1].lower() in {'jpg', 'jpeg', 'png', 'bmp', 'webp', 'gif'}:
-            filename = secure_filename(file.filename)
-            if not os.path.exists(UPLOAD_DIR):
-                os.mkdir(UPLOAD_DIR)
-            filename = datetime.datetime.now().strftime("Upload_%Y%m%d%H%M%S_") + filename
-            filename = ImageConverter(file, filename, convert).save(UPLOAD_DIR)
+            result = channel.add_image(file, file.filename, convert)
+            pic_url, delete_key = result.get_or(('', ''))
             return {
-                'success': True, 'picURL': url_for('uploaded_file', filename=filename), 'msg': ''
+                'success': not result.empty, 'picURL': pic_url, 'msg': '',
+                'result': {
+                    'url': pic_url,
+                    'deleteKey': delete_key,
+                    'channel': channel.identifier
+                }
             }
         else:
             msg += 'File Not Supported'
@@ -878,43 +906,68 @@ def upload_pic():
     }
 
 
-@app.route('/api/pic/list')
+@app.route('/api/pic/upload', methods=['POST'])
+def upload_pic():
+    from images.FileSystemImageManager import FileSystemImageManager
+    return upload_pic_to_channel(FileSystemImageManager.identifier)
+
+
+@app.route('/api/pic/<string:channel>/list')
 @to_json
 @verify_token(1)
-def get_list(username, role):
-    file_list = [x for x in os.listdir(UPLOAD_DIR) if os.path.isfile(os.path.join(UPLOAD_DIR, x))]
-    return {
-        'success': True,
-        'result': [{
-            'url': url,
-            'fileName': name
-        } for name, url in zip(file_list, map(lambda x: url_for('uploaded_file', filename=x), file_list))]
-    }
+def get_pic_list_for_channel(username, role, channel):
+    try:
+        channel = image_channels[channel]
+        images = channel.list()
+        return {
+            'success': True,
+            'result': images
+        }
+    except (NotImplementedError, KeyError):
+        return {
+            'success': False,
+            'msg': 'Listing in this channel is not supported.'
+        }
 
 
-@app.route('/api/pic/remove', methods=['POST'])
+@app.route('/api/pic/list')
+def get_list():
+    return get_pic_list_for_channel(channel='roselia')
+
+
+@app.route('/api/pic/<string:channel>/remove', methods=['POST'])
 @to_json
-@verify_token(1, True)
-def delete_image(username, role):
+@verify_token(1)
+def delete_image_from_channel(username, role, channel):
     form = request.get_json()
     if not form:
         form = request.form
     file_name = form.get('fileName')
     if not file_name:
+        file_name = form.get('file_name')
+
+    if not file_name:
         return {
             'success': False,
             'msg': 'Missing Filename'
         }
-    secure = secure_filename(file_name)
-    full_path = os.path.join(UPLOAD_DIR, secure)
-    success = os.path.exists(full_path)
-    if success:
-        os.remove(full_path)
-    msg = "DO NOT PLAY TRICKS." if file_name != secure else '' if success else 'File Not Found'
-    return {
-        'success': success,
-        'msg': msg
-    }
+    try:
+        channel = image_channels[channel]
+        success, message = channel.delete_image(file_name)
+        return {
+            'success': success,
+            'msg': message
+        }
+    except (ValueError, NotImplementedError):
+        return {
+            'success': False,
+            'msg': 'Deleting is not supported in this channel.'
+        }
+
+
+@app.route('/api/pic/remove', methods=['POST'])
+def delete_image():
+    return delete_image_from_channel(channel='roselia')
 
 
 from oauth.adapters import adapters as oauth_adapters
@@ -943,8 +996,9 @@ def get_oauth_url(third):
     return {
         'success': True,
         'result': adp.get_uri(BLOG_LINK[:-1] + quote(
-            url_for('oauth_callback', third=third, base=base, redirect=redirection)), raw_callback=BLOG_LINK[:-1] + quote(
-            url_for('oauth_callback', third=third)), state={
+            url_for('oauth_callback', third=third, base=base, redirect=redirection)),
+                              raw_callback=BLOG_LINK[:-1] + quote(
+                                  url_for('oauth_callback', third=third)), state={
                 'base': base,
                 'redirect': redirection
             })
@@ -979,8 +1033,10 @@ def oauth_callback(third):
     state = {}
     if request.args.get('state'):
         state = json.loads(unquote(request.args.get('state')))
+
     def get_context(key, default=None):
         return state.get(key, request.args.get(key, default))
+
     code = get_context('code')
     base = get_context('base')
     redirection = get_context('redirect')

@@ -129,6 +129,7 @@ export default {
         { icon: 'lock', text: 'Change Password', to: {name: 'changePassword'} },
         { icon: 'people', text: 'Manage User', to: {name: 'userManagement'}, cond: this.userData.role },
         { icon: 'computer', text: 'System Monitor', to: {name: 'systemMonitor'}, cond: this.userData.role > 1 },
+        { icon: 'photo', text: 'Image Managenent', to: {name: 'manageImages'}, cond: this.userData.role > 1 },
         { divider: true },
         // { icon: 'refresh', text: 'Token Refresh', click: this.refreshToken, cond: userData().rftoken },
         { heading: 'My Session' },

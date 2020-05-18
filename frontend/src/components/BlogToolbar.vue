@@ -13,8 +13,8 @@
     <v-spacer></v-spacer>
     <v-toolbar-items v-if="!shouldHaveToolbar">
       <v-btn dark text @click="dialog = true" v-if="canAskYukina">
-        <v-badge dot color="secondary">
-          <span slot="badge" v-if="notifications.length">{{ notifications.length }}</span>
+        <v-badge color="secondary" :value="notifications.length">
+          <span slot="badge">{{ notifications.length }}</span>
           <v-icon>question_answer</v-icon>
         </v-badge>
       </v-btn>
