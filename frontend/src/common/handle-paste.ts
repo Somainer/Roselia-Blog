@@ -23,7 +23,7 @@ const handleFileTransfer = async (instance: CodeMirror.Editor, items?: DataTrans
                 const text = parts[0]
                 parts = [text.then(x => `\`\`\`${parsed.mode}\n${x}\n\`\`\``)]
             }
-        } else if (i === 0) {
+        } else if (item.type === 'text/plain') {
             parts.push(new Promise(resolve => item.getAsString(resolve)))
         } else if (item.type === 'text/html') {
             additionalParts.push(new Promise(resolve => item.getAsString(resolve)))
