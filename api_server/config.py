@@ -8,7 +8,7 @@ BLOG_INFO = {
     "motto": "Do what you want to do, be who you want to be.",
     "link": BLOG_LINK
 }
-DEBUG = True
+DEBUG = False
 ANTI_SEO = False
 
 HOST = '0.0.0.0'

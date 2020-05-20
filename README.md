@@ -1,142 +1,150 @@
-# Roselia-Blog 3.0
-## A new trial of blog system. 
+# Roselia-Blog
 
-A single page app with slight SEO optimization, can also be deployed as an anti-SEO blog.
+Roselia-Blog is a blog engine. Its front-end is mostly written in TypeScript and Vue, while its back-end is written in Python.
 
-虽然是一个单页APP，但是也能够做到搜索引擎优化，同时正因为是SPA，可以进行反搜索引擎优化部署，阻止搜索引擎爬虫爬取你的文章。
+## [README of Chinese][readme-cn]
 
-> Demo: [Roselia-Blog](https://roselia.moe/blog/)
+## Usage
+These are steps you should take after cloning this repo.
 
-### Usage:
-> * 安装python3 & node & yarn
-> * 设置 api_server/config.py && frontend/src/common/config.js
-> * **!重要!** 在`secret.py`里面填写`APP_KEY`&`APP_SALT`或者改为`gen_key()`每次在启动时改变。
-> * 将你需要的图片放在 static_assets/img 里面
-> * api_server/roselia.py build
-> * RUN api_server/roselia.py run-prod (For production)
-> * Access localhost:5000
+### Prerequisite
+* `Python 3.6+` (because of string interpolations).
+* `NodeJS`  (to compile the front-end).
+* `Yarn pkg` The package manager for NodeJS.
 
-### 关于`api_server/roselia.py`
+Then install the dependencies via `pip install -r requirements.txt`.
+Then change current work dir to `./frontend` and execute `yarn`.
 
-`roselia.py` 提供了一些指令便于启动或者构件环境。
-用法：`roselia.py [command]`
+### Configuration
+There are three configs you need to change based on your conditions.
+In general, you do not need to change configs with a default value except blog title, motto and link.
 
-Commands: 
-> * serve: 根据 `DEBUG` 与否启动开发或者生产环境。
-> * run-dev: 强制启动开发环境
-> * run-prod: 强制启动生产环境
-> * run-gunicorn: 使用`gunicorn`启动环境。
-> * compress-assets: **删除原有的static文件夹**，将`static_assets`复制到`static`，压缩其中的图片
-> * copy-assets 将**已经build完成的**前端文件复制到static，并且替换template中的CSS/JS文件名
-> * build-frontend 编译前端
-> * build = compress-assets + build-frontend + copy-assets
+In `api_server/config.py` you could change:
+* `BLOG_LINK`: The link to your blog webpage.
+* `BLOG_INFO`: Change title, motto as you like. (For server-side static page rendering.)
+* `DEBUG`: Make sure it is `False` if you want to run it in production.
+* `ANTI_SEO`: Disable SEO optimization if this is `True`. If so, contents won’t be rendered per user request. Note that spiders which might execute user JavaScript like Google may also get the content.
+* `HOST`: The listening host, default `0.0.0.0`.
+* `PORT`: The listening port, default 5000.
+* `DB_PATH`: The database address,can be SQL addresses.
+* `UPLOAD_DIR`: The image upload directory. Make it empty to disable directly upload images to this server.
+
+In `api_server/secret.py` you could change:
+* `APP_KEY` & `APP_SALT`: The application key and salt for token generation. Change it to `gen_key()` to generate a random key every launch, or change it to a custom `str` value.
+* `GITHUB_CLIENT_ID` & `GITHUB_CLIENT_SECRET`: the id and secret for GitHub OAuth, keep it empty to disable it.
+* `MICROSOFT_CLIENT_ID` & `MICROSOFT_CLIENT_SECRET`: the id and secret for MSA OAuth, keep it empty to disable it.
+* `CHEVERETO_API_KEY` & `CHEVERETO_API_ENDPOINT`: the api enpoint and key for uploading images to the chevereto service. Keep them empty to disable this upload channel.
+* `SM_MS_API_TOKEN`: The api token to upload images to `sm.ms` image hosting server. Keep it empty to disable this channel.
+
+In `frontend/src/common/config.js`, you could change (in bottom `export default` clause):
+* `title`: The title of blog.
+* `motto`: The motto of blog.
+* `apiBase`: The api base URL of the site, default `/api`.
+* `theme`: The theme of the blog.
+* `enableRoseliaScript`: Control whether enable the in post rendering JavaScript.
+* `enableAskYukina`: Control whether enable the assistant. Please make it false because this function is still under development.
+* `footName`: The string display in the footer.
+* `urlPrefix`: Change the prefixing URL of the blog, default is an empty string.
+* `images.indexBannerImage`: The banner image of index page.
+* `images.lazyloadImage`: The placeholder image of images in the post.
+* `images.timelineBannerImage`: The banner image of timeline page.
+
+Basically, you only need to change title and motto and footName.
+
+### Build
+After installing all dependencies, you just execute `api_server/roselia.py build` to build the front-end.
+
+### Start
+Just execute `api_server/roselia.py serve` to start the server.
+Then, configure the nginx or apache.
+After that, access the blog index, follow the instructions, you are all done.
+
+### About `api_server/roselia.py`
+`roselia.py` provided some commands to start or build the blog. Usage: `roselia.py [command]`
+command could be:
+> * serve: Start the service regarding `DEBUG` setting.
+> * run-dev: Force start the development environment.
+> * run-prod: Force start the production environment.
+> * run-gunicorn: Start the server using `gunicorn`.
+> * compress-assets: **Remove previous static folder**,.copy static_assets` to `static`, and compress images.
+> * copy-assets Copy **built** front-end assets to static, then replace CSS and JS in templates.
+> * build-frontend Build the front end.
+> * build = compress-assets + build-front-end + copy-assets
 > * assets = compress-assets + copy-assets
 
-### 关于启动开发环境
-启动开发环境，你需要先启动`yarn serve`，再启动`roselia.py run-dev`
+## Features
+If you are writing codes or formulas in articles, this blog is suitable for you because this blog has native, out-of-the-box support of following functions:
+* Code highlighting.
+* Formula
+* Side-bar navigation.
+* Preview of links to articles.
+* References skip and preview.
+* In-article JavaScript and string interpolation, for additional functions or provide support for comments.
+* Block text template syntax for to humorously blocking out “inappropriate” or “secret” text. They are texts surrounded by `~`.
+* Paste or drop to upload images.
+* Paste code snippets directly from `Visual Studio Code`.
+* Hidden Posts: posts which could only be accessed via permanent link.
+* Secret Posts: posts which users with a certain role level only could access.
+* Social login: user could login via GitHub or Microsoft accounts.
+* Two factor authentication.
 
-目前正在逐步迁移到`TypeScript`
+## Roselia Script
+Roselia-Blog does not open for registration, hence, we fully trust every user in this site. So, we open the in-post or comment script to all users. This script could interpolate strings, open/close some switches, or programmatically change the metadata of post or comment. It is still dangerous because `while (true) {}` will still crash the browser. So, you could disable it in the config.
 
-## 特点
+Syntax: <prefix>{{<expression>}}. 
+The `<prefix>` is anything matches `Roselia|roselia|r|R`.  The `<expression>` is a valid `JavaScript` expression.
+If this expression ends with comma(`;`), this expression is treated as a clause and the execution result will be dropped.
 
-对理工科用户特别友好，原生支持：
+Example: `r{{ 1 + 1 }}` renderes to `2`.
 
-* 代码高亮
-* 内嵌公式
-* 侧边栏导航
-* 站内文章链接预览
-* 文章内引用文献预览&跳转
-* 黑幕支持（~黑幕内容~）
-* 文章内迷你脚本&字符串插值 r{{ 表达式 }}（roselia-script）
+There are such built-in apis:
+* `def (name: string, func: any)` naming a result. This result is possible to be used in following scripts or comments.
+* `onceLoad (fn: () => void)` Add a callabck when post is loaded.
+* `onceUnload(fn: () => void)` Add a callback when post is destroyed.
+* `getElement (name: RSElementSelector): HTMLElement | null`: Get the HTML element by id or other api rendering result. 
+* `element (name: RSElementSelector): Promise<HTMLElement>`: Promise version of `getElement`.
+* `then (f: () => void)`: Add a callback when the DOM is loaded.
+* `music (meta: MusicMetaObject | MusicMetaObject[], autoplay = false, onPlayerReady?: (ob?: object) => void)`: Insert a music or musics (based on APlayer).
+* `btn (text: string, onClick?: () => void, externalClasses: Array<String>|String = ‘’, externalAttributes?: object)`: Insert a button.
+* `toast(text: string, color: string)` Display a notification.
+* `importJS (url: string, onComplete?: any)`: Insert a JavaScript from other source. (May affect articles afterwards)
+* `
+createElement<K extends keyof HTMLElementTagNameMap>(
+    type: K,
+    extend?: RecursivePartial<HTMLElementTagNameMap[K]>,
+    children?: (Node | string)[]
+): HTMLElementTagNameMap[K]
+`: Create the element with type `type`, extend the attributed in `extent`, finally, fill the children.
+* `createTextNode(text: string): Text`: Create a text node.
+* `currentTheme()`: Get current theme palette.
+* `changeThemeOnce(theme: Partial<typeof config.theme>): void`: Change the theme when viewing this post, reset theme when switching posts.
+* `changeTheme(theme: Partial<typeof config.theme>): void`: Change the theme until refresh. (Asks for `theme` priviledge).
+* `resetTheme()`: Reset the theme to default.
+* `saveCurrentTheme()`: Save current theme.
+* `switchToColorMode(isLight: boolean)`: Change the color mode. To light mode if isLight is true, otherwise dark mode. Reset after post is destroyed.
+* `async forceSwitchToColorMode(light: boolean)`: Change the color mode. Won’t change until refresh.
+* `changeExtraDisplaySettings(settings: Partial<{
+    metaBelowImage: boolean,
+    blurMainImage: boolean,
+    disableSideNavigation: boolean
+  }>)`: Change the extra display settings. `metaBelowImage` controls whether the metadata of post is below the image.
+`blurMainImage` controls if blur the dominant image. `disableSideNavigation` controls whether disable the side navigation.
+* `sendNotification(notification: INotification)`: Send a notification to user (via the global notification bus).
 
-## roselia-script(~~其实只是普通的字符串插值~~)
+### Examples:
 
-语法： (Roselia|roselia|r|R){{(expression)}}
+Inserting a song:
 
-然后这个表达式的返回值将被插入到对应位置中，如果该表达式以分号为结尾，就将被视为语句，其结果将被丢弃。
-
-存在内置api
-
-`def (name, func)` 定义函数，或者为api结果命名
-
-`music (meta, autoplay = false, onPlayerReady = null)` 插入一首歌（基于APlayer）
-
-`onceLoad (fn)`: 定义文章加载完成后的回调
-
-`onceUnload (fn)`: 文章销毁时的回调
-
-`getElement (el)`: 获取对应的元素
-
-`btn (text, onClick, externalClasses = '', externalAttributes?: object)`：插入一个按钮
-
-`toast (text, color)`: 显示一个toast通知
-
-`then (fn)`: 在DOM完成后执行（对DOM的操作请务必在then中进行，除非你确信此时已经有这个元素了）
-
-`audio (src)` 插入一段原生audio Element
-
-`importJS (url, onComplete)`: 插入外置JS代码（会影响到之后的文章，慎用）
-
-`element (el: RSElementSelector): Promise<HTMLElement>`
-
-`Y`: 大名鼎鼎的Y-组合子[Y-Combinator](https://roselia.moe/blog/post?p=30)
-
-`changeThemeOnce(theme: Partial<typeof config.theme>): void` 改变主题，在切换文章时还原
-
-`changeTheme(theme: Partial<typeof config.theme>): void` 直到刷新之前，改变主题（需要征求`theme`权限）
-
-`resetTheme(): void` 重置主题（需要征求`theme`权限）
-
-`saveCurrentTheme(): void` 保存当前主题 （需要征求`theme`权限）
-
-例如：插入一首歌（会在切换文章时自动销毁）：
 ```
 r{{
     music({
-       title: '陽だまりロードナイト',
-        author: 'Roselia',
-        url: 'https://cdn.roselia.moe/static/img/roselia/hidamari.mp3',
-        pic: 'https://p4.music.126.net/gT4F8nlV2Io58GTVAEWyLw==/18636722092789001.jpg'
+       title: ‘陽だまりロードナイト’,
+        author: ‘Roselia’,
+        url: ‘https://cdn.roselia.moe/static/img/roselia/hidamari.mp3’,
+        pic: ‘https://p4.music.126.net/gT4F8nlV2Io58GTVAEWyLw==/18636722092789001.jpg’
     })
 }}
 ```
 
-如果我想要获取这个播放器，并且希望利用APlayer的API的话：
-
-```
-roselia{{
-    def('player', music({...}, false, player => {
-        console.log(player, 'is ready!')
-        toast('Player is ready!')
-        player.play()
-    }))
-}}
-```
-
-在此之后，就可以用player代指播放器实例了。
-
-```
-r{{
-	def('revue', audio('https://static.roselia.moe/static/audio/revue.mp3'))
-    
-}}
-R{{
-    def('playRevue', () => getElement(revue).play()),
-    def('playbtn', btn('play', playRevue))
-}}
-r{{
-	then(() => getElement(playbtn).style.color = '#66ccff')
-}}
-
-//Or
-
-r{{
-	element(playbtn).then(e => e.style.color = '#66ccff')
-}}
-```
-遗憾的是，为插入一个元素，就必须有一个r{{}}，因此可能会出现不少的R{{}}影响美观。
-
-但是，迷你脚本的出现确实大大增加了文章以及评论的灵活性，比起script标签，代码是运行在沙箱环境中的，因此可以受保护地访问某些对象，并且用一些受控的API进行访问，保障了安全性，
-在插件相对匮乏（其实根本没有）的Roselia-Blog里，迷你脚本可以在一定程度上实现部分插件的功能。但是，`Roselia-Script`仍然能进行沙箱逃逸，并且仍然能执行恶意代码，因此目前只对登陆用户开放。
-
-比如，对于登陆用户，在其迷你脚本执行的上下文里面就会有`comment`作为其评论的信息对象，用户可以修改除了评论ID等重要信息以外的信息，可以做到神奇的效果，同时执行的脚本运行在沙箱中可以确保一定程度上的安全，而且基于Roselia-Blog的邀请制注册，评论区中脚本的使用是可控的，因此可以放心使用。如果仍然不放心，可以在`config.js`里面把`enableRoseliaScript`设置为`false`从而彻底关闭这个功能。
+When the script is executed in posts, a special variable `post` will be available in the context.
+Properties of this object can be modified to change the metadata during runtime. Also, a `comment` variable will be available when rendering comments.

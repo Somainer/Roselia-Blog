@@ -45,7 +45,7 @@ export default {
   theme: roseliaTheme,
   // theme: mohuetyTheme,
   enableRoseliaScript: true,
-  enableAskYukina: true,
+  enableAskYukina: false,
   footerName: 'Somainer',
   urlPrefix,
   images: {
