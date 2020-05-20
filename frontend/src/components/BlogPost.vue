@@ -78,14 +78,14 @@
               </v-btn>
               <v-spacer></v-spacer>
               <div v-if="postData.id !== 'preview' && postData.id !== -1 && isEditable">
-                <v-btn class="ma-3" color="error" fab small :to="{name: 'edit', params: {deletePost: true, title: postData.title}, query: {post: postData.id}}">
+                <v-btn class="ma-2" color="error" fab small :to="{name: 'edit', params: {deletePost: true, title: postData.title}, query: {post: postData.id}}">
                   <v-icon>delete</v-icon>
                 </v-btn>
-                <v-btn class="ma-3" color="primary" fab small :to="{name: 'edit', query: {post: postData.id}}">
+                <v-btn class="ma-2" color="primary" fab small :to="{name: 'edit', query: {post: postData.id}}">
                   <v-icon>mode_edit</v-icon>
                 </v-btn>
               </div>
-              <v-btn class="ma-3" fab small color="secondary" @click="sharePost" v-if="isPostFound && !isShared">
+              <v-btn class="ma-2" fab small color="secondary" @click="sharePost" v-if="isPostFound && !isShared">
                 <v-icon>share</v-icon>
               </v-btn>
             </v-row>

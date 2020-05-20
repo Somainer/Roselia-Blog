@@ -19,3 +19,8 @@ MICROSOFT_CLIENT_SECRET = ''
 LUIS_URL_BASE = ''
 
 YUKINA_BOT = {} # {'key': '', 'url': ''}
+
+CHEVERETO_API_KEY = ''
+CHEVERETO_API_ENDPOINT = ''
+
+SM_MS_API_TOKEN = ''

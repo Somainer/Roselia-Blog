@@ -85,3 +85,5 @@ export function selfish<T extends object, U extends object>(target: T, bindConte
         }
     })
 }
+
+export const randomId = () => Math.random().toString(36).substring(2)

@@ -2,8 +2,8 @@
   <lazy-component text="Load comment">
     <v-container>
       <v-col cols="12" sm="8" offset-sm="2">
-        <v-badge>
-          <span slot="badge" v-if="commentCount">{{commentCount}}</span>
+        <v-badge :value="commentCount">
+          <span slot="badge">{{commentCount}}</span>
           <v-icon>
             mode_comment
           </v-icon>
@@ -146,7 +146,7 @@ import { mapToUnderline, mapToCamelCase, safeDictGet } from '@/common/helpers';
 import recursiveComment from './RecursiveComments'
 import utils from '@/common/utils';
 import M from 'materialize-css'
-import SimpleMDE from 'simplemde'
+import { markdown } from '../common/roselia-markdown'
 import WsBus from '../plugins/ws-bus'
 export default {
   components: {lazyComponent, recursiveComment},
@@ -513,7 +513,6 @@ export default {
       ]
     },
     currentCommentObject() {
-      const markdown = s => SimpleMDE.prototype.markdown(s)
       const comment = {
         content: markdown(this.comment),
         color: '',

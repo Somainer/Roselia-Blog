@@ -43,6 +43,8 @@ const TwoStepAuth = () => import(/* webpackChunkName: "fire-bird" */ '../compone
 const SystemMonitor = () => import(/* webpackChunkName: "fire-bird" */ '../components/console/SystemMonitor')
 // import DraftManage from '../components/console/DraftManage'
 const DraftManage = () => import(/* webpackChunkName: "fire-bird" */ '../components/console/DraftManage')
+// import UploadedImagesManagement from '../components/console/UploadedImagesManagement'
+const UploadedImagesManagement = () => import(/* webpackChunkName: "fire-bird" */ '../components/console/UploadedImagesManagement')
 
 Vue.use(Router)
 
@@ -175,6 +177,14 @@ export default new Router({
           component: DraftManage,
           meta: {
             title: 'Draft Management'
+          }
+        },
+        {
+          path: 'manage-images',
+          name: 'manageImages',
+          component: UploadedImagesManagement,
+          meta: {
+            title: 'Uploaded Image Management'
           }
         },
         {
