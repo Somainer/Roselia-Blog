@@ -2,7 +2,7 @@
 
 Roselia-Blog is a blog engine. Its front-end is mostly written in TypeScript and Vue, while its back-end is written in Python.
 
-## [README of Chinese][readme-cn]
+English | [简体中文](./README-CN.md)
 
 ## Usage
 These are steps you should take after cloning this repo.
@@ -91,7 +91,8 @@ If you are writing codes or formulas in articles, this blog is suitable for you 
 ## Roselia Script
 Roselia-Blog does not open for registration, hence, we fully trust every user in this site. So, we open the in-post or comment script to all users. This script could interpolate strings, open/close some switches, or programmatically change the metadata of post or comment. It is still dangerous because `while (true) {}` will still crash the browser. So, you could disable it in the config.
 
-Syntax: <prefix>{{<expression>}}. 
+Syntax: `<prefix>{{<expression>}}`
+
 The `<prefix>` is anything matches `Roselia|roselia|r|R`.  The `<expression>` is a valid `JavaScript` expression.
 If this expression ends with comma(`;`), this expression is treated as a clause and the execution result will be dropped.
 

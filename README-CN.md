@@ -8,7 +8,7 @@ A single page app with slight SEO optimization, can also be deployed as an anti-
 
 > Demo: [Roselia-Blog](https://roselia.moe/blog/)
 
-## [README of English][readme]
+[English](./README.md) | 简体中文
 
 ### Usage（最简版）:
 > * 安装python3.6+ & node & yarn
