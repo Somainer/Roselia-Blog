@@ -9,13 +9,11 @@ import datetime
 from Logger import log
 import AuthLogin
 import time
-import os
 from config import BLOG_INFO, BLOG_LINK, DEBUG, HOST, PORT, UPLOAD_DIR, ANTI_SEO, APP_KEY
 from middleware import verify_token, ReverseProxied, make_option_dict, to_json, require_argument, get_token_from_request
 from urllib.parse import quote, unquote
 
 from external_views import register_views, register_plugins
-from models.all import database
 from controller.UserManager import UserManager
 from controller.PostManager import PostManager
 from views.socket import main_ns as socket_namespace
@@ -556,10 +554,6 @@ def login():
 @app.route('/api/login/token', methods=['POST'])
 @to_json
 def login_token():
-    # form = request.get_json()
-    # if not form:
-    #     form = request.form
-    # token = form.get('token')
     token = get_token_from_request()
     if not token:
         return {
@@ -594,7 +588,6 @@ def delete_post():
     if not form:
         form = request.form
     pid = form.get('postID')
-    # token = form.get('token')
     token = get_token_from_request()
     valid, info = token_processor.get_username(token)
     if not valid:
@@ -677,7 +670,6 @@ def authorize():
 @app.route('/api/oauth/get')
 @to_json
 def get_infos():
-    # token = request.args.get('token', '')
     token = get_token_from_request()
     stat, info = token_processor.app_token_decode(token)
     return {
@@ -736,10 +728,6 @@ def gen_code():
 @app.route("/api/login/code/scan/<int:code>", methods=["POST"])
 @to_json
 def scan_code(code):
-    # form = request.get_json()
-    # if not form:
-    #     form = request.form
-    # token = form.get("token", "")
     token = get_token_from_request()
 
     def hndl_code():
