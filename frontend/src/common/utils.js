@@ -113,20 +113,38 @@ utils.fetchJSON = function (url, method = 'GET', payload = {}, withToken = true,
   let loginData = this.getLoginData()
   let token = loginData ? loginData.token : ''
   method = method.toUpperCase()
+  const data = { ...payload }
   if (individual) {
-    payload['__timestamp'] = (new Date()).getTime()
+    data['__timestamp'] = (new Date()).getTime()
   }
-  let data = withToken ? Object.assign({}, payload, {token: token}) : payload
-  // if (method !== 'GET') data = JSON.stringify(data)
-  if (method === 'GET') {
-    data = {
-      params: data
+  /**
+   * @type {import('axios').AxiosRequestConfig}
+   */
+  const config = {
+    url,
+    method,
+    data,
+    params: method === 'GET' ? data : undefined
+  }
+
+  if (withToken) {
+    config.headers = {
+      Authorization: `Bearer ${token}`
     }
   }
-  return axios[method.toLowerCase()](url, data).then(x => x.data).catch(reason => {
-    // app.$Progress.fail()
-    return Promise.reject(reason)
-  })
+
+  // let data = withToken ? Object.assign({}, payload, {token: token}) : payload
+  // if (method !== 'GET') data = JSON.stringify(data)
+  // if (method === 'GET') {
+  //   data = {
+  //     params: data
+  //   }
+  // }
+  return axios.request(config).then(x => x.data)
+  // return axios[method.toLowerCase()](url, data).then(x => x.data).catch(reason => {
+  //   // app.$Progress.fail()
+  //   return Promise.reject(reason)
+  // })
 }
 utils.fetchJSONWithSuccess = function (...args) {
   return this.fetchJSON(...args).then(data => {

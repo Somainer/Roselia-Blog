@@ -3,7 +3,7 @@ import marked from 'marked'
 (marked as any).use({
     tokenizer: {
         del(src: string) {
-            const match = src.match(/~((?:~~|[^~])+?)~(?!~)/);
+            const match = src.match(/^~((?:~~|[^~])+?)~(?!~)/);
             if (match) {
                 return {
                     type: 'text',

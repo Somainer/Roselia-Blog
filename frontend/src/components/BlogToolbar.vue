@@ -245,6 +245,10 @@ export default {
       }).catch(err => {
         this.loading = false
         this.notUnderstand = true
+        this.addDialog({
+          color: 'error',
+          content: `Sorry, I don't understand.`
+        })
       })
     },
     addDialog(content) {

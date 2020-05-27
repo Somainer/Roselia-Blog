@@ -53,9 +53,9 @@
             </router-link>
             <v-chip class="ma-1" v-if="postData.secret" color="success" text-color="white">
               <v-avatar left class="success">
-                <v-icon>lock</v-icon>{{postData.secret}}
+                <v-icon>lock</v-icon>
               </v-avatar>
-              Secret
+              Secret {{postData.secret}}
             </v-chip>
             <v-chip class="ma-1" v-if="postData.id === -1" color="warning" text-color="white">
               <v-avatar left>
