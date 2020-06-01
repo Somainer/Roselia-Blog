@@ -49,9 +49,9 @@
                       </router-link>
                       <v-chip class="ma-1" v-if="post.secret" color="success" text-color="white">
                         <v-avatar left>
-                          <v-icon>lock</v-icon>{{post.secret}}
+                          <v-icon>lock</v-icon>
                         </v-avatar>
-                        Secret
+                        Secret {{post.secret}}
                       </v-chip>
                       <v-chip class="ma-1" v-if="post.hidden" color="grey" text-color="white">
                         <v-avatar left>
@@ -79,9 +79,9 @@
                 </router-link>
                 <v-chip class="ma-1" v-if="post.secret" color="success" text-color="white">
                   <v-avatar left>
-                    <v-icon>lock</v-icon>{{post.secret}}
+                    <v-icon>lock</v-icon>
                   </v-avatar>
-                  Secret
+                  Secret {{post.secret}}
                 </v-chip>
                 <v-chip class="ma-1" v-if="post.hidden" color="grey" text-color="white">
                   <v-avatar left>

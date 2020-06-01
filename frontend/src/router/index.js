@@ -101,7 +101,6 @@ export default new Router({
     {
       path: '/userspace',
       alias: '/me',
-      name: 'userspace',
       component: BlogUserSpace,
       meta: {
         title: 'Console'
@@ -189,7 +188,7 @@ export default new Router({
         },
         {
           path: '/',
-          name: 'console-index',
+          name: 'userspace',
           component: ConsoleIndex,
           meta: {
             title: 'Roselia-Blog Console'

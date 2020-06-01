@@ -112,7 +112,7 @@ export default {
   computed: {
     items () {
       return [
-        { icon: 'home', text: 'Home', to: {name: 'console-index'} },
+        { icon: 'home', text: 'Home', to: {name: 'userspace'} },
         { divider: true },
         { heading: 'Articles' },
         { icon: 'add_circle', text: 'Write a new post', to: {name: 'edit'}, cond: this.userData.role },

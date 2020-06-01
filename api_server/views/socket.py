@@ -5,7 +5,7 @@ from operator import itemgetter, attrgetter
 
 from models.KVStorage import DefaultStorage
 from controller.UserManager import UserManager
-from middleware import token_processor
+from middleware import token_processor, get_token_from_request
 
 namespace = '/api/socket'
 
@@ -61,7 +61,7 @@ class RoseliaSocketNS(Namespace):
 
     @property
     def token(self):
-        return request.args.get('token')
+        return get_token_from_request()
 
     @property
     def username(self):

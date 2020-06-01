@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 from flask import Flask, request, send_from_directory, jsonify, render_template, redirect, url_for, abort, make_response
-from werkzeug.utils import secure_filename
 import json
 from tokenProcessor import TokenProcessor
 import functools
@@ -10,14 +9,11 @@ import datetime
 from Logger import log
 import AuthLogin
 import time
-import os
 from config import BLOG_INFO, BLOG_LINK, DEBUG, HOST, PORT, UPLOAD_DIR, ANTI_SEO, APP_KEY
-from ImageConverter import ImageConverter
-from middleware import verify_token, ReverseProxied, make_option_dict, to_json, require_argument
+from middleware import verify_token, ReverseProxied, make_option_dict, to_json, require_argument, get_token_from_request
 from urllib.parse import quote, unquote
 
 from external_views import register_views, register_plugins
-from models.all import database
 from controller.UserManager import UserManager
 from controller.PostManager import PostManager
 from views.socket import main_ns as socket_namespace
@@ -135,7 +131,7 @@ def seo_main():
     # return new_index()
 
     logged_in = True
-    token = request.args.get('token')
+    token = get_token_from_request()
     data = None
     if not token:
         logged_in = False
@@ -172,7 +168,7 @@ def getpostpage(p=None):
     p = p or request.args.get("p", -1, int)
     logged_in = True
     data = None
-    token = request.args.get('token')
+    token = get_token_from_request()
     if not token:
         logged_in = False
     else:
@@ -237,7 +233,7 @@ def first_run():
     user_data = {
         "username": "Master",
         'role': 3,
-        'nickname': 'Marisa Kirisame'
+        'nickname': 'Yukina Minato'
     }
     _, token = token_processor.iss_token(**user_data)
     su_token = token_processor.iss_su_token(user_data['username'], user_data['role'])
@@ -267,7 +263,7 @@ def seo_post(p):
     # print("Got an request:", p)
     logged_in = True
     data = None
-    token = request.args.get('token')
+    token = get_token_from_request()
     if not token:
         logged_in = False
     else:
@@ -328,7 +324,7 @@ def change_password():
 @app.route('/api/user/list')
 @to_json
 def get_user_list():
-    token = request.args.get('token', '')
+    token = get_token_from_request()
     stat, data = token_processor.get_username(token)
     if stat:
         stat = stat and data.get('role', 0)
@@ -347,7 +343,7 @@ def get_su_token():
     form = request.get_json()
     if not form:
         form = request.form
-    token = form.get('token')
+    token = get_token_from_request()
     username = None
     if token:
         stat, info = token_processor.get_username(token)
@@ -378,7 +374,7 @@ def delete_user():
     if not form:
         form = request.form
     username = form.get('username')
-    token = form.get('token')
+    token = get_token_from_request()
     if not all([username, token]):
         return {
             "success": False, 'msg': 'Bad Request'
@@ -405,7 +401,7 @@ def add_user():
     form = request.get_json()
     username = form.get('username')
     password = form.get('password')
-    token = form.get('token')
+    token = get_token_from_request()
     role = form.get('role', 0)
     try:
         role = int(role)
@@ -436,7 +432,7 @@ def add_user():
 @app.route('/tag/<string:t>')
 def tag_post(t):
     logged_in = True
-    token = request.args.get('token')
+    token = get_token_from_request()
     data = None
     if not token:
         logged_in = False
@@ -461,7 +457,7 @@ def tag_post(t):
 def get_post(p):
     logged_in = True
     data = None
-    token = request.args.get('token')
+    token = get_token_from_request()
     if not token:
         logged_in = False
     else:
@@ -484,7 +480,7 @@ def get_post(p):
 @to_json
 def all_post():
     logged_in = True
-    token = request.args.get('token')
+    token = get_token_from_request()
     data = None
     if not token:
         logged_in = False
@@ -546,7 +542,7 @@ def login():
                 'totp': True
             }
     username = acm.find_user(username).username
-    log.v("User logged in successfully!", username=username, role=code)
+    # log.v("User logged in successfully!", username=username, role=code)
     emit('user_login', conn_info(), room=username)
     return {
         'success': True, 'token': token_processor.iss_token(username, code)[1]['token'],
@@ -558,10 +554,7 @@ def login():
 @app.route('/api/login/token', methods=['POST'])
 @to_json
 def login_token():
-    form = request.get_json()
-    if not form:
-        form = request.form
-    token = form.get('token')
+    token = get_token_from_request()
     if not token:
         return {
             'success': False, 'msg': 'Bad Params'
@@ -575,10 +568,7 @@ def login_token():
 @app.route('/api/login/token/refresh', methods=['POST'])
 @to_json
 def refresh_token():
-    form = request.get_json()
-    if not form:
-        form = request.form
-    token = form.get('token')
+    token = get_token_from_request()
     stat, payload = token_processor.refresh_token(token)
     if stat:
         return {
@@ -598,7 +588,7 @@ def delete_post():
     if not form:
         form = request.form
     pid = form.get('postID')
-    token = form.get('token')
+    token = get_token_from_request()
     valid, info = token_processor.get_username(token)
     if not valid:
         return {
@@ -625,7 +615,7 @@ def add_edit_post():
         form = request.form
     pid = form.get('postID')
     data = form.get('data')
-    token = form.get('token')
+    token = get_token_from_request()
     markdown = form.get('markdown', 0)
     if not all([data, token]):
         return {
@@ -680,7 +670,7 @@ def authorize():
 @app.route('/api/oauth/get')
 @to_json
 def get_infos():
-    token = request.args.get('token', '')
+    token = get_token_from_request()
     stat, info = token_processor.app_token_decode(token)
     return {
         'success': stat, 'info': info
@@ -690,7 +680,7 @@ def get_infos():
 @app.route('/api/rss')
 def rss_feed():
     logged_in = True
-    token = request.args.get('token')
+    token = get_token_from_request()
     data = None
     if not token:
         logged_in = False
@@ -738,10 +728,7 @@ def gen_code():
 @app.route("/api/login/code/scan/<int:code>", methods=["POST"])
 @to_json
 def scan_code(code):
-    form = request.get_json()
-    if not form:
-        form = request.form
-    token = form.get("token", "")
+    token = get_token_from_request()
 
     def hndl_code():
         if not code:
@@ -768,10 +755,7 @@ def scan_code(code):
 @app.route("/api/login/code/confirm/<int:code>", methods=["POST"])
 @to_json
 def confirm_code(code):
-    form = request.get_json()
-    if not form:
-        form = request.form
-    token = form.get("token", "")
+    token = get_token_from_request()
     succ, info = auth_login.get_code(code)
     valid, token_user = token_processor.get_username(token)
 
@@ -880,7 +864,7 @@ def upload_pic_to_channel(channel):
         }
     channel = image_channels[channel]
     file = request.files['file']
-    token = request.form.get('token', '')
+    token = get_token_from_request()
     convert = request.form.get('to')
     status, msg = token_processor.get_username(token)
     if status and not msg['role']:
@@ -1062,7 +1046,7 @@ def oauth_callback(third):
 def oauth_bind(username, third):
     adp = oauth_adapters.get(third.lower())
     code = request.args.get('code')
-    token = request.args.get('token', '')
+    token = get_token_from_request()
     stat, user = token_processor.get_username(token)
     if not adp or not code or not stat or user['username'].lower() != username.lower():
         return redirect(BLOG_LINK[:-1] + '/userspace/oauth-accounts?error={}'.format(third))

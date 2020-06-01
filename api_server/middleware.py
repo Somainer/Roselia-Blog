@@ -7,6 +7,34 @@ from Logger import log
 token_processor = TokenProcessor()
 
 
+def try_get_token_from_header(header: str):
+    if header:
+        parts = header.split(' ')
+        if len(parts) == 2:
+            auth_type, token = parts
+            if auth_type.lower() == 'bearer':
+                return token
+    return None
+
+
+def get_token_from_request():
+    is_post = request.method.upper() != 'GET'
+    authorization_header = request.headers.get('Authorization', None)
+    token = try_get_token_from_header(authorization_header)
+
+    # Get token from request parameter or body.
+    if not token:
+        if is_post:
+            form = request.get_json()
+            if not form:
+                form = request.form
+            token = form.get("token")
+        else:
+            token = request.args.get('token')
+
+    return token
+
+
 def verify_token(role_require=1, is_post=False):
     def decorator(func):
         @functools.wraps(func)
@@ -15,14 +43,9 @@ def verify_token(role_require=1, is_post=False):
                 'username': None,
                 'role': None
             }
-            is_post = request.method.upper() != 'GET'
-            if is_post:
-                form = request.get_json()
-                if not form:
-                    form = request.form
-                token = form.get("token")
-            else:
-                token = request.args.get('token')
+
+            token = get_token_from_request()
+
             if not token:
                 if role_require < 0:
                     return func(*args, **dict(kwargs, **no_token))
@@ -160,7 +183,6 @@ def catch_exception(func):
 
 
 def transform_to(trans):
-
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
