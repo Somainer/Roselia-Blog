@@ -2,11 +2,12 @@ export class RoseliaStorage<T extends object = any> {
     private readonly key: string
     private readonly storage: Storage
     private changeListeners: ((s: T) => void)[] = []
+    private readonly removeHandler: () => void
 
     constructor(key: string, storage = localStorage) {
         this.key = key
         this.storage = storage
-        this.addStorageEventListener(() => this.onStorageChanged())
+        this.removeHandler = this.addStorageEventListener(() => this.onStorageChanged())
     }
 
     private onStorageChanged() {
@@ -14,8 +15,9 @@ export class RoseliaStorage<T extends object = any> {
         this.changeListeners.forEach(l => l(payload))
     }
 
-    public addChangeListener(handler: (t: T) => void) {
+    public addChangeListener(handler: (t: T) => void, immediate: boolean = false) {
         this.changeListeners.push(handler)
+        if (immediate) handler(this.payload)
         return () => {
             this.changeListeners = this.changeListeners.filter(x => x !== handler)
         }
@@ -55,12 +57,21 @@ export class RoseliaStorage<T extends object = any> {
         this.onStorageChanged()
     }
 
+    public destroy() {
+        this.removeHandler()
+    }
+
     public addStorageEventListener(handle: (o?: T) => void) {
-        addEventListener('storage', ev => {
+        const handler = (ev: StorageEvent) => {
             if(ev.key === this.key) {
                 handle(this.payload)
             }
-        })
+        }
+
+        addEventListener('storage', handler)
+        return () => {
+            removeEventListener('storage', handler)
+        }
     }
 
     public isEmpty() {

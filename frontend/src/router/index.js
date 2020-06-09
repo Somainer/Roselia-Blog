@@ -86,6 +86,11 @@ export default new Router({
           component: BlogPost
         },
         {
+          path: 'live-preview/:previewPostId',
+          name: 'postLivePreview',
+          component: BlogPost
+        },
+        {
           path: ':postLink+',
           name: 'postWithEternalLink',
           component: BlogPost

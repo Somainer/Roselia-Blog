@@ -1,3 +1,10 @@
+/**
+ * Only write necessary functions in lodash.js to reduce chunk size.
+ * @author Somainer
+ * @module fake-lodash
+ */
+
+
 const getTag = (value: any) => {
     if (value == null) {
         return value === undefined ? '[object Undefined]' : '[object Null]'
@@ -41,4 +48,29 @@ export const merge = (to: any, ...source: any[]): any => {
 
 export const omit = <T extends object, K extends keyof T>(obj: T, keys: K[]): Omit<T, K> => {
     return Object.fromEntries(Object.entries(obj).filter(([key]) => !keys.includes(key as K))) as any
+}
+
+export const debounce = <T>(fn: (...args: T[]) => void, wait: number = 0) => {
+    let timerId: number | undefined
+
+    return function (this: any, ...args: T[]) {
+        clearTimeout(timerId)
+        timerId = setTimeout(() => fn.call(this, ...args), wait)
+    }
+}
+
+export const throttle = <T>(fn: (...args: T[]) => void, threshold: number) => {
+    let timerId: number | undefined
+    let lastTime = 0
+
+    return function (this: any, ...args: T[]) {
+        const currentTime = +new Date();
+        clearTimeout(timerId)
+        if (currentTime - lastTime < threshold) {
+            timerId = setTimeout(() => fn.call(this, ...args), threshold)
+        } else {
+            lastTime = currentTime
+            fn.call(this, ...args)
+        }
+    }
 }

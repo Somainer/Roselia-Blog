@@ -18,6 +18,14 @@
             </template>
             <span>Preview the post. Note that the link can be used only once.</span>
           </v-tooltip>
+          <v-tooltip bottom>
+            <template v-slot:activator="{ on }">
+              <v-btn v-on="on" class="ma-2" color="accent" fab small :to="{name: 'postLivePreview', params: {previewPostId: postData.id || 0}}" target="_blank">
+                <v-icon>preview</v-icon>
+              </v-btn>
+            </template>
+            <span>Live Preview</span>
+          </v-tooltip>
           
         </v-layout>
         <v-form ref="form" v-model="valid">
@@ -225,6 +233,8 @@ import { getImageChannels, uploadImage } from '../common/api/images'
 import { handlePaste, handleBeforeChange, handleDrop } from '../common/handle-paste'
 import UploadedImages from './UploadedImages'
 import { markdownAsync, markdown } from '../common/roselia-markdown'
+
+import { debounce, throttle } from '../common/fake-lodash'
 // window.hljs = hljs
 // window.platform = platform
 
@@ -304,7 +314,7 @@ export default {
     getPostDraft (pid) {
       return JSON.parse(window.localStorage.getItem(`postDraft#${pid || 0}`))
     },
-    saveDraft () {
+    saveDraft (doNotShow = false) {
       window.localStorage.setItem(`postDraft#${this.postData.id || 0}`,
         JSON.stringify(this.getPostData()))
       this.showToast('Draft saved!')
@@ -580,6 +590,12 @@ export default {
       if(!val) this.makeRedirect({
         name: 'login'
       })
+    },
+    postDataContent: {
+      handler: debounce(function () {
+        this.saveDraft()
+      }, 500),
+      deep: true
     }
   },
   beforeDestroy () {

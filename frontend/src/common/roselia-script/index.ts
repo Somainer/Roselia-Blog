@@ -57,7 +57,7 @@ function replaceTemplate(template: string, delim: string[], replace: (s: string,
   return template.replace(new RegExp((delim || ['{{', '}}']).join('\\s*?(([\\s\\S]+?))\\s*?'), 'gm'), replace)
 }
 
-function render (template, context, delim) { // A not so naive template engine.
+function render (template: string, context: any, delim: string[]) { // A not so naive template engine.
   const funcTemplate = expr => `with(data) { with(functions) {return (${expr});}}`
   const innerRenderer = expr => {
     if (!config.enableRoseliaScript) {
@@ -88,6 +88,7 @@ function render (template, context, delim) { // A not so naive template engine.
   }
   return replaceTemplate(template, delim, (_total, expr: string) => {
     const exprTrim = expr.trim()
+    if (exprTrim.startsWith('//')) return ''; // Ignore comments.
     const needReturnValue = !exprTrim.endsWith(';')
     const expression = needReturnValue ? exprTrim : exprTrim.substring(0, exprTrim.length - 1)
     const renderResult = innerRenderer(expression)
@@ -443,23 +444,20 @@ class RoseliaScript {
   }
 
   getElement (name: RSElementSelector) {
-    if (name instanceof HTMLElement) {
-      name = name.id
-    }
     if (name instanceof RenderResult) {
       if (_.isString(name.returnValue)) name = name.returnValue
       else {
         name = name.template
       }
     }
+    if (name instanceof HTMLElement) {
+      name = name.id
+    }
     if (_.isString(name)) {
       const matchId = /id=['"]([a-zA-Z0-9-]+)['"]/.exec(name)
       if (matchId) {
         name = matchId[1]
       }
-    }
-    if (name instanceof HTMLElement) {
-      name = name.id
     }
     const res = (name in this.functions) ? this.functions[name] : name
     return document.getElementById(res instanceof Element ? res.id : res)

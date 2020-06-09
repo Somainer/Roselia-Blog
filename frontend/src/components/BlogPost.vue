@@ -282,6 +282,7 @@ import {pushContext, flushContext} from '../custom-command/luis'
 import GlobalEvents from 'vue-global-events'
 import WsBus from '../plugins/ws-bus'
 import RelativeDateTime from './RelativeTime'
+import { getStorageForDraft, importAndRenderMarkdown } from '../common/post-information'
 
 const extraDisplaySettings = {
   metaBelowImage: false,
@@ -656,6 +657,32 @@ export default {
     resolvePostLink(link) {
       if (Array.isArray(link)) return link.join('/')
       else return link
+    },
+    setUpLivePreview(postId) {
+      const storage = getStorageForDraft(postId)
+      storage.addChangeListener(async draft => {
+        if (!draft) {
+          this.postData = {
+            ...this.notFoundData(),
+            title: `This Post is Not Ready`,
+            content: 'Please just write something and save draft.',
+            subtitle: 'Please make sure such draft exists.'
+          }
+          return;
+        }
+        const content = draft.markdown ? (await importAndRenderMarkdown(draft.data.content)) : draft.data.content
+        this.$emit('postUnload')
+        this.postData = {
+          ...this.notFoundData(),
+          ...draft.data,
+          id: 'preview',
+          content,
+          markdownContent: draft.markdown ? draft.data.content : undefined,
+          prev: -1,
+          next: -1
+        }
+        this.processContent()
+      }, true)
     }
   },
   computed: {
@@ -699,6 +726,7 @@ export default {
   mounted () {
     this.renderer = RoseliaScript.createRenderer(this)
     if(this.$route.params.shareId) this.getPostByShared(this.$route.params.shareId)
+    else if (this.$route.params.previewPostId) this.setUpLivePreview(this.$route.params.previewPostId)
     else this.loadContent()
     // console.log(RoseliaScript)
     // this.renderer = RoseliaScript.createRenderer(this)

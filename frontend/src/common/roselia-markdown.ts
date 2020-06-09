@@ -18,8 +18,8 @@ import marked from 'marked'
 
 export const markdown = (text: string) => marked(text) 
 
-export const markdownAsync = async (text: string) => {
+export const markdownAsync = async (text: string): Promise<string> => {
     return new Promise(resolve => {
-        marked(text, resolve)
+        marked(text, (_err, result) => resolve(result))
     })
 }

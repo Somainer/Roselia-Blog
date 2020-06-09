@@ -19,8 +19,8 @@ export interface MusicMetaObject {
 
 export class RenderResult {
   template: string
-  returnValue: HTMLElement
-  constructor (template, ret) {
+  returnValue: HTMLElement | string
+  constructor (template: string, ret: HTMLElement | string) {
     this.template = template
     this.returnValue = ret
   }
