@@ -175,6 +175,9 @@ changeExtraDisplaySettings(settings: Partial<{
 
 `sendNotification(notification: INotification)`: 向用户发送通知 (通过通知总线)
 
+`withEventListener<K extends keyof HTMLElementEventMap>(element: RSElementSelector, event: K, listener: (event: HTMLElementEventMap[K]) => void): RSElementSelector` 在元素上添加事件监听器，
+接下来返回该元素。
+
 ### Hooks
 Roselia-Script 支持类似于`React`的hook。这个功能收到了Vue和React的启发（~~读书人的事，怎么能说是抄呢~~），该功能可以帮助用户撰写出响应式的文章。
 我们有如下约定：如果某API能在当前上下文中添加变量，则该API以`def`开头，hook API以`use`开头。

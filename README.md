@@ -131,6 +131,7 @@ createElement<K extends keyof HTMLElementTagNameMap>(
   }>)`: Change the extra display settings. `metaBelowImage` controls whether the metadata of post is below the image.
 `blurMainImage` controls if blur the dominant image. `disableSideNavigation` controls whether disable the side navigation.
 * `sendNotification(notification: INotification)`: Send a notification to user (via the global notification bus).
+* `withEventListener<K extends keyof HTMLElementEventMap>(element: RSElementSelector, event: K, listener: (event: HTMLElementEventMap[K]) => void): RSElementSelector` Add an event listener to an element, then return the element.
 
 ### Hooks
 Roselia-Script supports react-like hooks, which is inspired both by Vue and React.

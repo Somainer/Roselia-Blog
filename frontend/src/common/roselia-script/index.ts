@@ -802,6 +802,14 @@ class RoseliaScript {
   useState<S>(state: S | (() => S)) {
     return this.stateManager.useState(state)
   }
+
+  withEventListener<K extends keyof HTMLElementEventMap>(element: RSElementSelector, event: K, listener: (event: HTMLElementEventMap[K]) => void) {
+    this.element(element).then(el => {
+      el.addEventListener(event, listener)
+    })
+
+    return element;
+  }
 }
 
 export default {
