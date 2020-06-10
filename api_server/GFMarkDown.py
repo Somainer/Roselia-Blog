@@ -17,10 +17,17 @@ class HeimuPattern(Pattern):
         return el
 
 
+class RoseliaScriptPattern(Pattern):
+    def handleMatch(self, m):
+        return m.group(2)
+
+
 class RoseliaMarkdownExtension(Extension):
     def extendMarkdown(self, md):
         md.registerExtension(self)
         md.inlinePatterns.register(HeimuPattern(r'~((?:~~|[^~])+?)~(?!~)', md), 'inline_heimu', 175)
+        md.inlinePatterns.register(RoseliaScriptPattern(r'((?:r|R|Roselia|roselia){{[\s\S]+}})', md), 'roselia_script',
+                                   200)
 
 
 renderer = pymarkdown.Markdown(extensions=[
