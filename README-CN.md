@@ -175,6 +175,74 @@ changeExtraDisplaySettings(settings: Partial<{
 
 `sendNotification(notification: INotification)`: 向用户发送通知 (通过通知总线)
 
+### Hooks
+Roselia-Script 支持类似于`React`的hook。这个功能收到了Vue和React的启发（~~读书人的事，怎么能说是抄呢~~），该功能可以帮助用户撰写出响应式的文章。
+我们有如下约定：如果某API能在当前上下文中添加变量，则该API以`def`开头，hook API以`use`开头。
+因此，我们有如下API：
+
+#### defState
+```typescript
+declare function defState<S>(name: string, state: S | (() => S)): void
+```
+`defState` 接受一个名字和一个状态，该状态可以是一个函数从而减少渲染时重复计算的开销，在这之后，你可以在文章上下人中使用和修改该变量。
+基本上，你可以使用该方法来写出一个最简单的计数器：
+```
+r{{
+    defState('count', 0), btn(count, () => ++count)
+}}
+```
+这样，会在文章中显示一个按钮，上面显示当前的数字，每按一次，计数+1。
+
+#### useState
+有人可能会十分想念`React`中的`useState` hook，不过没有关系，这里也有。
+
+该API与[React State Hook](https://zh-hans.reactjs.org/docs/hooks-state.html)的功能一致。
+
+```typescript
+declare function useState<S>(state: S | (() => S)): [S, (value: (S | ((oldValue: S) => S))) => void]
+```
+
+一个计数器还能这么写：
+```javascript
+(() => {
+    const [count, setCount] = useState(0)
+    return btn(count, () => setCount(c => c + 1))
+})()
+```
+
+或者：
+
+```javascript
+    def(['count', 'setCount'], useState(0)), btn(count, () => setCount(c => c + 1))
+```
+
+`defState` 更加响应式但是 `useState` 更加函数式。 如果你经常使用Vue，你应该会喜欢 `defState`，如果你经常使用React，或者你是函数式编程的拥趸，你应该会喜欢`useState`。
+如果你都不是，那你爱用啥用啥吧，这里没有特别的偏好。
+
+#### useEffect
+这个hook和[React Effect Hook](https://zh-hans.reactjs.org/docs/hooks-effect.html)功能一致。
+```typescript
+declare function useEffect(effect: () => void, deps: any[]): void
+```
+
+#### useInterval / useTimeout
+```typescript
+declare function useInterval(callback: () => void, interval: number | null): void
+```
+这两个的hook函数签名一致，定时器的间隔随着参数的变化而作出响应式变化，如果参数是`null`，则该定时器会被终止。
+
+下面这个实现能说明原理（~~但是是用ts写的，文章里也没有`setInterval`给你用，看个热闹就行~~）
+```typescript
+function useInterval(callback: () => void, interval: number | null): void {
+    useEffect(() => {
+        if (typeof interval === 'number') {
+            const timer = setInterval(() => fn(), interval)
+            return () => clearInterval(timer)
+        }
+    }, [interval])
+}
+```
+
 例如：插入一首歌（会在切换文章时自动销毁）：
 ```
 r{{

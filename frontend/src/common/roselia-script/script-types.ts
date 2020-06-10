@@ -41,3 +41,7 @@ export type RecursiveReadOnly<T> = {
     T[K] extends object ? RecursiveReadOnly<T[K]> :
     T[K];
 }
+
+
+export type Optional<T> = T | undefined;
+export type UnitFunction = () => void;

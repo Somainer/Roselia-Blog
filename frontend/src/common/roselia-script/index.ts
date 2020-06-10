@@ -8,8 +8,11 @@ import {
   MusicMetaObject,
   RSElementSelector,
   RecursivePartial,
-  RecursiveReadOnly
+  RecursiveReadOnly,
+  Optional,
+  UnitFunction
 } from './script-types'
+import { RoseliaScriptState, RoseliaScriptEffect } from './states'
 import { INotification } from '@/common/api/notifications'
 import {summonDialog} from './summonDialog'
 import Vue from 'vue';
@@ -58,7 +61,7 @@ function replaceTemplate(template: string, delim: string[], replace: (s: string,
 }
 
 function render (template: string, context: any, delim: string[]) { // A not so naive template engine.
-  const funcTemplate = expr => `with(data) { with(functions) {return (${expr});}}`
+  const funcTemplate = expr => `with(data) { with (states) { with(functions) {return (${expr});}}}`
   const innerRenderer = expr => {
     if (!config.enableRoseliaScript) {
       return `<pre><code>${expr}</code></pre>`
@@ -186,12 +189,14 @@ class RoseliaRenderer {
     this.context = context
     this.hiddenFields = hiddenFields
   }
+
   render (template: string) {
     // if (!config.enableRoseliaScript) return template
     this.scriptEvaluator.pendingFunctions = []
     try {
       this.toInject = this.app
       const result = render(template, this.context, RoseliaRenderer.roseliaScriptDelim)
+      this.resetHookCounts()
       return result
     } catch (e) {
       console.error(e)
@@ -206,7 +211,7 @@ class RoseliaRenderer {
   }
 
   async renderAsync (template: string) {
-    return new Promise(resolve => resolve(this.render(template))).then(t => {
+    return Promise.resolve(this.render(template)).then(t => {
       // this.scriptEvaluator.injectEventsOn(this.app)
       return t
     })
@@ -274,8 +279,25 @@ class RoseliaRenderer {
         "previewColor",
         "undef",
         "def",
+        "defState",
+        "useState",
+        "useInterval",
+        "useTimeout",
         'sendNotification'
     ])
+  }
+
+  setUpdateCallback(callback: () => void) {
+    this.scriptEvaluator.stateManager.setCallback(callback)
+  }
+
+  resetMounted() {
+    this.scriptEvaluator.mounted = false
+  }
+
+  resetHookCounts() {
+    this.scriptEvaluator._effectManager.reset()
+    this.scriptEvaluator.stateManager.reset()
   }
 }
 
@@ -284,22 +306,39 @@ class RoseliaScript {
   app: any
   customFunctions: object
   functions: object
+  stateManager: RoseliaScriptState
+  states: any
+  _effectManager: RoseliaScriptEffect
   askAccess: Map<String, boolean>
   pendingFunctions: (() => void)[]
   mounted: boolean
 
   constructor (app: Vue) {
     this.app = app
-    this.customFunctions = {app: null}
-    this.functions = selfish(this.customFunctions)
-    this.app.$on('postUnload', () => {
-      this.customFunctions = {app: null}
+    const initialize = () => {
+      this.customFunctions = { app: null }
       this.functions = selfish(this.customFunctions)
+      this.stateManager = new RoseliaScriptState()
+      this._effectManager.clear()
+      this._effectManager = new RoseliaScriptEffect()
+      this.states = this.stateManager.state
       this.mounted = false
+    };
+
+    // Just copy them to make the ts compiler knows that these fields are definitely assigned in the constructor.
+    this.customFunctions = { app: null }
+    this.functions = selfish(this.customFunctions)
+    this.stateManager = new RoseliaScriptState()
+    this._effectManager = new RoseliaScriptEffect()
+    this.mounted = false
+
+    initialize()
+    this.app.$on('postUnload', () => {
+      initialize()
     })
     this.askAccess = new Map
     this.pendingFunctions = []
-    this.mounted = false
+    // this.mounted = false
   }
 
   then (f: () => void) {
@@ -383,7 +422,7 @@ class RoseliaScript {
     const id = this.randomID()
     if (externalClasses instanceof Array) externalClasses = externalClasses.join(' ')
     onClick && this.then(() => {
-      document.getElementById(id)!.addEventListener('click', onClick)
+      this.getElement(id)!.addEventListener('click', onClick)
     })
     if (externalAttributes) {
       this.extendAttributes(id, externalAttributes)
@@ -423,7 +462,15 @@ class RoseliaScript {
     document.body.appendChild(jsNode)
   }
 
-  def (name: string, func: any) {
+  def(name: string | string[], func: any) {
+    if (_.isArray(name)) {
+      if (_.isArray(func)) {
+        name.forEach((key, idx) => this.def(key, func[idx]))
+      } else {
+        throw new Error('When name is an array, result should also be an array.')
+      }
+      return;
+    }
     if (func instanceof RenderResult) {
       this.customFunctions[name] = func.returnValue
       return func.template
@@ -436,6 +483,10 @@ class RoseliaScript {
 
   undef (name: string) {
     this.customFunctions[name] = undefined
+  }
+
+  defState<S>(name: string, value: S | (() => S)) {
+    this.stateManager.defineState(name, value)
   }
 
   audio (src: string) {
@@ -723,6 +774,33 @@ class RoseliaScript {
   Object = Object
   log(...args: any[]) {
     return console.log(...args)
+  }
+
+  useTimeout(fn: () => void, timeout: number | null) {
+    this.useEffect(() => {
+      if (typeof timeout === 'number') {
+        const timer = setTimeout(() => fn(), timeout)
+        return () => clearTimeout(timer)
+      }
+    }, [timeout])
+    
+  }
+
+  useInterval(fn: () => void, threshold: number | null) {
+    this.useEffect(() => {
+      if (typeof threshold === 'number') {
+        const timer = setInterval(() => fn(), threshold)
+        return () => clearInterval(timer)
+      }
+    }, [threshold])
+  }
+
+  useEffect(fn: () => Optional<UnitFunction>, deps: any[] = []) {
+    this._effectManager.useEffect(fn, deps)
+  }
+
+  useState<S>(state: S | (() => S)) {
+    return this.stateManager.useState(state)
   }
 }
 

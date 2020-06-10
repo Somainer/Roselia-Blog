@@ -417,8 +417,14 @@ export default {
         value: this.postData.id,
         writable: false
       })
+      if (!this.postData.rawContent) {
+        this.postData.rawContent = this.postData.content;
+        this.renderer.setUpdateCallback(this.processContent)
+      }
+
+      this.renderer.resetMounted()
       const popContext = this.renderer.pushContext(this.postData, 'post')
-      this.renderer.renderAsync(this.postData.content).then(template => {
+      this.renderer.renderAsync(this.postData.rawContent || this.postData.content).then(template => {
         this.postData.content = template
         this.$nextTick(() => {
           this.renderer.injectEvents()
@@ -629,7 +635,7 @@ export default {
           markdown: this.postData.markdownContent
         })
         this.$emit('postUnload')
-        // this.$emit('postDestroyed')
+        this.$emit('postDestroyed')
         this.postData.content = data;
         this.postData.serverRendered = true;
         this.processContent()
@@ -638,17 +644,21 @@ export default {
       }
     },
     getAdjacentPostMeta() {
-      this.prevMeta = null
-      if (this.postData.prev > 0) {
-        utils.fetchJSONWithSuccess(utils.apiFor('post', 'meta', 'id', this.postData.prev)).then(data => {
-          this.prevMeta = data
-        })
+      if (!this.prevMeta || this.prevMeta.id !== this.postData.prev) {
+        this.prevMeta = null
+        if (this.postData.prev > 0) {
+          utils.fetchJSONWithSuccess(utils.apiFor('post', 'meta', 'id', this.postData.prev)).then(data => {
+            this.prevMeta = data
+          })
+        }
       }
-      this.nextMeta = null
-      if(this.postData.next > 0) {
-        utils.fetchJSONWithSuccess(utils.apiFor('post', 'meta', 'id', this.postData.next)).then(data => {
-          this.nextMeta = data
-        })
+      if (!this.nextMeta || this.nextMeta.id !== this.postData.next) {
+        this.nextMeta = null
+        if(this.postData.next > 0) {
+          utils.fetchJSONWithSuccess(utils.apiFor('post', 'meta', 'id', this.postData.next)).then(data => {
+            this.nextMeta = data
+          })
+        }
       }
     },
     resetExtraDisplaySettings() {
