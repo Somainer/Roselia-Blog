@@ -42,6 +42,10 @@ export type RecursiveReadOnly<T> = {
     T[K];
 }
 
+export interface RefObject<T> {
+  current: T | null
+}
+
 
 export type Optional<T> = T | undefined;
 export type UnitFunction = () => void;

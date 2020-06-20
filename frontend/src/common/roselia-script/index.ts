@@ -10,13 +10,17 @@ import {
   RecursivePartial,
   RecursiveReadOnly,
   Optional,
-  UnitFunction
+  UnitFunction,
+  RefObject
 } from './script-types'
 import { RoseliaScriptState, RoseliaScriptEffect } from './states'
 import { INotification } from '@/common/api/notifications'
 import {summonDialog} from './summonDialog'
 import Vue from 'vue';
 import { mapEntries } from '../helpers';
+import { createElement, RoseliaVNode, vNodeHasProps } from './vnode'
+import { RoseliaDomOwner } from './dom'
+import { compileTemplate, compileTemplateBody } from './compiler'
 declare global {
   interface Window {
     APlayer: any
@@ -36,7 +40,7 @@ function ensureAPlayer(onload: () => void) {
     document.body!.appendChild(playerNode)
   }
 }
-function unescapeToHTML (str) {
+function unescapeFromHTML (str: string) {
   const d = document.createElement('div')
   d.innerHTML = str.replace(/<em>(.*?)<\/em>/, (_, expr) => `*${expr}*`)
   return d.innerText || d.textContent
@@ -67,19 +71,19 @@ function render (template: string, context: any, delim: string[]) { // A not so 
       return `<pre><code>${expr}</code></pre>`
     }
     try {
-      const bigC = /([a-zA-Z_$]+[a-zA-Z_0-9]*){([\s\S]+)}/.exec(expr)
+      const bigC = /^([a-zA-Z_$]+[a-zA-Z_0-9]*){([\s\S]+)}/.exec(expr)
       let res
       let isSingleCall = false
       if (bigC) {
         let [_inp, fn, ctx] = bigC
         const func = (context[fn] || context.functions[fn])
         if (_.isFunction(func)) {
-          res = func(unescapeToHTML(ctx))
+          res = func(unescapeFromHTML(ctx))
           isSingleCall = true
         }
       }
       if (!isSingleCall) {
-        expr = unescapeToHTML(expr)
+        expr = unescapeFromHTML(expr)
         res = (new Function('data', funcTemplate(expr))).call(context, context)
       }
       return handleRenderResult(res)
@@ -192,6 +196,7 @@ class RoseliaRenderer {
 
   render (template: string) {
     // if (!config.enableRoseliaScript) return template
+    this.scriptEvaluator.inRenderMode = true;
     this.scriptEvaluator.pendingFunctions = []
     try {
       this.toInject = this.app
@@ -202,6 +207,8 @@ class RoseliaRenderer {
       console.error(e)
       // this.scriptEvaluator.injectEventsOn(this.app)
       return template
+    } finally {
+      this.scriptEvaluator.inRenderMode = false
     }
     // return render(template, this.context, ['(?:Roselia|roselia|r|R){{', '}}'])
   }
@@ -211,32 +218,29 @@ class RoseliaRenderer {
   }
 
   async renderAsync (template: string) {
-    return Promise.resolve(this.render(template)).then(t => {
+    return Promise.resolve().then(() => this.render(template)).then(t => {
       // this.scriptEvaluator.injectEventsOn(this.app)
       return t
     })
   }
 
-  renderVue (template: string) {
-    const rid = this.scriptEvaluator.randomID()
-    const v = new Vue({
-      template: `<div id="${rid}">` + this.render(template) + '</div>',
-      data: this.scriptEvaluator.functions,
-      delimiters: ['v{{', '}}']
-    })
-    this.toInject = v
-    // this.injectEvents()
-    Object.defineProperty(v, 'autoInject', {
-      value: () => {
-        v.$mount(document.getElementById(rid)!)
-        v.$nextTick(() => this.injectEvents())
-      }
-    })
-    return v
-  }
-
-  async renderVueAsync(template: string) {
-    return new Promise(resolve => resolve(this.renderVue(template)))
+  mount(template: string, element: HTMLElement) {
+    element.innerHTML = ''
+    this.scriptEvaluator.inRenderMode = false;
+    const body = compileTemplateBody(template);
+    const code = `with(this) { with({__r:createElement}) { with(states) { with(functions) { return (${body}); } } } }`;
+    try {
+      const vNode = new Function(code);
+      this.scriptEvaluator._domOwner.render(vNode.call(this.context), element)
+    } catch (e) {
+      element.innerHTML = this.render(template);
+      this.scriptEvaluator.sendNotification({
+        message: 'There was an error when rendering that post. Please open console to check it out.',
+        color: 'warning'
+      })
+      this.scriptEvaluator.toast('Falling back to rendering...', 'warning')
+      console.error(e);
+    }
   }
 
   injectEvents () {
@@ -287,8 +291,16 @@ class RoseliaRenderer {
     ])
   }
 
-  setUpdateCallback(callback: () => void) {
-    this.scriptEvaluator.stateManager.setCallback(callback)
+  setDomUpdateCallback(callback: () => void) {
+    this.scriptEvaluator.stateManager.setCallback(() => this.scriptEvaluator._domOwner.refresh())
+    this.scriptEvaluator._domOwner.whenDomUpdated(() => {
+      this.resetHookCounts()
+      callback()
+    })
+  }
+
+  setRenderUpdateCallback(callback: () => void) {
+    this.scriptEvaluator.stateManager.setCallback(callback);
   }
 
   resetMounted() {
@@ -309,9 +321,12 @@ class RoseliaScript {
   stateManager: RoseliaScriptState
   states: any
   _effectManager: RoseliaScriptEffect
+  _domOwner: RoseliaDomOwner
   askAccess: Map<String, boolean>
   pendingFunctions: (() => void)[]
   mounted: boolean
+  // If true, render string, else mount.
+  inRenderMode: boolean = false
 
   constructor (app: Vue) {
     this.app = app
@@ -323,6 +338,8 @@ class RoseliaScript {
       this._effectManager = new RoseliaScriptEffect()
       this.states = this.stateManager.state
       this.mounted = false
+      this._domOwner?.destroy()
+      this._domOwner = new RoseliaDomOwner();
     };
 
     // Just copy them to make the ts compiler knows that these fields are definitely assigned in the constructor.
@@ -330,6 +347,7 @@ class RoseliaScript {
     this.functions = selfish(this.customFunctions)
     this.stateManager = new RoseliaScriptState()
     this._effectManager = new RoseliaScriptEffect()
+    this._domOwner = new RoseliaDomOwner()
     this.mounted = false
 
     initialize()
@@ -353,31 +371,31 @@ class RoseliaScript {
     this.mounted = true
   }
 
-  music (meta: MusicMetaObject | MusicMetaObject[], autoplay = false, onPlayerReady?: (ob?: object) => void) {
+  music(meta: MusicMetaObject | MusicMetaObject[], autoplay = false, onPlayerReady?: (ob?: object) => void) {
     ensureAPlayer(() => this.app.$emit('aPlayerLoaded'))
     let id = this.randomID()
     let player: any
+    const addPlayer = (el?: HTMLDivElement) => {
+      const element = (el || document.getElementById(id))!
+      player = new window.APlayer({
+        container: element,
+        narrow: false,
+        autoplay,
+        mutex: true,
+        theme: config.theme.accent,
+        mode: 'circulation',
+        showlrc: 1,
+        preload: 'metadata',
+        audio: meta
+      })
+      player.on('loadstart', () => {
+        Array.from(element.getElementsByClassName('aplayer-title')).forEach((ev: Element) => {
+          if(ev) (ev as HTMLElement).style.color = config.theme.secondary
+        })
+        onPlayerReady && onPlayerReady(player)
+      })
+    }
     this.then(() => {
-      const addPlayer = () => {
-        const element = document.getElementById(id)!
-        player = new window.APlayer({
-          container: element,
-          narrow: false,
-          autoplay,
-          mutex: true,
-          theme: config.theme.accent,
-          mode: 'circulation',
-          showlrc: 1,
-          preload: 'metadata',
-          audio: meta
-        })
-        player.on('loadstart', () => {
-          Array.from(element.getElementsByClassName('aplayer-title')).forEach((ev: Element) => {
-            if(ev) (ev as HTMLElement).style.color = config.theme.secondary
-          })
-          onPlayerReady && onPlayerReady(player)
-        })
-      }
       if (!window.APlayer) {
         this.app.$once('aPlayerLoaded', () => {
           this.then(addPlayer)
@@ -390,11 +408,25 @@ class RoseliaScript {
         player.destroy()
       })
     })
-    return new RenderResult(`<div id="${id}"></div>`, player)
+    if (this.inRenderMode) return new RenderResult(`<div id="${id}"></div>`, player)
+    else return this.createElement('div',
+      {
+        id,
+        ref: (el) => {
+          if (window.APlayer) { addPlayer(el) }
+          else {
+            this.app.$once('aPlayerLoaded', () => {
+              addPlayer(el)
+            })
+          }
+        }
+      })
   }
+
   heimu (text: string) {
-    const id = this.randomID()
-    return new RenderResult(`<span class="heimu" id="${id}">${text}</span>`, id)
+    return this.createElement('span', {
+      className: 'heimu'
+    }, [text])
   }
   cite (text: string, pid: number) {
     return `<a href="post?p=${pid}">${text}</a>`
@@ -415,21 +447,32 @@ class RoseliaScript {
   extendAttributes(element: RSElementSelector, attributes: object) {
     this.element(element).then(el => {
       _.merge(el, attributes)
+      Object.keys(attributes).forEach(key => {
+        if (key.startsWith('on')) {
+          el.addEventListener(key.substring(2).toLowerCase(), attributes[key])
+        }
+      })
     })
   }
 
   btn (text: string, onClick?: () => void, externalClasses: Array<String>|String = '', externalAttributes?: object) {
     const id = this.randomID()
     if (externalClasses instanceof Array) externalClasses = externalClasses.join(' ')
-    onClick && this.then(() => {
+    this.inRenderMode && onClick && this.then(() => {
       this.getElement(id)!.addEventListener('click', onClick)
     })
-    if (externalAttributes) {
+    if (this.inRenderMode && externalAttributes) {
       this.extendAttributes(id, externalAttributes)
     }
-    return new RenderResult(
-        `<button id="${id}" class="v-btn v-btn--contained v-size--default ${externalClasses}">${text}</button>`,
-        id)
+    const className = `v-btn v-btn--contained v-size--default ${externalClasses}`
+    if (this.inRenderMode) return new RenderResult(
+        `<button id="${id}" class="${className}">${text}</button>`,
+      id)
+    return this.createElement('button', {
+      ...(externalAttributes || {}),
+      className,
+      onclick: onClick
+    }, [text])
   }
 
   toast (text: string, color: string) {
@@ -449,7 +492,7 @@ class RoseliaScript {
     delims.map(pat => pat.map(s => s.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')).join('\\s*(.*?)\\s*')).map(p => new RegExp(p, 'gms')).forEach(pattern => {
       this.app.postData.content = this.app.postData.content.replace(pattern, (_sup, form) => {
         // console.log(form, '=>', unescapeToHTML(form))
-        return unescapeToHTML(form)
+        return unescapeFromHTML(form)
       })
     })
   }
@@ -491,7 +534,8 @@ class RoseliaScript {
 
   audio (src: string) {
     const id = this.randomID()
-    return new RenderResult(`<audio id='${id}' src='${src}' hidden='true'/>`, id)
+    if (this.inRenderMode) return new RenderResult(`<audio id='${id}' src='${src}' hidden='true'/>`, id)
+    return this.createElement('audio', { src, hidden: true })
   }
 
   getElement (name: RSElementSelector) {
@@ -516,7 +560,9 @@ class RoseliaScript {
 
   raw (s: string) {
     // s = s.split('\n').map(x => `<p>${x}</p>`).join('\n')
-    return `<pre>Roselia{{${s}}}</pre>`
+    return this.createElement('pre', {}, [
+      'Roselia{{', s, '}}'
+    ])
   }
 
   previewColor (color) {
@@ -546,6 +592,24 @@ class RoseliaScript {
 
   createElement<K extends keyof HTMLElementTagNameMap>(
     type: K,
+    prop?: RecursivePartial<HTMLElementTagNameMap[K] & { ref?: ((n: HTMLElementTagNameMap[K]) => void) | RefObject<HTMLElementTagNameMap[K]> }>,
+    children?: (RoseliaVNode | Node)[]
+  ): RoseliaVNode | Node {
+    // const el = document.createElement(type)
+    // el.id = this.randomID()
+    // extend && this.extendAttributes(el, extend)
+    // if (children) {
+    //   children.forEach(c => {
+    //     el.appendChild(_.isString(c) ? this.createTextNode(c) : c)
+    //   })
+    // }
+    // return el
+    if (this.inRenderMode) return this.createNativeElement(type, prop, (children || []) as (Node | string)[])
+    return createElement(type, prop || null, ...(children as RoseliaVNode[] || []))
+  }
+
+  createNativeElement<K extends keyof HTMLElementTagNameMap>(
+    type: K,
     extend?: RecursivePartial<HTMLElementTagNameMap[K]>,
     children?: (Node | string)[]
   ): HTMLElementTagNameMap[K] {
@@ -564,36 +628,48 @@ class RoseliaScript {
     return document.createTextNode(text)
   }
 
-  setPreview (el: HTMLElement, preview: PreviewObject /* :{title, subtitle, img, color} */) {
-    this.element(el).then((e: HTMLElement) => {
-      e.addEventListener('mouseover', ev => {
-        ev.preventDefault()
+  setPreview (el: HTMLElement | RoseliaVNode, preview: PreviewObject /* :{title, subtitle, img, color} */) {
+    const onMouseOver = (ev: MouseEvent) => {
+      ev.preventDefault()
         this.app.preview.show = true
-        this.app.preview.attach = e
+        // this.app.preview.attach = e
         this.app.preview.cacheData = null
         this.app.preview.current = this.app.postData.id;
         ['title', 'subtitle', 'img', 'color'].forEach(attr => {
           const value = preview[attr]
           if (!_.isNil(value)) this.app.preview[attr] = value
         })
-      })
-      e.addEventListener('mouseout', ev => {
-        ev.preventDefault()
-        this.app.preview.show = false
-      })
-      if (!_.isNil(preview.goTo)) {
-        e.addEventListener('click', ev => {
-          ev.preventDefault()
-          try {
-            this.app.$vuetify.goTo(_.isNumber(preview.goTo) ? preview.goTo : this.getElement(<RSElementSelector>preview.goTo), {offset: -200})
-          } catch (reason) {
-            if(_.isString(preview.goTo)) location.href = preview.goTo
-            else this.app.$router.push(preview.goTo)
-            console.error(reason)
-          }
-        })
+    }
+    const onMouseOut = (ev: MouseEvent) => {
+      ev.preventDefault()
+      this.app.preview.show = false
+    }
+    const onClick = (ev: MouseEvent) => {
+      ev.preventDefault()
+      try {
+        this.app.$vuetify.goTo(_.isNumber(preview.goTo) ? preview.goTo : this.getElement(<RSElementSelector>preview.goTo), {offset: -200})
+      } catch (reason) {
+        if(_.isString(preview.goTo)) location.href = preview.goTo
+        else this.app.$router.push(preview.goTo)
+        console.error(reason)
       }
-    })
+    }
+    if (el instanceof Node) {
+      this.element(el).then((e: HTMLElement) => {
+        e.addEventListener('mouseover', onMouseOver)
+        e.addEventListener('mouseout', onMouseOut)
+        if (!_.isNil(preview.goTo)) {
+          e.addEventListener('click', onClick)
+        }
+      })
+    } else {
+      if (vNodeHasProps(el)) {
+        if (!_.isNil(preview.goTo)) el.props.onClick = onClick
+        el.props.onMouseOver = onMouseOver
+        el.props.onMouseOut = onMouseOut
+      }
+    }
+    
   }
 
   previewed (el: HTMLElement, preview: PreviewObject) {
@@ -609,11 +685,19 @@ class RoseliaScript {
   icon (icn: string, externalClasses: Array<String>|String = '') {
     // if (_.isArray(externalClasses)) externalClasses = externalClasses.join(' ')
     if (externalClasses instanceof Array) externalClasses = externalClasses.join(' ')
+    let className: string
     if (icn.startsWith('fa')) {
       const [fa, txt] = icn.split('-')
-      return `<i aria-hidden="true" class="v-icon ${fa} fa-${txt} ${externalClasses}"></i>`
+      className = `v-icon ${fa} fa-${txt} ${externalClasses}`
+      return this.createElement('i', {
+        className
+      })
     }
-    return `<i aria-hidden="true" class="v-icon material-icons ${externalClasses}">${icn}</i>`
+
+    className = `v-icon material-icons ${externalClasses}`
+    return this.createElement('i', {
+      className
+    }, [icn])
   }
 
   Y = fn => (u => u(u))(x => fn(s => x(x)(s)))
@@ -625,7 +709,7 @@ class RoseliaScript {
         if (this.askAccess.get(type)) resolve()
         else reject()
       } else {
-        const ch = this.createElement('div')
+        const ch = document.createElement('div')
         document.getElementById('content')!.appendChild(ch)
         summonDialog({
           onConfirm: () => {
@@ -800,9 +884,15 @@ class RoseliaScript {
   }
 
   useState<S>(state: S | (() => S)) {
-    return this.stateManager.useState(state)
+    if (this.inRenderMode) return this.stateManager.useState(state)
+    else return this._domOwner.useState(state);
   }
 
+  useRef<S>(): RefObject<S> {
+    return this.useState({current: null})[0]
+  }
+
+  /** @deprecated Use function props directly. */
   withEventListener<K extends keyof HTMLElementEventMap>(element: RSElementSelector, event: K, listener: (event: HTMLElementEventMap[K]) => void) {
     this.element(element).then(el => {
       el.addEventListener(event, listener)

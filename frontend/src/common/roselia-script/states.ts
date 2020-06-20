@@ -8,7 +8,8 @@ class RoseliaInternalWrappedState<T> {
 }
 
 type RoseliaStateUpdateCallback = (key: string, newValue: any, oldValue: any) => void;
-type RoseliaStateUpdater<T> = (v: (T | ((t: T) => T))) => void
+export type RoseliaStateUpdaterProp<T> = (T | ((t: T) => T));
+export type RoseliaStateUpdater<T> = (v: RoseliaStateUpdaterProp<T>) => void
 
 class RoseliaManagedState {
     private state: Record<string, any> = {};
@@ -119,7 +120,7 @@ export class RoseliaScriptEffect {
         // cell for effect: [deps, clear]
         if (this.cell.currentIsDefined()) {
             const [oldDeps, clearEffect] = this.cell.currentValue
-            const changed = deps.some((v, i) => v !== oldDeps[i])
+            const changed = oldDeps.length !== deps.length || deps.some((v, i) => v !== oldDeps[i])
             if (changed) {
                 clearEffect?.()
                 this.cell.setCurrent([deps, effect()])

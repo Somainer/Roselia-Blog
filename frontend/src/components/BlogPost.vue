@@ -366,6 +366,8 @@ export default {
       return utils.formatDate(date, withTime)
     },
     loadContent (p, context) {
+      this.$emit('postUnload')
+      this.$emit('postDestroyed')
       p = p || this.getPostNum()
       context = context || this.$route
       if (context && context.params.data) {
@@ -418,19 +420,36 @@ export default {
         writable: false
       })
       if (!this.postData.rawContent) {
-        this.postData.rawContent = this.postData.content;
-        this.renderer.setUpdateCallback(this.processContent)
+        const [firstLine, ...lines] = this.postData.content.split('\n')
+        const inDomMode = firstLine.includes('---feature:roselia-dom')
+        this.postData.inDomMode = inDomMode
+        if (inDomMode) this.postData.rawContent = lines.join('\n')
+        else this.postData.rawContent = this.postData.content;
+        if (inDomMode) {
+          this.renderer.setDomUpdateCallback(this.afterContentMounted)
+        }
+        else this.renderer.setRenderUpdateCallback(this.processContent)
       }
 
       this.renderer.resetMounted()
       const popContext = this.renderer.pushContext(this.postData, 'post')
-      this.renderer.renderAsync(this.postData.rawContent || this.postData.content).then(template => {
-        this.postData.content = template
+      
+      if (this.postData.inDomMode) {
+        this.rsRendered = true
+        this.postData.content = '';
         this.$nextTick(() => {
-          this.renderer.injectEvents()
-          popContext()
-        })
-      }).then(() => this.$nextTick(async () => this.afterContentMounted()))
+          this.renderer.mount(this.postData.rawContent, this.$refs.rhodonite)
+        });
+      } else {
+        this.rsRendered = false;
+        this.renderer.renderAsync(this.postData.rawContent || this.postData.content).then(template => {
+          this.postData.content = template
+          this.$nextTick(() => {
+            this.renderer.injectEvents()
+            popContext()
+          })
+        }).then(() => this.$nextTick(async () => this.afterContentMounted()))
+      }
       this.getAdjacentPostMeta()
       // this.rsRendered = false
       // this.renderer.renderVueAsync(this.postData.content).then(v => {

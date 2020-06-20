@@ -13,12 +13,13 @@ const getTag = (value: any) => {
 }
 
 const isObjectLike = (value: any): boolean => typeof value === 'object' && value !== null
-export const isNumber = (value: any): value is number => typeof value === 'number' || (isObjectLike(value) && getTag(value) == '[object Number]')
+export const isNumber = (value: any): value is number => typeof value === 'number' || (isObjectLike(value) && getTag(value) === '[object Number]')
 export const isFunction = (value: any): value is (...args: any[]) => any => typeof value === 'function'
 export const isString = (value: any): value is string => {
     const type = typeof value
-    return type === 'string' || (type === 'object' && value != null && !Array.isArray(value) && getTag(value) == '[object String]')
+    return type === 'string' || (type === 'object' && value != null && !Array.isArray(value) && getTag(value) === '[object String]')
 }
+export const isBoolean = (value: any): value is boolean => typeof value === 'boolean' || (isObjectLike(value) && getTag(value) === '[object Boolean]')
 export const isArray = (value: any): value is any[] => Array.isArray(value)
 export const isNil = (value: any): value is undefined | null => value == null
 export const isObject = (value: any): value is object => {
@@ -50,6 +51,10 @@ export const omit = <T extends object, K extends keyof T>(obj: T, keys: K[]): Om
     return Object.fromEntries(Object.entries(obj).filter(([key]) => !keys.includes(key as K))) as any
 }
 
+export const pick = <T extends object, K extends keyof T>(obj: T, keys: K[]): Pick<T, K> => {
+    return Object.fromEntries(keys.map(k => [k, obj[k]])) as any
+}
+
 export const debounce = <T>(fn: (...args: T[]) => void, wait: number = 0) => {
     let timerId: number | undefined
 
@@ -73,4 +78,30 @@ export const throttle = <T>(fn: (...args: T[]) => void, threshold: number) => {
             fn.call(this, ...args)
         }
     }
+}
+
+export const escapeStringLiteral = (string: string) => {
+    return string.replace(/["'\\\n\r\u2028\u2029]/g, character => {
+        // Escape all characters not included in SingleStringCharacters and
+        // DoubleStringCharacters on
+        // http://www.ecma-international.org/ecma-262/5.1/#sec-7.8.4
+        switch (character) {
+            case '"':
+            case "'":
+            case '\\':
+                return '\\' + character
+            // Four possible LineTerminator characters need to be escaped:
+            case '\n':
+                return '\\n'
+            case '\r':
+                return '\\r'
+            case '\u2028':
+                return '\\u2028'
+            case '\u2029':
+                return '\\u2029'
+        }
+
+        // Can never reach here, just to make the TS typer happy.
+        return character;
+    })
 }
