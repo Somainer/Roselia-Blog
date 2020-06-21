@@ -15,7 +15,7 @@ interface ISearchRecord {
     all: boolean
 }
 
-type IBaseStorageContent = IBasePluginStorageInfo & {
+interface IBaseStorageContent extends IBasePluginStorageInfo {
     content: string,
     created: Date,
     edited: Date,
@@ -23,20 +23,24 @@ type IBaseStorageContent = IBasePluginStorageInfo & {
     user: number
 }
 
+interface IGetAll {
+    all: boolean
+}
+
 export const getContent = (request: IBasePluginStorageInfo & {
     forMe: boolean
 }) => makeApi<IBasePluginStorageInfo, IBaseStorageContent>('get', 'plugin-storage/get-content', request.forMe)(request)
 
 
-export const newRecord = makeApi<IBasePluginStorageInfo & IContent & {
-    all: boolean
-}>('post', 'plugin-storage/new-record')
+export const newRecord = makeApi<IBasePluginStorageInfo & IContent & IGetAll>('post', 'plugin-storage/new-record')
 
 export const searchRecords = makeApi<ISearchRecord, IBaseStorageContent[]>('get', 'plugin-storage/search-records')
 
-export const editRecord = makeApi<IBasePluginStorageInfo & IContent>('post', 'plugin-storage/edit-record')
+export const editRecord = makeApi<IBasePluginStorageInfo & IContent & IGetAll>('post', 'plugin-storage/edit-record')
 
-export const deleteRecord = makeApi<IBasePluginStorageInfo>('post', 'plugin-stroage/delete-record')
+export const deleteRecord = makeApi<IBasePluginStorageInfo & IGetAll>('post', 'plugin-storage/delete-record')
+
+export const upsertRecord = makeApi<IBasePluginStorageInfo>('post', 'plugin-storage/upsert-record')
 
 export const deleteByIndex = makeApi<ISearchRecord>('post', 'plugin-storage/delete-by-index')
 

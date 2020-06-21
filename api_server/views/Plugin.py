@@ -54,16 +54,16 @@ def search_records(application, index, all, username, role):
 
 
 @route('/edit-record', methods=['POST'])
-@require_argument(['application', 'key', 'content'], is_post=True, need_raw_payload=True)
+@require_argument(['application', 'key', 'content', 'all'], is_post=True, need_raw_payload=True)
 @verify_token(0, is_post=True)
 @to_json
-def edit_record(application, key, username, role, raw_payload):
+def edit_record(application, key, content, all, username, role, raw_payload):
     raw_content = raw_payload.get('content')
     content = raw_content
     if raw_content is not None:
         content = Option.from_call(json.dumps, raw_content).get_or(raw_content)
     result = PluginStorageManager \
-        .edit_record(application, key, content, username,
+        .edit_record(application, key, content, None if bool(all) else username,
                      raw_payload.get('index'))
     return {
         'success': not not result
@@ -71,12 +71,29 @@ def edit_record(application, key, username, role, raw_payload):
 
 
 @route('/delete-record', methods=['POST'])
-@require_argument(['application', 'key'], is_post=True)
+@require_argument(['application', 'key', 'all'], is_post=True)
 @verify_token(0, is_post=True)
 @to_json
-def delete_record(application, key, username, role):
+def delete_record(application, key, all, username, role):
     result = PluginStorageManager \
-        .delete_record(application, key, username)
+        .delete_record(application, key, None if bool(all) else username)
+    return {
+        'success': not not result
+    }
+
+
+@route('/upsert-record', methods=['POST'])
+@require_argument(['application', 'key', 'content', 'all'], is_post=True, need_raw_payload=True)
+@verify_token(0, is_post=True)
+@to_json
+def upsert_record(application, key, content, all, username, role, raw_payload):
+    raw_content = raw_payload.get('content')
+    content = raw_content
+    if raw_content is not None:
+        content = Option.from_call(json.dumps, raw_content).get_or(raw_content)
+    result = PluginStorageManager \
+        .upsert_record(application, key, content, None if bool(all) else username,
+                     raw_payload.get('index'))
     return {
         'success': not not result
     }

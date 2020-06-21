@@ -21,6 +21,7 @@ import { mapEntries } from '../helpers';
 import { createElement, RoseliaVNode, vNodeHasProps } from './vnode'
 import { RoseliaDomOwner } from './dom'
 import { compileTemplate, compileTemplateBody } from './compiler'
+import * as PluginStorage from '@/common/api/plugin-storage'
 declare global {
   interface Window {
     APlayer: any
@@ -227,7 +228,8 @@ class RoseliaRenderer {
   mount(template: string, element: HTMLElement) {
     element.innerHTML = ''
     this.scriptEvaluator.inRenderMode = false;
-    const body = compileTemplateBody(template);
+    const refinedTemplate = replaceTemplate(template, RoseliaRenderer.roseliaScriptDelim, code => unescapeFromHTML(code) || '')
+    const body = compileTemplateBody(refinedTemplate);
     const code = `with(this) { with({__r:createElement}) { with(states) { with(functions) { return (${body}); } } } }`;
     try {
       const vNode = new Function(code);
@@ -287,7 +289,8 @@ class RoseliaRenderer {
         "useState",
         "useInterval",
         "useTimeout",
-        'sendNotification'
+        'sendNotification',
+        'pluginStorage'
     ])
   }
 
@@ -763,6 +766,8 @@ class RoseliaScript {
       })
     }
   }
+
+  pluginStorage = PluginStorage
 
   nil () {
     return null

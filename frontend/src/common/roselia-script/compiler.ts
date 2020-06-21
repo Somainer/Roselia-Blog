@@ -23,7 +23,8 @@ const fragmentToLiteral = (fragment: StringContentFragment) => {
 }
 
 const splitStringContentToFragment = (fragments: string, delim?: [string, string]): StringContentFragment[] => {
-    const result = fragments.split(new RegExp((delim || ['(?:r|R|roselia|Roselia){{', '}}']).join('\\s*?([\\s\\S]+?)\\s*?'), 'gm')).map((value, index) => {
+    delim = delim  || ['(?:r|R|roselia|Roselia){{', '}}']
+    const result = fragments.split(new RegExp(delim.join('\\s*?([\\s\\S]+?)\\s*?'), 'gm')).map((value, index) => {
         if (index & 1) {
             let code = value.trim();
             const singleArityLike = /^([a-zA-Z_$]+[a-zA-Z_0-9]*){([\s\S]+)}/.exec(code);
