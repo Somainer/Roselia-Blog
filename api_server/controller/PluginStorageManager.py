@@ -40,10 +40,13 @@ class PluginStorageManager:
     @classmethod
     @db_mutation_cleanup
     def new_record(cls, application: str, key: str, value: str, username=None, index_key=None):
-        record = cls.raw_query(application, key)
+        user = Option(username).map(UserManager.find_user).get_or(None)
+        if username:
+            record = cls.raw_query(application, key, username)
+        else:
+            record = cls.raw_query(application, key)
         if record.count():
             return False
-        user = Option(username).map(UserManager.find_user).get_or(None)
         record = PluginStorage()
         if user:
             record.user = user.user_id
@@ -58,19 +61,27 @@ class PluginStorageManager:
     @classmethod
     @db_mutation_cleanup
     def edit_record(cls, application: str, key: str, value: str = None, username=None, index_key=None):
-        record = cls.raw_query(application, key, username)
+        record = cls.raw_query(application, key, username).first()
         if record:
             if value is not None:
                 record.content = value
             if index_key is not None:
                 record.index_key = index_key
-        db.session.commit()
+            db.session.commit()
         return record is not None
+    
+    @classmethod
+    @db_mutation_cleanup
+    def upsert_record(cls, application: str, key: str, value: str = None, username=None, index_key=None):
+        record = cls.raw_query(application, key, username).first()
+        if record:
+            return cls.edit_record(application, key, value, username, index_key)
+        return cls.new_record(application, key, value, username, index_key)
 
     @classmethod
     @db_mutation_cleanup
     def delete_record(cls, application: str, key: str, username: str = None):
-        record = cls.raw_query(application, key, username)
+        record = cls.raw_query(application, key, username).first()
         if record:
             db.session.delete(record)
             db.session.commit()

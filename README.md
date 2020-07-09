@@ -132,6 +132,94 @@ createElement<K extends keyof HTMLElementTagNameMap>(
 `blurMainImage` controls if blur the dominant image. `disableSideNavigation` controls whether disable the side navigation.
 * `sendNotification(notification: INotification)`: Send a notification to user (via the global notification bus).
 
+### Hooks
+Roselia-Script supports react-like hooks, which is inspired both by Vue and React.
+There are several APIs help building reactive posts.
+APIs introducing new variables are prefixed with `def`. Hook APIs are prefixed with `use`. So, we have following APIs:
+
+#### defState
+```typescript
+declare function defState<S>(name: string, state: S | (() => S)): void
+```
+`defState` accepts a name and a state, introducing that variable to current article. 
+Basically, you could write a simplest counter in this way:
+```
+r{{
+    defState('count', 0), btn(count, () => ++count)
+}}
+```
+This would introduce a button, displaying current count, increasing count every click.
+
+#### useState
+Somebody would miss the legacy `useState` hook in React. Here is `useState`.
+This hook is expected to hehave the same as [React State Hook](https://reactjs.org/docs/hooks-state.html).
+
+```typescript
+declare function useState<S>(state: S | (() => S)): [S, (value: (S | ((oldValue: S) => S))) => void]
+```
+
+A counter could be written as:
+```javascript
+(() => {
+    const [count, setCount] = useState(0)
+    return btn(count, () => setCount(c => c + 1))
+})()
+```
+Or:
+```javascript
+    def(['count', 'setCount'], useState(0)), btn(count, () => setCount(c => c + 1))
+```
+
+`defState` is more reactive and short while `useState` is more functional. If you loved Vue, you might be happy with `defState`, otherwise use `useState`.
+
+#### useEffect
+This hook is expected to behave the same as [React Effect Hook](https://reactjs.org/docs/hooks-effect.html).
+```typescript
+declare function useEffect(effect: () => void, deps: any[]): void
+```
+
+#### useInterval / useTimeout
+```typescript
+declare function useInterval(callback: () => void, interval: number | null): void
+```
+Both hook have the same signature. Interval could be changed when `interval` changed. 
+If `interval` is `null`, the interval stopped.
+Here is an implementation to demonstrate how it works:
+```typescript
+function useInterval(callback: () => void, interval: number | null): void {
+    useEffect(() => {
+        if (typeof interval === 'number') {
+            const timer = setInterval(() => fn(), interval)
+            return () => clearInterval(timer)
+        }
+    }, [interval])
+}
+```
+
+### Roselia-Dom
+
+There are two different procedures when processing in-article scripts. They are:
+
+1. Rendering
+
+   Rendering relaces all scripts to its execution result as a single HTML
+   string, then releace the post with this single HTML string. Whenever a state changed, the content will be re-rendered and all contents of this
+   article will be replaced. This procedure is not so efficient during frequent state changes. This is the default processing method for articles
+   and comments. 
+
+2. Mounting
+
+    This method compiles the article to a function yielding a virtual dom, just as popular MVVM frameworks. A new virtual dom will be generated
+    everytime a state changed. After that, this virtual dom will be compared
+    with old virtual dom via a reconciliation algorithm by diffing both doms,
+    generating a patch, which actually changes the dom and this action is async. This procedure will not be so effcient if no state is going to be changed. This method is only
+    available when rendering an article, to use this metod, you should add such content on the first line of article:
+
+        ---feature:roselia-dom---
+    
+    This function is experimental and way of activiation may be changed.
+
+
 ### Examples:
 
 Inserting a song:

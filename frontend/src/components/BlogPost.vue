@@ -366,6 +366,8 @@ export default {
       return utils.formatDate(date, withTime)
     },
     loadContent (p, context) {
+      this.$emit('postUnload')
+      this.$emit('postDestroyed')
       p = p || this.getPostNum()
       context = context || this.$route
       if (context && context.params.data) {
@@ -417,14 +419,37 @@ export default {
         value: this.postData.id,
         writable: false
       })
+      if (!this.postData.rawContent) {
+        const [firstLine, ...lines] = this.postData.content.split('\n')
+        const inDomMode = firstLine.includes('---feature:roselia-dom')
+        this.postData.inDomMode = inDomMode
+        if (inDomMode) this.postData.rawContent = lines.join('\n')
+        else this.postData.rawContent = this.postData.content;
+        if (inDomMode) {
+          this.renderer.setDomUpdateCallback(this.afterContentMounted)
+        }
+        else this.renderer.setRenderUpdateCallback(this.processContent)
+      }
+
+      this.renderer.resetMounted()
       const popContext = this.renderer.pushContext(this.postData, 'post')
-      this.renderer.renderAsync(this.postData.content).then(template => {
-        this.postData.content = template
+      
+      if (this.postData.inDomMode) {
+        this.rsRendered = true
+        this.postData.content = '';
         this.$nextTick(() => {
-          this.renderer.injectEvents()
-          popContext()
-        })
-      }).then(() => this.$nextTick(async () => this.afterContentMounted()))
+          this.renderer.mount(this.postData.rawContent, this.$refs.rhodonite)
+        });
+      } else {
+        this.rsRendered = false;
+        this.renderer.renderAsync(this.postData.rawContent || this.postData.content).then(template => {
+          this.postData.content = template
+          this.$nextTick(() => {
+            this.renderer.injectEvents()
+            popContext()
+          })
+        }).then(() => this.$nextTick(async () => this.afterContentMounted()))
+      }
       this.getAdjacentPostMeta()
       // this.rsRendered = false
       // this.renderer.renderVueAsync(this.postData.content).then(v => {
@@ -629,7 +654,7 @@ export default {
           markdown: this.postData.markdownContent
         })
         this.$emit('postUnload')
-        // this.$emit('postDestroyed')
+        this.$emit('postDestroyed')
         this.postData.content = data;
         this.postData.serverRendered = true;
         this.processContent()
@@ -638,17 +663,21 @@ export default {
       }
     },
     getAdjacentPostMeta() {
-      this.prevMeta = null
-      if (this.postData.prev > 0) {
-        utils.fetchJSONWithSuccess(utils.apiFor('post', 'meta', 'id', this.postData.prev)).then(data => {
-          this.prevMeta = data
-        })
+      if (!this.prevMeta || this.prevMeta.id !== this.postData.prev) {
+        this.prevMeta = null
+        if (this.postData.prev > 0) {
+          utils.fetchJSONWithSuccess(utils.apiFor('post', 'meta', 'id', this.postData.prev)).then(data => {
+            this.prevMeta = data
+          })
+        }
       }
-      this.nextMeta = null
-      if(this.postData.next > 0) {
-        utils.fetchJSONWithSuccess(utils.apiFor('post', 'meta', 'id', this.postData.next)).then(data => {
-          this.nextMeta = data
-        })
+      if (!this.nextMeta || this.nextMeta.id !== this.postData.next) {
+        this.nextMeta = null
+        if(this.postData.next > 0) {
+          utils.fetchJSONWithSuccess(utils.apiFor('post', 'meta', 'id', this.postData.next)).then(data => {
+            this.nextMeta = data
+          })
+        }
       }
     },
     resetExtraDisplaySettings() {

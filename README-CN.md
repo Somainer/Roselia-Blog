@@ -175,6 +175,95 @@ changeExtraDisplaySettings(settings: Partial<{
 
 `sendNotification(notification: INotification)`: 向用户发送通知 (通过通知总线)
 
+### Hooks
+Roselia-Script 支持类似于`React`的hook。这个功能收到了Vue和React的启发（~~读书人的事，怎么能说是抄呢~~），该功能可以帮助用户撰写出响应式的文章。
+我们有如下约定：如果某API能在当前上下文中添加变量，则该API以`def`开头，hook API以`use`开头。
+因此，我们有如下API：
+
+#### defState
+```typescript
+declare function defState<S>(name: string, state: S | (() => S)): void
+```
+`defState` 接受一个名字和一个状态，该状态可以是一个函数从而减少渲染时重复计算的开销，在这之后，你可以在文章上下人中使用和修改该变量。
+基本上，你可以使用该方法来写出一个最简单的计数器：
+```
+r{{
+    defState('count', 0), btn(count, () => ++count)
+}}
+```
+这样，会在文章中显示一个按钮，上面显示当前的数字，每按一次，计数+1。
+
+#### useState
+有人可能会十分想念`React`中的`useState` hook，不过没有关系，这里也有。
+
+该API与[React State Hook](https://zh-hans.reactjs.org/docs/hooks-state.html)的功能一致。
+
+```typescript
+declare function useState<S>(state: S | (() => S)): [S, (value: (S | ((oldValue: S) => S))) => void]
+```
+
+一个计数器还能这么写：
+```javascript
+(() => {
+    const [count, setCount] = useState(0)
+    return btn(count, () => setCount(c => c + 1))
+})()
+```
+
+或者：
+
+```javascript
+    def(['count', 'setCount'], useState(0)), btn(count, () => setCount(c => c + 1))
+```
+
+`defState` 更加响应式但是 `useState` 更加函数式。 如果你经常使用Vue，你应该会喜欢 `defState`，如果你经常使用React，或者你是函数式编程的拥趸，你应该会喜欢`useState`。
+如果你都不是，那你爱用啥用啥吧，这里没有特别的偏好。
+
+#### useEffect
+这个hook和[React Effect Hook](https://zh-hans.reactjs.org/docs/hooks-effect.html)功能一致。
+```typescript
+declare function useEffect(effect: () => void, deps: any[]): void
+```
+
+#### useInterval / useTimeout
+```typescript
+declare function useInterval(callback: () => void, interval: number | null): void
+```
+这两个的hook函数签名一致，定时器的间隔随着参数的变化而作出响应式变化，如果参数是`null`，则该定时器会被终止。
+
+下面这个实现能说明原理（~~但是是用ts写的，文章里也没有`setInterval`给你用，看个热闹就行~~）
+```typescript
+function useInterval(callback: () => void, interval: number | null): void {
+    useEffect(() => {
+        if (typeof interval === 'number') {
+            const timer = setInterval(() => fn(), interval)
+            return () => clearInterval(timer)
+        }
+    }, [interval])
+}
+```
+
+### Roselia-Dom
+
+Roselia-Blog 可以采用两种不同的方法来处理文章中的内嵌脚本。他们分别是：
+
+1. 渲染
+
+    这种方法将会将脚本中的内容替换为执行的结果，最终生成一个`HTML`字符串，这种字符串
+    会直接替换为文章内容。在遇到状态变量改变的时候， 将会重新全部渲染生成一个新的字符串，
+    并替换文章的内容。这种方法在遇到大量的状态更新的时候，性能不是十分优秀。这是默认的处理文章和评论中脚本的方法。
+
+2. 挂载
+
+    这种方法将会把文章编译成一个生成虚拟节点（virtual dom, vdom）的函数，即函数组件。
+    这个组件会生成浏览器的文档组件，并挂载到文章对应的容器里，和大多数MVVM框架一样。
+    在状态改变的时候，会重新生成一个vdom，再通过调度算法，对新内容和旧内容进行对比，
+    生成的补丁操作才会真正改变dom的内容。这个操作是异步的，且只会在浏览器空闲的时候执行。
+    在没有大量状态改变或者根本没有状态改变的时候，这个方法就会多了很多多余的步骤。这个处理方式是实验功能，并且正在测试中，且只在处理文章时可用。为了开启这个功能，你需要在文章第一行
+    加入如下内容：
+        
+        ---feature:roselia-dom---
+
 例如：插入一首歌（会在切换文章时自动销毁）：
 ```
 r{{

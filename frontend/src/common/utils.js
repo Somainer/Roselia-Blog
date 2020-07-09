@@ -149,7 +149,9 @@ utils.fetchJSON = function (url, method = 'GET', payload = {}, withToken = true,
 utils.fetchJSONWithSuccess = function (...args) {
   return this.fetchJSON(...args).then(data => {
     if (!data.success) return Promise.reject(data.msg)
-    return data.result || data.data || data
+    if (typeof data.result !== 'undefined') return data.result
+    if (typeof data.data !== 'undefined') return data.data
+    return data
   })
 };
 
