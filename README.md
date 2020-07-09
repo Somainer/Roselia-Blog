@@ -196,6 +196,30 @@ function useInterval(callback: () => void, interval: number | null): void {
 }
 ```
 
+### Roselia-Dom
+
+There are two different procedures when processing in-article scripts. They are:
+
+1. Rendering
+
+   Rendering relaces all scripts to its execution result as a single HTML
+   string, then releace the post with this single HTML string. Whenever a state changed, the content will be re-rendered and all contents of this
+   article will be replaced. This procedure is not so efficient during frequent state changes. This is the default processing method for articles
+   and comments. 
+
+2. Mounting
+
+    This method compiles the article to a function yielding a virtual dom, just as popular MVVM frameworks. A new virtual dom will be generated
+    everytime a state changed. After that, this virtual dom will be compared
+    with old virtual dom via a reconciliation algorithm by diffing both doms,
+    generating a patch, which actually changes the dom and this action is async. This procedure will not be so effcient if no state is going to be changed. This method is only
+    available when rendering an article, to use this metod, you should add such content on the first line of article:
+
+        ---feature:roselia-dom---
+    
+    This function is experimental and way of activiation may be changed.
+
+
 ### Examples:
 
 Inserting a song:
