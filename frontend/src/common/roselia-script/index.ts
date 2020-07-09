@@ -237,7 +237,7 @@ class RoseliaRenderer {
     } catch (e) {
       element.innerHTML = this.render(template);
       this.scriptEvaluator.sendNotification({
-        message: 'There was an error when rendering that post. Please open console to check it out.',
+        message: 'There was an error while rendering that post. Please open console to check it out.',
         color: 'warning'
       })
       this.scriptEvaluator.toast('Falling back to rendering...', 'warning')
