@@ -13,8 +13,8 @@ export const getJSWorker = async (...uri: monaco.Uri[]): Promise<monaco.language
 
 export interface RichCompletionItem extends monaco.languages.CompletionItem {
     label: string;
-	uri: monaco.Uri;
-	position: monaco.Position;
+    uri: monaco.Uri;
+    position: monaco.Position;
 }
 
 export const convertItemKind = (kind: string): monaco.languages.CompletionItemKind => 
