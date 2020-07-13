@@ -1,5 +1,7 @@
+const MonacoEditorWebpackPlugin = require('monaco-editor-webpack-plugin')
+
 module.exports = {
-    assetsDir: 'static',
+    assetsDir: 'blog/static',
     pwa: {
         "name": 'Roselia Blog',
         "themeColor": '#6670ed',
@@ -9,5 +11,15 @@ module.exports = {
         // "msTileColor": '#6292E9',
         "appleMobileWebAppCapable": "yes",
         "appleMobileWebAppStatusBarStyle": "black"
+    },
+    configureWebpack: {
+        plugins: [
+            new MonacoEditorWebpackPlugin({
+                languages: [
+                    'html', 'javascript', 'typescript', 'markdown'
+                ],
+                filename: 'unions-road.[name].[contenthash].js'
+            })
+        ]
     }
 }

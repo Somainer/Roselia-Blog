@@ -18,7 +18,8 @@ import { INotification } from '@/common/api/notifications'
 import {summonDialog} from './summonDialog'
 import Vue from 'vue';
 import { mapEntries } from '../helpers';
-import { createElement, RoseliaVNode, vNodeHasProps } from './vnode'
+import { RoseliaVNode, vNodeHasProps, createElement } from './vnode'
+import { h } from './creater-syntax-sugars'
 import { RoseliaDomOwner } from './dom'
 import { compileTemplate, compileTemplateBody } from './compiler'
 import * as PluginStorage from '@/common/api/plugin-storage'
@@ -65,29 +66,33 @@ function replaceTemplate(template: string, delim: string[], replace: (s: string,
   return template.replace(new RegExp((delim || ['{{', '}}']).join('\\s*?(([\\s\\S]+?))\\s*?'), 'gm'), replace)
 }
 
+function evalOnExpr(expr: string, context: any) {
+  const funcTemplate = (expr: string) => `with(data) { with (states) { with(functions) {return (${expr});}}}`
+  const bigC = /^([a-zA-Z_$]+[a-zA-Z_0-9]*){([\s\S]+)}/.exec(expr)
+  let res
+  let isSingleCall = false
+  if (bigC) {
+    let [_inp, fn, ctx] = bigC
+    const func = (context[fn] || context.functions[fn])
+    if (_.isFunction(func)) {
+      res = func(unescapeFromHTML(ctx))
+      isSingleCall = true
+    }
+  }
+  if (!isSingleCall) {
+    expr = unescapeFromHTML(expr)!
+    res = (new Function('data', funcTemplate(expr))).call(context, context)
+  }
+  return res
+}
+
 function render (template: string, context: any, delim: string[]) { // A not so naive template engine.
-  const funcTemplate = expr => `with(data) { with (states) { with(functions) {return (${expr});}}}`
   const innerRenderer = expr => {
     if (!config.enableRoseliaScript) {
       return `<pre><code>${expr}</code></pre>`
     }
     try {
-      const bigC = /^([a-zA-Z_$]+[a-zA-Z_0-9]*){([\s\S]+)}/.exec(expr)
-      let res
-      let isSingleCall = false
-      if (bigC) {
-        let [_inp, fn, ctx] = bigC
-        const func = (context[fn] || context.functions[fn])
-        if (_.isFunction(func)) {
-          res = func(unescapeFromHTML(ctx))
-          isSingleCall = true
-        }
-      }
-      if (!isSingleCall) {
-        expr = unescapeFromHTML(expr)
-        res = (new Function('data', funcTemplate(expr))).call(context, context)
-      }
-      return handleRenderResult(res)
+      return handleRenderResult(evalOnExpr(expr, context))
     } catch (e) {
       console.log('On rendering:', expr)
       console.error(e)
@@ -214,6 +219,14 @@ class RoseliaRenderer {
     // return render(template, this.context, ['(?:Roselia|roselia|r|R){{', '}}'])
   }
 
+  evaluateOn(exporession: string) {
+    try {
+      return evalOnExpr(exporession, this.context)
+    } catch (e) {
+      return undefined
+    }
+  }
+
   cleanScript(template: string) {
     return replaceTemplate(template, RoseliaRenderer.roseliaScriptDelim, _ => '')
   }
@@ -317,7 +330,7 @@ class RoseliaRenderer {
 }
 
 
-class RoseliaScript {
+export class RoseliaScript {
   app: any
   customFunctions: object
   functions: object
@@ -609,6 +622,28 @@ class RoseliaScript {
     // return el
     if (this.inRenderMode) return this.createNativeElement(type, prop, (children || []) as (Node | string)[])
     return createElement(type, prop || null, ...(children as RoseliaVNode[] || []))
+  }
+
+  /**
+   * A syntax sugar for easy creating elements:
+   * def('h', $createElement)
+   * h('div', 
+   *  h('h1', 'Title')
+   *  h('h2', 'Subtitle')
+   * )
+   */
+  $createElement(tag: string, prop: object, ...children: RoseliaVNode[]) {
+    if (this.inRenderMode) {
+      if (_.isArray(tag)) return this.createNativeElement('div', {}, tag)
+      if (typeof prop !== 'object' || prop instanceof Node) {
+        // Excluding null
+        children = [prop as any, ...children]
+        prop = {}
+      }
+      return this.createElement(tag as keyof HTMLElementTagNameMap, prop, children)
+    }
+
+    return h(tag, prop, ...children)
   }
 
   createNativeElement<K extends keyof HTMLElementTagNameMap>(

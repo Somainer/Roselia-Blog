@@ -65,20 +65,24 @@
             label="Secret level"
             :prepend-icon="lockIcon"
           ></v-slider>
-          <span>
-            <v-icon>visibility{{ postData.hidden ? '_off' : '' }}</v-icon>
-            Hidden?
-          </span>
-          <v-switch color="accent"
-            :label="postData.hidden ? 'Hidden' : 'Public'"
-            v-model="postData.hidden"
-          ></v-switch>
-          <span>Comment</span>
-          <v-switch color="accent"
-            :label="postData.enableComment ? 'Enabled' : 'Disabled'"
-            v-model="postData.enableComment"
-          ></v-switch>
           <v-row>
+            <v-col>
+              <span>
+                <v-icon>visibility{{ postData.hidden ? '_off' : '' }}</v-icon>
+                Hidden?
+              </span>
+              <v-switch color="accent"
+                :label="postData.hidden ? 'Hidden' : 'Public'"
+                v-model="postData.hidden"
+              ></v-switch>
+            </v-col>
+            <v-col>
+              <span>Comment</span>
+              <v-switch color="accent"
+                :label="postData.enableComment ? 'Enabled' : 'Disabled'"
+                v-model="postData.enableComment"
+              ></v-switch>
+            </v-col>
             <v-col>
               <span>Color of Title</span>
               <v-switch color="accent"
@@ -86,7 +90,18 @@
                 v-model="postData.darkTitle"
               ></v-switch>
             </v-col>
-            <v-col>
+          </v-row>
+          <v-row>
+            <v-col :cols="3">
+              <v-select
+                :items="availableEditors"
+                v-model="currentEditor"
+                label="Editor"
+              ></v-select>
+            </v-col>
+            <v-col
+              v-if="currentEditor === 'easymde'"
+            >
               <span>Paste Option</span>
               <v-switch color="accent"
                 :label="pasteHtml ? 'HTML' : 'Plain Text'"
@@ -129,9 +144,14 @@
             prepend-icon="image"
           ></v-text-field>
           <span>Content</span>
-          <markdown-editor
-            @keyup.ctrl.s.prevent="saveDraft"
-           id="markdownEditor" ref="markdownEditor" v-model="postDataContent" :highlight="true" :configs="configs"></markdown-editor>
+          <editor-switcher 
+            :editor="currentEditor"
+            v-model="postDataContent"
+            :useMarkdown="markdown"
+            :dark="!currentColorScheme"
+            :postPageActionBus="postPageActionBus"
+            :pasteHtml="pasteHtml"
+          />
 
           <v-card-actions>
             <v-spacer></v-spacer>
@@ -217,8 +237,6 @@
 import utils from '../common/utils'
 import BlogToolbar from './BlogToolbar'
 // import hljs from 'highlight.js'
-import markdownEditor from 'vue-easymde'
-import 'easymde/dist/easymde.min.css'
 import 'github-markdown-css'
 // import 'highlight.js/styles/vs.css'
 import 'highlight.js/styles/xcode.css'
@@ -230,7 +248,6 @@ import PluginExplorer from './EditPluginExplorer'
 import {plugins} from '../plugins/RoseliaPluginHost'
 import {pushContext, flushContext} from '../custom-command/luis'
 import { getImageChannels, uploadImage } from '../common/api/images'
-import { handlePaste, handleBeforeChange, handleDrop } from '../common/handle-paste'
 import UploadedImages from './UploadedImages'
 import { markdownAsync, markdown } from '../common/roselia-markdown'
 
@@ -238,8 +255,10 @@ import { debounce, throttle } from '../common/fake-lodash'
 // window.hljs = hljs
 // window.platform = platform
 
+import { EditorSwitcher } from '../common/rich-editor/editor-switcher'
+
 export default {
-  components: {BlogToolbar, markdownEditor, PluginExplorer, GlobalEvents, UploadedImages},
+  components: {BlogToolbar, PluginExplorer, GlobalEvents, UploadedImages, EditorSwitcher},
   name: 'post-edit',
   data: () => ({
     postData: {
@@ -278,7 +297,9 @@ export default {
       loading: true,
       convertToWebp: false
     },
-    pasteHtml: false
+    pasteHtml: false,
+    availableEditors: EditorSwitcher.availableEditors,
+    currentEditor: EditorSwitcher.defaultEditor
   }),
   props: {
     userData: Object,
@@ -308,7 +329,8 @@ export default {
       return {
         markdown: this.markdown,
         data: this.postData,
-        uploadImages: this.uploadImages
+        uploadImages: this.uploadImages,
+        editor: this.currentEditor
       }
     },
     getPostDraft (pid) {
@@ -345,6 +367,7 @@ export default {
         this.markdown = dft.markdown
         this.postData = dft.data
         this.uploadImages = dft.uploadImages || []
+        this.currentEditor = dft.editor || this.currentEditor
       }
       return !!dft
     },
@@ -434,10 +457,6 @@ export default {
         })
       }
     },
-    simplemde () {
-      let ref = this.$refs.markdownEditor
-      return ref && ref.easymde
-    },
     getPreviewData() {
       return {
         ...this.postData,
@@ -445,60 +464,6 @@ export default {
         content: this.markdown ? markdown(this.postData.content) : this.postData.content,
         markdownContent: this.markdown ? this.postData.content : undefined
       }
-    },
-    registerPasteListener() {
-      /** @type {CodeMirror} */
-      const editor = this.simplemde().codemirror
-      if (!editor) return;
-      const imageFormatHandler = (source) => {
-        if (this.markdown) return source;
-        return source.replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2">$1</img>')
-      }
-      const handler = async (parts, additionalParts, input) => {
-        if (this.pasteHtml) {
-          input(imageFormatHandler((await additionalParts).join('')))
-        } else {
-          input(imageFormatHandler((await parts).join('')))
-        }
-      }
-      const uploader = async (image, origionalUrl) => {
-        const placeHolder = {
-          url: origionalUrl,
-          channel: this.imageUpload.channel,
-          loading: true,
-          fileName: 'Uploading...'
-        }
-
-        try {
-          this.uploadImages = [...this.uploadImages, placeHolder]
-          const uploaded = await uploadImage(image, this.imageUpload.channel, this.imageUpload.convertToWebp ? 'webp' : undefined)
-          if (!uploaded.success) throw new Error(uploaded.msg);
-          this.uploadImages = this.uploadImages.map(x => {
-            if (x === placeHolder) return uploaded.result
-            return x
-          })
-          await this.$nextTick()
-          const { url } = uploaded.result
-          const cursor = editor.getCursor()
-          this.postData.content = this.postData.content.replace(origionalUrl, url)
-          URL.revokeObjectURL(origionalUrl)
-          await this.$nextTick()
-          editor.setCursor(cursor)
-        } catch (error) {
-          this.showToast(error, 'error')
-          this.uploadImages = this.uploadImages.filter(x => x !== placeHolder)
-        }
-      }
-
-      editor.on('paste', (instance, event) => {
-        handlePaste(instance, event, handler, uploader)
-      })
-      editor.on('drop', (instance, event) => {
-        handleDrop(instance, event, handler, uploader)
-      })
-      editor.on('beforeChange', (instance, event) => {
-        handleBeforeChange(instance, event)
-      })
     },
     switchDarkMode() {
       const isLight = this.currentColorScheme
@@ -536,6 +501,41 @@ export default {
       set(value) {
         this.postData.content = value
       }
+    },
+    postPageActionBus() {
+      /** @type {IRoseliaEditPageActionBus} */
+      const actionBus = {
+        save: () => this.doEditPost(),
+        goToPreview: () => {
+          this.$router.push({name: 'post', params: {data: this.getPreviewData()}})
+        },
+        goToLivePreview: () => {
+          window.open(this.$router.resolve({name: 'postLivePreview', params: {previewPostId: this.postData.id || 0}}).href, '_blank')
+        },
+        uploadImage: async (image, origionalUrl) => {
+          const placeHolder = {
+            url: origionalUrl,
+            channel: this.imageUpload.channel,
+            loading: true,
+            fileName: 'Uploading...'
+          }
+
+          try {
+            this.uploadImages = [...this.uploadImages, placeHolder]
+            const uploaded = await uploadImage(image, this.imageUpload.channel, this.imageUpload.convertToWebp ? 'webp' : undefined)
+            if (!uploaded.success) throw new Error(uploaded.msg);
+            this.uploadImages = this.uploadImages.map(x => {
+              if (x === placeHolder) return uploaded.result
+              return x
+            })
+            return uploaded.result;
+          } catch (error) {
+            this.showToast(error, 'error')
+            this.uploadImages = this.uploadImages.filter(x => x !== placeHolder)
+          }
+        }
+      }
+      return actionBus
     }
   },
   mounted () {
@@ -583,7 +583,6 @@ export default {
       }))
       this.imageUpload.loading = false;
     })
-    this.registerPasteListener()
   },
   watch: {
     userData(val) {

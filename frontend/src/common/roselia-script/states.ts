@@ -12,10 +12,11 @@ export type RoseliaStateUpdaterProp<T> = (T | ((t: T) => T));
 export type RoseliaStateUpdater<T> = (v: RoseliaStateUpdaterProp<T>) => void
 
 class RoseliaManagedState {
-    private state: Record<string, any> = {};
+    public state: Record<string, any> = {};
 
     public static create(updateCallback: RoseliaStateUpdateCallback) {
-        return new Proxy(new RoseliaManagedState(), {
+        const managedState = new RoseliaManagedState()
+        return [new Proxy(managedState, {
             has(target, key) { return Reflect.has(target.state || target, key) },
             get(target, key) { return Reflect.get(target.state || target, key) },
             set(target, key, value) {
@@ -27,20 +28,26 @@ class RoseliaManagedState {
                     updateCallback(key as string, value, oldValue);
                     return result;
                 }
+            },
+            ownKeys(target) {
+                return Reflect.ownKeys(target)
             }
-        })
+        }), managedState]
     }
 }
 
 export class RoseliaScriptState {
     public readonly state: RoseliaManagedState
+    public readonly rawState: RoseliaManagedState
     private cell: DynamicCell<[any, RoseliaStateUpdater<any>]>
     private updateCallback: RoseliaStateUpdateCallback | undefined;
     constructor(callback?: RoseliaStateUpdateCallback) {
         this.updateCallback = callback
-        this.state = RoseliaManagedState.create((key, newValue, oldValue) => {
+        const [state, rawState] = RoseliaManagedState.create((key, newValue, oldValue) => {
             this.triggerCallback(key, newValue, oldValue)
         })
+        this.state = state;
+        this.rawState = rawState
         this.cell = new DynamicCell();
     }
 

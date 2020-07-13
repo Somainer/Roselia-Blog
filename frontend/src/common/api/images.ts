@@ -2,7 +2,7 @@ import { makeApi } from './protocol'
 import utils from '../utils';
 import request from '../ajax-bar-axios'
 
-interface IImageAPIMeta {
+export interface IImageAPIMeta {
     id: string
     name: string
     description: string
@@ -15,7 +15,7 @@ export interface IImageMeta {
     deleteKey?: string
 }
 
-interface IUploadedImageMeta {
+export interface IUploadedImageMeta {
     success: boolean
     picUrl: string
     msg: string

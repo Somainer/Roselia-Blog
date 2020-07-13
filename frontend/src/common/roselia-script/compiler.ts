@@ -22,7 +22,7 @@ const fragmentToLiteral = (fragment: StringContentFragment) => {
     return fragment.value
 }
 
-const splitStringContentToFragment = (fragments: string, delim?: [string, string]): StringContentFragment[] => {
+export const splitStringContentToFragment = (fragments: string, delim?: [string, string]): StringContentFragment[] => {
     delim = delim  || ['(?:r|R|roselia|Roselia){{', '}}']
     const result = fragments.split(new RegExp(delim.join('\\s*?([\\s\\S]+?)\\s*?'), 'gm')).map((value, index) => {
         if (index & 1) {

@@ -1,7 +1,7 @@
-import CodeMirror from 'codemirror'
+import type CodeMirror from 'codemirror'
 
-type IPasteHandler = (parts: Promise<string[]>, additionalParts: Promise<string[]>, input: (s: string) => void) => void
-type IImageUploader = (image: File, origionalUrl: string) => void;
+export type IPasteHandler = (parts: Promise<string[]>, additionalParts: Promise<string[]>, input: (s: string) => void) => void
+export type IImageUploader = (image: File, origionalUrl: string) => void;
     
 const handleFileTransfer = async (instance: CodeMirror.Editor, items?: DataTransferItemList, handler?: IPasteHandler, uploader?: IImageUploader) => {
     if (!items) return;
@@ -19,7 +19,7 @@ const handleFileTransfer = async (instance: CodeMirror.Editor, items?: DataTrans
         } else if (item.kind === 'string' && item.type === 'vscode-editor-data') {
             const metaData: string = await new Promise(resolve => item.getAsString(resolve))
             const parsed = JSON.parse(metaData)
-            if (parsed.mode && !['markdown', 'html'].includes(parsed.mode.toLowerCase())) {
+            if (parsed.mode && !['markdown', 'html', 'roselia-post'].includes(parsed.mode.toLowerCase())) {
                 const text = parts[0]
                 parts = [text.then(x => `\`\`\`${parsed.mode}\n${x}\n\`\`\``)]
             }

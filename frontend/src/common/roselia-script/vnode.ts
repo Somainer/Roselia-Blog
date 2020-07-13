@@ -14,6 +14,8 @@ export const isTextVNode = (node: RoseliaVNode): node is RoseliaText => _.isStri
 export const isFunctionVNode = (node: RoseliaVNode): node is RoseliaFunctionVNode => _.isObject(node) && _.isFunction(node.tag)
 export const isNativeVNode = (node: RoseliaVNode): node is RoseliaNativeVNode => _.isObject(node) && _.isString(node.tag)
 export const vNodeHasProps = (node: RoseliaVNode): node is RoseliaNativeVNode | RoseliaFunctionVNode => _.isObject(node) && _.isObject(node.props)
+export const isRoseliaVNode = (maybeNode: any): maybeNode is RoseliaVNode =>
+    isEmptyVNode(maybeNode) || isTextVNode(maybeNode) || isFunctionVNode(maybeNode) || isNativeVNode(maybeNode)
 
 export type VNodeType = 'empty' | 'text' | 'function' | 'native'
 export const getVNodeTypeTag = (node: RoseliaVNode): VNodeType => {
@@ -82,6 +84,26 @@ export function createElement(
         props: {
             ...(props || {}),
             children
+        },
+        key: props?.key
+    }
+}
+
+export function createElementWithArray(elements: RoseliaVNode[]): RoseliaVNode
+export function createElementWithArray(tag: string, props: object, children: RoseliaVNode[]): RoseliaVNode
+export function createElementWithArray<P>(component: RoseliaFunctionComponent<P>, props: P, children: RoseliaVNode[]): RoseliaVNode
+export function createElementWithArray(
+    tag: keyof HTMLElementTagNameMap | Function | string | RoseliaVNode[],
+    props: Keyable & object | null = null,
+    children?: RoseliaVNode[]
+): RoseliaVNode {
+    if (_.isArray(tag)) return createElement(tag)
+
+    return {
+        tag: tag as any,
+        props: {
+            ...(props || {}),
+            children,
         },
         key: props?.key
     }
