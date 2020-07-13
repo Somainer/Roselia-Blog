@@ -1,7 +1,7 @@
 const MonacoEditorWebpackPlugin = require('monaco-editor-webpack-plugin')
 
 module.exports = {
-    assetsDir: 'blog/static',
+    assetsDir: 'static',
     pwa: {
         "name": 'Roselia Blog',
         "themeColor": '#6670ed',
