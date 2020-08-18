@@ -5,6 +5,10 @@ export { SuggestAdapter };
 export { FormatAdapter, QuickInfoAdapter, SignatureHelpAdapter } from 'monaco-editor/esm/vs/language/typescript/languageFeatures'
 import * as monaco from 'monaco-editor'
 
+// declare var SuggestAdapter: monaco.languages.CompletionItemProvider & {
+//     convertKind(kind: string): monaco.languages.CompletionItemKind
+// }
+
 
 export const getJSWorker = async (...uri: monaco.Uri[]): Promise<monaco.languages.typescript.TypeScriptWorker> => {
     const getter = await getJavaScriptWorker()

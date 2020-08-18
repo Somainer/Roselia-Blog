@@ -3,7 +3,7 @@ import { RecursivePartial, RefObject } from "./script-types";
 
 export type RoseliaText = string | number
 export type RoseliaEmptyVNode = boolean | null | undefined
-export type RoseliaVNode = RoseliaFunctionVNode | RoseliaNativeVNode | RoseliaText | RoseliaEmptyVNode
+export type RoseliaVNode = RoseliaFunctionVNode | RoseliaNativeVNode | RoseliaText | RoseliaEmptyVNode | RoseliaControllVNode
 
 interface RefProp {
     ref?: ((node: Node) => void) | RefObject<Node>
@@ -14,6 +14,8 @@ export const isTextVNode = (node: RoseliaVNode): node is RoseliaText => _.isStri
 export const isFunctionVNode = (node: RoseliaVNode): node is RoseliaFunctionVNode => _.isObject(node) && _.isFunction(node.tag)
 export const isNativeVNode = (node: RoseliaVNode): node is RoseliaNativeVNode => _.isObject(node) && _.isString(node.tag)
 export const vNodeHasProps = (node: RoseliaVNode): node is RoseliaNativeVNode | RoseliaFunctionVNode => _.isObject(node) && _.isObject(node.props)
+export const isFragmentVNode = (node: RoseliaVNode): node is RoseliaNativeVNode => isNativeVNode(node) && !node.tag
+export const isControllVNode = (node: RoseliaVNode): node is RoseliaControllVNode => _.isObject(node) && _.isSymbol(node.tag)
 export const isRoseliaVNode = (maybeNode: any): maybeNode is RoseliaVNode =>
     isEmptyVNode(maybeNode) || isTextVNode(maybeNode) || isFunctionVNode(maybeNode) || isNativeVNode(maybeNode)
 
@@ -44,6 +46,12 @@ export interface RoseliaFunctionVNode<T = any> extends Keyable {
 export interface RoseliaNativeVNode<T extends keyof HTMLElementTagNameMap | string = string> extends Keyable {
     tag: T
     props: WithChildren<T extends keyof HTMLElementTagNameMap ? RecursivePartial<HTMLElementTagNameMap[T]> : object> & RefProp
+}
+
+export interface RoseliaControllVNode extends Keyable {
+    tag: string | symbol
+    props: Record<string, any>
+    child: RoseliaVNode
 }
 
 interface Keyable {
@@ -108,3 +116,5 @@ export function createElementWithArray(
         key: props?.key
     }
 }
+
+export const Fragment = '';

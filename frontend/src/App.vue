@@ -23,6 +23,7 @@
 </template>
 
 <script>
+import Vue from 'vue'
 import ThemeListener from './plugin/ThemeListener'
 import { selectByLuminance } from './common/helpers';
 import {userInfoManager} from "./common/UserInfoManager";
@@ -31,7 +32,7 @@ import NotificationHub from './components/NotificationHub'
 import '@/code-highlight.css'
 // import '@/highlight-vs.css'
 
-export default {
+export default Vue.extend({
   name: 'App',
   components: {
     'theme-listener': ThemeListener,
@@ -70,7 +71,11 @@ export default {
     })
     userInfoManager.addChangeListener(d => {
       this.userData = d
-    })
+      this.$store.commit('setUserData', d)
+      if (d) {
+        this.$store.dispatch('ensureUserMeta')
+      }
+    }, true)
   },
   methods: {
     switchToLight(ev) {
@@ -112,7 +117,7 @@ export default {
       immediate: true
     }
   }
-}
+})
 </script>
 
 <style>

@@ -33,6 +33,7 @@ class UserSessionManager:
         self.sid_dict.remove(sid)
 
     def add_user(self, username: str, sid: str):
+        username = username.lower()
         if self.dict.has(username):
             previous = self.dict.get(username)  # type: list
             if sid not in previous:
@@ -46,10 +47,14 @@ class UserSessionManager:
             self._pop_user_unchecked(self.sid_dict.get(sid), sid)
 
     def get_user_sids(self, username):
+        username = username.lower()
         return self.dict.get_option(username).get_or([])
 
+    def get_username_by_sid(self, sid):
+        return self.sid_dict.get(sid)
+
     def is_online(self, username):
-        return self.dict.has(username)
+        return self.dict.has(username.lower())
 
 
 class RoseliaSocketNS(Namespace):
@@ -75,7 +80,7 @@ class RoseliaSocketNS(Namespace):
         username = UserManager.find_user_option(username).map(attrgetter('username')).get_or(username)
         if username:
             self.session.add_user(username, self.sid)
-            self.enter_room(self.sid, username)
+            self.enter_room(self.sid, username.lower())
         else:
             self.emit('reject', 'You should login first.')
             raise ConnectionRefusedError('Not Authorized', 'Missing token or token expired.')
@@ -83,10 +88,22 @@ class RoseliaSocketNS(Namespace):
     def on_disconnect(self):
         self.session.remove_sid(self.sid)
 
+    def on_query_online_status(self, data):
+        username = data.get('username', '')
+        is_online = self.session.is_online(username)
+        self.emit('user_online_status', {
+            'username': username,
+            'status': is_online
+        })
+    
+    def emit_to_user(self, event, data, username):
+        self.emit(event, data, room=username.lower())
+
     def on_send_message(self, data):
         to = data['to']
+        data['from'] = self.username
         if self.session.is_online(to):
-            self.emit('inbox_message', data, room=to)
+            self.emit('inbox_message', data, room=to.lower())
         else:
             self.emit('warn_message', {
                 'message': '{} is offline and may not respond.'.format(to)

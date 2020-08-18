@@ -48,11 +48,11 @@ def add_comment(username, role, content, to_post, raw_payload):
         author = raw_post.author.username
         if not nickname:
             name = UserManager.find_user(username).nickname
-        emit('post_commented', {
+        main_ns.emit_to_user('post_commented', {
             'post_id': raw_post.post_id,
             'title': raw_post.title,
             'by_name': name
-        }, room=author)
+        }, author)
 
     else:
         token = ''

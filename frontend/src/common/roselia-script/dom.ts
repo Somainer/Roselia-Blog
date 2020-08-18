@@ -1,9 +1,11 @@
 import * as _ from '@/common/fake-lodash'
-import { RoseliaVNode, isEmptyVNode, isTextVNode, isNativeVNode, vNodeHasProps, getVNodeTypeTag, RoseliaFunctionVNode, RoseliaNativeVNode, isFunctionVNode, RoseliaEmptyVNode, RoseliaText, areSameType } from './vnode'
+import { RoseliaVNode, isEmptyVNode, isTextVNode, isNativeVNode, vNodeHasProps, getVNodeTypeTag, RoseliaFunctionVNode, RoseliaNativeVNode, isFunctionVNode, RoseliaEmptyVNode, RoseliaText, areSameType, isFragmentVNode, RoseliaControllVNode, isControllVNode } from './vnode'
 import { Scheduler } from './scheduler';
-import { Fiber, StateHook } from './fiber';
+import { Fiber } from './fiber';
 import { RoseliaStateUpdater } from './states'
 import { UnitFunction } from './script-types';
+import { StateHook, StateHookType, RoseliaHooks, EffectHook, isDependencyChanged, EffectHookType, MemoHook, MemoHookType } from './hooks';
+import { ContextNode, IRoseliaScriptContext, lookupContext } from './context';
 
 
 // On event listeners.
@@ -50,7 +52,12 @@ function createDom(vNode: RoseliaVNode) {
         
         updateDom(node, vNode.props, {})
         if (vNode.props.ref) {
-            if (_.isFunction(vNode.props.ref)) vNode.props.ref(node)
+            if (_.isFunction(vNode.props.ref)) {
+                const callback = vNode.props.ref
+                node.addEventListener('mounted', () => {
+                    callback.call(node, node)
+                })
+            }
             else vNode.props.ref.current = node
         }
 
@@ -70,11 +77,25 @@ function getTextOfVNode(node: RoseliaText | RoseliaEmptyVNode) {
 type FiberWithVNodeTypeOf<T extends RoseliaVNode> = Fiber & { vNode: T };
 
 const commitDeletion = (fiber: Fiber, domParent: HTMLElement) => {
+    fiber.effectTag = 'deletion';
+    if (isFragmentVNode(fiber.vNode)) {
+        removeFragment(fiber, domParent);
+        return;
+    }
     if (fiber.dom) {
         // domParent.removeChild(fiber.dom)
+        fiber.dom.dispatchEvent(new Event('beforeDestroy'))
         fiber.dom.parentNode?.removeChild(fiber.dom)
     }
     else if (fiber.child) commitDeletion(fiber.child, domParent)
+}
+
+const removeFragment = (fiber: Fiber, domParent: HTMLElement) => {
+    let currentFiber = fiber.child;
+    while (currentFiber) {
+        commitDeletion(currentFiber, domParent);
+        currentFiber = currentFiber.sibling;
+    }
 }
 
 const findNextSibling = (fiber?: Fiber) => {
@@ -124,29 +145,94 @@ export class RoseliaDomOwner {
         this.domScheduler.changeWorkTo(this.wipRoot)
     }
 
+    private useRefresh() {
+        const fiber = this.currentFiber;
+        return () => {
+            this.wipRoot = {
+                dom: fiber?.dom || null,
+                vNode: fiber?.vNode,
+                alternate: fiber,
+                effectTag: 'update'
+            }
+            this.deletions = [];
+            this.domScheduler.changeWorkTo(this.wipRoot)
+        }
+    }
+
     public destroy() {
         this.domScheduler.kill()
     }
 
+    private withHook<H extends RoseliaHooks, T>(fn: (hook?: H) => [H, T]) {
+        const oldHook = this.currentFiber?.alternate?.hooks?.[this.hookIndex] as H | undefined
+        const [newHook, returnValue] = fn(oldHook);
+        this.currentFiber?.hooks?.push(newHook)
+        ++this.hookIndex;
+        return returnValue
+    }
+
+    public useEffect(callback: () => UnitFunction | undefined, deps: any[]) {
+        return this.withHook((oldHook?: EffectHook) => {
+            const isDepChanged = !oldHook || isDependencyChanged(oldHook.deps, deps)
+            const newHook: EffectHook = {
+                type: EffectHookType,
+                deps,
+                clearEffect: oldHook?.clearEffect
+            }
+            if (isDepChanged) {
+                newHook.clearEffect?.()
+                newHook.clearEffect = callback();
+            }
+            return [newHook, undefined]
+        })
+    }
+
+    public useMemo<T>(compute: () => T, deps: any[]): T {
+        return this.withHook((oldHook?: MemoHook<T>) => {
+            const newHook: MemoHook<T> = {
+                type: MemoHookType,
+                value: oldHook?.value || null,
+                deps
+            }
+            const isDepChanged = !oldHook || isDependencyChanged(oldHook.deps, deps);
+            if (isDepChanged) {
+                newHook.value = compute();
+            }
+            return [newHook, newHook.value as T]
+        })
+    }
+
+    public useCallback<T>(callback: T, deps: any[]) {
+        return this.useMemo(() => callback, deps);
+    }
+
     public useState<S>(initialState: S | (() => S)): [S, RoseliaStateUpdater<S>] {
         const oldHook = this.currentFiber?.alternate?.hooks?.[this.hookIndex] as StateHook<S> | null
-        const hook: StateHook<S> = {
-            state: oldHook?.state || (initialState instanceof Function ? initialState() : initialState),
-            queue: []
+        const hook: StateHook<S> = oldHook || {
+            type: StateHookType,
+            state: (initialState instanceof Function ? initialState() : initialState),
+            queue: [],
+            setState: action => {
+                hook.queue.push(action)
+                // refresh()
+                this.refresh()
+            }
         }
 
-        oldHook?.queue.forEach(action => {
-            hook.state = action instanceof Function ? action(hook.state) : action
-        })
-
-        const setState: RoseliaStateUpdater<S> = action => {
-            hook.queue.push(action)
-            this.refresh()
+        if (oldHook) {
+            oldHook?.queue.forEach(action => {
+                hook.state = action instanceof Function ? action(hook.state) : action
+            })
+            oldHook.queue = []
         }
 
         this.currentFiber?.hooks?.push(hook)
         ++this.hookIndex;
-        return [hook.state, setState]
+        return [hook.state, hook.setState]
+    }
+
+    public useContext<T>(context: IRoseliaScriptContext<T>): T {
+        return lookupContext(context, this.currentFiber ?? undefined)
     }
 
     public whenDomUpdated(callback: UnitFunction) {
@@ -158,6 +244,8 @@ export class RoseliaDomOwner {
         if (isFunctionVNode(fiber.vNode)) {
             // TS typechecker can not realize the type is fit here.
             this.updateFunctionVNode(fiber as any)
+        } else if (isControllVNode(fiber.vNode)) {
+            this.updateControllNode(fiber as any)
         } else {
             this.updateHostVNode(fiber as any)
         }
@@ -178,6 +266,10 @@ export class RoseliaDomOwner {
         this.deletions = []
         this.commitWork(this.wipRoot?.child);
         this.currentRoot = this.wipRoot
+        if (this.wipRoot?.alternate) {
+            // To ensure old fiber could be cleaned by GC.
+            this.wipRoot.alternate.alternate = null;
+        }
         this.wipRoot = null;
         this.domUpdatedCallback?.()
     }
@@ -195,6 +287,7 @@ export class RoseliaDomOwner {
             const sibling = findNextSibling(fiber)
             if (sibling?.dom && domParent.contains(sibling.dom)) domParent.insertBefore(fiber.dom, sibling.dom)
             else domParent.appendChild(fiber.dom)
+            fiber.dom.dispatchEvent(new Event('mounted'))
         } else if (
             fiber.effectTag === 'update' &&
             fiber.dom
@@ -210,6 +303,11 @@ export class RoseliaDomOwner {
             }
         } else if (fiber.effectTag === 'deletion') {
             commitDeletion(fiber, domParent)
+            fiber.hooks?.forEach(hook => {
+                if (hook.type === EffectHookType) {
+                    hook.clearEffect?.()
+                }
+            })
         }
         this.commitWork(fiber.child)
         this.commitWork(fiber.sibling)
@@ -275,7 +373,7 @@ export class RoseliaDomOwner {
         try {
             result = fiber.vNode.tag(fiber.vNode.props)
         } catch (e) {
-            console.log('Rendering virtual node:', fiber.vNode, fiber.vNode.tag.toString())
+            console.error('Rendering virtual node:', fiber.vNode, fiber.vNode.tag)
             console.error(e);
         }
 
@@ -289,6 +387,14 @@ export class RoseliaDomOwner {
         }
     
         if (vNodeHasProps(fiber.vNode)) this.reconcileChildren(fiber, fiber.vNode.props.children)
+    }
+
+    private updateControllNode(fiber: FiberWithVNodeTypeOf<RoseliaControllVNode>) {
+        switch (fiber.vNode.tag) {
+            case ContextNode:
+                this.reconcileChildren(fiber, [fiber.vNode.child])
+                return;
+        }
     }
 }
 

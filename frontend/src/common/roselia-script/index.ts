@@ -19,8 +19,9 @@ import {summonDialog} from './summonDialog'
 import Vue from 'vue';
 import { mapEntries } from '../helpers';
 import { RoseliaVNode, vNodeHasProps, createElement } from './vnode'
-import { h } from './creater-syntax-sugars'
+import { h, hyperScript } from './creater-syntax-sugars'
 import { RoseliaDomOwner } from './dom'
+import { createContext, IRoseliaScriptContext } from './context'
 import { compileTemplate, compileTemplateBody } from './compiler'
 import * as PluginStorage from '@/common/api/plugin-storage'
 declare global {
@@ -109,6 +110,7 @@ function render (template: string, context: any, delim: string[]) { // A not so 
   })
 }
 
+const shouldBypassSelfish = Symbol('shouldBypassSelfish');
 function selfish<T extends object, K extends keyof T> (target: T, forbid?: K[]): T {
   const cache = new WeakMap()
   const forbidden = new Set(forbid)
@@ -118,12 +120,19 @@ function selfish<T extends object, K extends keyof T> (target: T, forbid?: K[]):
       if (forbidden.has(key)) return null;
       const value = Reflect.get(target, key)
       if (!_.isFunction(value)) return value
+      if (value[shouldBypassSelfish]) {
+        return value;
+      }
       if (!cache.has(value)) {
         cache.set(value, value.bind(target))
       }
       return cache.get(value)
     }
   })
+}
+selfish.byPass = <T>(object: T) => {
+  object[shouldBypassSelfish] = true;
+  return object;
 }
 
 function sandbox<T extends object>(target: T): T {
@@ -326,6 +335,10 @@ class RoseliaRenderer {
   resetHookCounts() {
     this.scriptEvaluator._effectManager.reset()
     this.scriptEvaluator.stateManager.reset()
+  }
+
+  destroy() {
+    this.scriptEvaluator._domOwner.destroy();
   }
 }
 
@@ -646,6 +659,18 @@ export class RoseliaScript {
     return h(tag, prop, ...children)
   }
 
+  hyperScript = selfish.byPass(new Proxy(hyperScript, {
+    has(target, key) {
+      return Reflect.has(target, key)
+    },
+    get: (target, key: string) => {
+      if (this.inRenderMode) {
+        return (prop: object, ...children: any[]) => this.$createElement(key, prop, ...children);
+      }
+      return target[key]
+    }
+  }))
+
   createNativeElement<K extends keyof HTMLElementTagNameMap>(
     type: K,
     extend?: RecursivePartial<HTMLElementTagNameMap[K]>,
@@ -910,17 +935,18 @@ export class RoseliaScript {
     
   }
 
-  useInterval(fn: () => void, threshold: number | null) {
+  useInterval(fn: () => void, threshold: number | null, deps: any[] = []) {
     this.useEffect(() => {
       if (typeof threshold === 'number') {
         const timer = setInterval(() => fn(), threshold)
         return () => clearInterval(timer)
       }
-    }, [threshold])
+    }, [threshold, ...deps])
   }
 
   useEffect(fn: () => Optional<UnitFunction>, deps: any[] = []) {
-    this._effectManager.useEffect(fn, deps)
+    if (this.inRenderMode) this._effectManager.useEffect(fn, deps)
+    this._domOwner.useEffect(fn, deps)
   }
 
   useState<S>(state: S | (() => S)) {
@@ -928,8 +954,38 @@ export class RoseliaScript {
     else return this._domOwner.useState(state);
   }
 
-  useRef<S>(): RefObject<S> {
-    return this.useState({current: null})[0]
+  useRef<S>(init: S): RefObject<S> {
+    return this.useState({ current: init })[0]
+  }
+
+  useMemo<S>(compute: () => S, deps: any[] = []) {
+    if (this.inRenderMode) {
+      return compute()
+    }
+    return this._domOwner.useMemo(compute, deps)
+  }
+
+  useCallback(fn: () => void, deps: any[]) {
+    return this.useMemo(() => fn, deps)
+  }
+
+  useReactiveState<S extends object>(init: S | (() => S)) {
+    const [state, setState] = this.useState(init);
+    return this.useMemo(() => new Proxy(state, {
+      set(target, key, value) {
+        const result = Reflect.set(target, key, value);
+        setState(target);
+        return result;
+      }
+    }), [])
+  }
+
+  createContext<T>(defaultValue: T) {
+    return createContext(defaultValue)
+  }
+
+  useContext<T>(context: IRoseliaScriptContext<T>) {
+    return this._domOwner.useContext(context)
   }
 
   /** @deprecated Use function props directly. */

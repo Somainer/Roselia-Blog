@@ -37,7 +37,8 @@ export class MonacoWrapper extends Vue {
 
         const lineHeight = editor.getOption(Monaco.editor.EditorOption.lineHeight)
         const lineCount = editor.getModel()?.getLineCount() || 1
-        const height = editor.getTopForLineNumber(lineCount + 1) + lineHeight
+        const computedHeight = editor.getTopForLineNumber(lineCount + 1) + lineHeight
+        const height = Math.min(computedHeight, screen.availHeight * 0.9)
 
         if (this.prevHeight !== height) {
             this.prevHeight = height

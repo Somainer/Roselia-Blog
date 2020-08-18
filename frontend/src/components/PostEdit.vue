@@ -91,23 +91,6 @@
               ></v-switch>
             </v-col>
           </v-row>
-          <v-row>
-            <v-col :cols="3">
-              <v-select
-                :items="availableEditors"
-                v-model="currentEditor"
-                label="Editor"
-              ></v-select>
-            </v-col>
-            <v-col
-              v-if="currentEditor === 'easymde'"
-            >
-              <span>Paste Option</span>
-              <v-switch color="accent"
-                :label="pasteHtml ? 'HTML' : 'Plain Text'"
-                v-model="pasteHtml"></v-switch>
-            </v-col>
-          </v-row>
           <v-btn round @click="explorerOpen = true" color="primary" v-if="richPostExtensions.length">
             +<v-icon>extension</v-icon>Plugins
           </v-btn>
@@ -143,6 +126,23 @@
             label="Banner Image"
             prepend-icon="image"
           ></v-text-field>
+          <v-row>
+            <v-col :cols="3">
+              <v-select
+                :items="availableEditors"
+                v-model="currentEditor"
+                label="Editor"
+              ></v-select>
+            </v-col>
+            <v-col
+              v-if="currentEditor === 'easymde'"
+            >
+              <span>Paste Option</span>
+              <v-switch color="accent"
+                :label="pasteHtml ? 'HTML' : 'Plain Text'"
+                v-model="pasteHtml"></v-switch>
+            </v-col>
+          </v-row>
           <span>Content</span>
           <editor-switcher 
             :editor="currentEditor"
@@ -393,12 +393,12 @@ export default {
         this.showToast(reason, 'error')
       })
     },
-    doEditPost () {
+    doEditPost (shouldRedirect = true) {
       if(!this.valid) return
       this.loading = true
       return utils.fetchJSONWithSuccess(utils.apiFor('add'), 'POST', this.getRequestForm()).then(data => {
-        this.showToast('Success!', 'success')
-        this.leave()
+        this.showToast('Post Saved', 'success')
+        if (shouldRedirect || this.addPost) this.leave()
       }).catch(reason => {
         this.$Progress.fail()
         if (reason === 'expired') {
@@ -505,7 +505,7 @@ export default {
     postPageActionBus() {
       /** @type {IRoseliaEditPageActionBus} */
       const actionBus = {
-        save: () => this.doEditPost(),
+        save: this.doEditPost,
         goToPreview: () => {
           this.$router.push({name: 'post', params: {data: this.getPreviewData()}})
         },

@@ -1,11 +1,6 @@
 import { RoseliaVNode } from './vnode';
-import { RoseliaStateUpdaterProp } from './states'
+import { RoseliaHooks } from './hooks'
 
-
-export interface StateHook<T = any> {
-    state: T
-    queue: RoseliaStateUpdaterProp<T>[]
-}
 
 export interface Fiber {
     dom: HTMLElement | null
@@ -15,7 +10,7 @@ export interface Fiber {
     vNode: RoseliaVNode
     alternate: Fiber | null
     effectTag: DomChangeType
-    hooks?: StateHook[]
+    hooks?: RoseliaHooks[]
 }
 
 export type DomChangeType = 'update' | 'placement' | 'deletion'

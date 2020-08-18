@@ -338,7 +338,8 @@ export default {
       y: 0
     },
     cachedData: false,
-    renderer: null,
+    /** To make this property non-reactive. */
+    // renderer: null,
     toast: utils.getToastOption(),
     rsRendered: false,
     share: {
@@ -806,6 +807,7 @@ export default {
     this.$emit('postUnload')
     this.$emit('postDestroyed')
     flushContext()
+    this.renderer && this.renderer.destroy()
   },
   watch: {
     userData () {

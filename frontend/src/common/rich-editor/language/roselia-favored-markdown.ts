@@ -11,7 +11,7 @@ monaco.languages.register({
     id: RFMLanguageId
 })
 
-monaco.languages.setMonarchTokensProvider(RFMLanguageId, <any> {
+monaco.languages.setMonarchTokensProvider(RFMLanguageId, <monaco.languages.IMonarchLanguage> {
     defaultToken: '',
     tokenPostfix: '.roselia',
 
@@ -279,12 +279,12 @@ const generateFakeTypeScriptSourceOnObject = <T extends object>(obj: T, filter: 
 }
 
 monaco.languages.typescript.javascriptDefaults.addExtraLib(generateFakeTypeScriptSourceOnObject(RoseliaScript.prototype, key => {
-    return !['def', 'defState', 'useState', 'changeExtraDisplaySettings', 'createElement', '$createElement'].includes(key) // Which will be declared later.
+    return !['def', 'defState', 'useState', 'useMemo', 'useRef', 'useReactiveState', 'changeExtraDisplaySettings', 'createElement', '$createElement', 'hyperScript'].includes(key) // Which will be declared later.
 }), 'roselia-script.d.ts')
 monaco.languages.typescript.javascriptDefaults.addExtraLib(generateFakeTypeScriptSourceOnObject(new RoseliaScript(new Proxy({} as any, {
     get() { return () => {} }
 })), key => {
-    return !key.startsWith('_') && key !== 'app' && !(key in window)
+    return !key.startsWith('_') && key !== 'app' && !(key in window) && key !== 'hyperScript'
 }), 'roselia-dynamic.d.ts')
 monaco.languages.typescript.javascriptDefaults.addExtraLib(`
 /** React-like useState */
@@ -294,6 +294,9 @@ declare function def<T>(variable: string, value: T): T;
 /** Introduce multiple variables. */
 declare function def(variables: string[], values: []): void;
 declare function defState<S>(name: string, state: S | (() => S)): void;
+declare function useMemo<S>(init: (() => S), deps: any[]): S;
+declare function useReactiveState<S>(init: S | (() => S)): S;
+declare function useRef<S>(init: S): { current: S };
 declare function changeExtraDisplaySettings(settings: Partial<{
     metaBelowImage: boolean,
     blurMainImage: boolean,
@@ -328,9 +331,13 @@ type RecursivePartial<T> = {
     T[P] extends object ? RecursivePartial<T[P]> :
     T[P];
 };
+interface RefProp<N = Node> {
+    ref?: ((node: N) => void) | { current?: N }
+};
+type ManagedNativeProps<T> = RecursivePartial<T> & RefProp<T> & Keyable;
 declare function $createElement<T extends keyof HTMLElementTagNameMap>(
     tag: T,
-    props: RecursivePartial<HTMLElementTagNameMap[T]> | null,
+    props: ManagedNativeProps<HTMLElementTagNameMap[T]> | null,
     ...children: RoseliaVNode[]): RoseliaNativeVNode<T>;
 declare function $createElement<P>(
     tag: RoseliaFunctionComponent<P>,
@@ -340,13 +347,24 @@ declare function $createElement(elements: RoseliaVNode[]): RoseliaVNode;
 
 declare function createElement<T extends keyof HTMLElementTagNameMap>(
     tag: T,
-    props: RecursivePartial<HTMLElementTagNameMap[T]> | null,
+    props: ManagedNativeProps<HTMLElementTagNameMap[T]> | null,
     children: RoseliaVNode[]): RoseliaNativeVNode<T>;
 declare function createElement<P>(
     tag: RoseliaFunctionComponent<P>,
     props: P | null,
     children: RoseliaVNode[]): RoseliaFunctionVNode<P>;
 declare function createElement(elements: RoseliaVNode[]): RoseliaVNode;
+type HyperScriptCreater = typeof $createElement & {
+    [K in keyof HTMLElementTagNameMap]: (props?: ManagedNativeProps<HTMLElementTagNameMap[K]> | RoseliaVNode, ...children: RoseliaVNode[]) => RoseliaNativeVNode;
+} & {
+    Fragment: (...children: (RoseliaVNode | RoseliaVNode[])[]) => RoseliaVNode;
+};
+declare var hyperScript: HyperScriptCreater;
+interface IRoseliaScriptContext<T> {
+    Provider: RoseliaFunctionComponent<{value: T}>
+};
+declare function createContext<T>(defaultValue: T): IRoseliaScriptContext<T>;
+declare function useContext<T>(context: IRoseliaScriptContext<T>): T;
 `, 'essentials.d.ts')
 
 
@@ -359,7 +377,7 @@ const refreshModelByContent = (content: string) => {
 }
 
 monaco.languages.registerCompletionItemProvider(RFMLanguageId, {
-    triggerCharacters: ['.'],
+    triggerCharacters: ['.', "'", '"'],
     async provideCompletionItems(model, position, context) {
         const textUntilPosition = model.getValueInRange({startLineNumber: 1, startColumn: 1, endLineNumber: position.lineNumber, endColumn: position.column});
         const match = textUntilPosition.match(/(?:r|R|roselia|Roselia){{(([\s\S](?!}}))+)$/);

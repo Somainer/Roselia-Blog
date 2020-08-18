@@ -2,7 +2,7 @@
 import type { IUploadedImageMeta } from '@/common/api/images'
 
 export interface IRoseliaEditPageFullActionBus {
-    save(): void
+    save(shouldLeave: boolean): void
     saveDraft(): void
     goToPreview(): void
     goToLivePreview(): void

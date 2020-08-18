@@ -1,3 +1,4 @@
+import type { VNode } from 'vue'
 import { IImageMeta } from './api/images';
 import { RoseliaStorage } from './RoseliaStorage';
 
@@ -20,8 +21,10 @@ export interface IRoseliaPost {
 export interface IRoseliaUserMeta {
     id: number
     avatar?: string
+    banner?: string
     mail?: string
     nickname: string
+    motto?: string
     role: number
     username: string
 }
@@ -30,6 +33,17 @@ export interface IPostDraft {
     data: IRoseliaPost
     markdown: true
     uploadImages: IImageMeta
+}
+
+export interface IRoseliaPostComment {
+    id: number
+    content: string | VNode
+    replies: IRoseliaPostComment[]
+    createdAt: Date
+    color?: string
+    replyTo?: number
+    author?: IRoseliaUserMeta
+    nickname?: string
 }
 
 export const keyForDraft = (postId: number) => `postDraft#${postId}`

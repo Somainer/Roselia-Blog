@@ -552,7 +552,7 @@ def login():
             }
     username = acm.find_user(username).username
     # log.v("User logged in successfully!", username=username, role=code)
-    emit('user_login', conn_info(), room=username)
+    socket_namespace.emit_to_user('user_login', conn_info(), username)
     return {
         'success': True, 'token': token_processor.iss_token(username, code)[1]['token'],
         'role': code,

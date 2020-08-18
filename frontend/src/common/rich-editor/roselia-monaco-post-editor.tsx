@@ -38,7 +38,14 @@ export class RoseliaMonacoEditor extends Vue {
 
         const editor = this.editor
         editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_S, () => {
-            actionBus.save?.()
+            actionBus.save?.(false)
+        })
+        editor.addAction({
+            id: 'save-and-leave',
+            label: `${RoseliaMonacoEditor.CommandPrefix}: Save Changes and Leave`,
+            run() {
+                actionBus.save?.(true)
+            }
         })
 
         if (actionBus.goToPreview) {
