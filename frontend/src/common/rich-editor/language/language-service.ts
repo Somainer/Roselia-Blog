@@ -9,6 +9,17 @@ import * as monaco from 'monaco-editor'
 //     convertKind(kind: string): monaco.languages.CompletionItemKind
 // }
 
+const extraLibs: monaco.Uri[] = [];
+
+export const addExtraLibViaModel = (model: monaco.editor.ITextModel) => {
+    extraLibs.push(model.uri);
+    return () => {
+        const index = extraLibs.indexOf(model.uri);
+        if (index > -1) {
+            extraLibs.splice(index, 1);
+        }
+    }
+}
 
 export const getJSWorker = async (...uri: monaco.Uri[]): Promise<monaco.languages.typescript.TypeScriptWorker> => {
     const getter = await getJavaScriptWorker()

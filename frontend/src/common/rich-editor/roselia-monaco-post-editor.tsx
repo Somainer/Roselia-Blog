@@ -1,5 +1,5 @@
 import Vue from 'vue'
-import { Component, Model, Prop } from 'vue-property-decorator'
+import { Component, Model, Prop, Watch } from 'vue-property-decorator'
 import * as monaco from 'monaco-editor'
 import { MonacoWrapper } from './monaco-wrapper'
 import { IRoseliaEditPageActionBus, imageSourceForUrl } from './editor-actions'

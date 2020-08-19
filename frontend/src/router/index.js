@@ -45,6 +45,7 @@ const SystemMonitor = () => import(/* webpackChunkName: "fire-bird" */ '../compo
 const DraftManage = () => import(/* webpackChunkName: "fire-bird" */ '../components/console/DraftManage')
 // import UploadedImagesManagement from '../components/console/UploadedImagesManagement'
 const UploadedImagesManagement = () => import(/* webpackChunkName: "fire-bird" */ '../components/console/UploadedImagesManagement')
+const AboutComponent = () => import(/* webpackChunkName: "fire-bird" */ '../components/console/About.vue')
 
 Vue.use(Router)
 
@@ -190,6 +191,11 @@ export default new Router({
           meta: {
             title: 'Uploaded Image Management'
           }
+        },
+        {
+          path: 'about',
+          name: 'about',
+          component: AboutComponent,
         },
         {
           path: '/',

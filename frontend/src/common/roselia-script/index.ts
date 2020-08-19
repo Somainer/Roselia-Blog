@@ -526,12 +526,16 @@ export class RoseliaScript {
     })
   }
 
-  importJS (url: string, onComplete?: any) {
-    const jsNode = document.createElement('script')
-    jsNode.onload = onComplete
-    jsNode.async = true
-    jsNode.src = url
-    document.body.appendChild(jsNode)
+  importJS(url: string, onComplete?: any) {
+    return new Promise((resolve, reject) => {
+      const jsNode = document.createElement('script')
+      jsNode.addEventListener('load', onComplete)
+      jsNode.addEventListener('load', resolve)
+      jsNode.addEventListener('error', reject)
+      jsNode.async = true
+      jsNode.src = url
+      document.body.appendChild(jsNode)
+    })
   }
 
   def(name: string | string[], func: any) {
@@ -633,7 +637,15 @@ export class RoseliaScript {
     //   })
     // }
     // return el
-    if (this.inRenderMode) return this.createNativeElement(type, prop, (children || []) as (Node | string)[])
+    if (this.inRenderMode) {
+      if (_.isFunction(type)) {
+        return type({
+          ...(prop || {}),
+          children: children || []
+        })
+      }
+      return this.createNativeElement(type, prop, (children || []) as (Node | string)[])
+    }
     return createElement(type, prop || null, ...(children as RoseliaVNode[] || []))
   }
 
@@ -659,6 +671,14 @@ export class RoseliaScript {
     return h(tag, prop, ...children)
   }
 
+  /**
+   * A more efficient syntax sugar for easy creating elements:
+   * def('h', hyperScript)
+   * h('div', 
+   *  h.h1('Title')
+   *  h.h2(Subtitle')
+   * )
+   */
   hyperScript = selfish.byPass(new Proxy(hyperScript, {
     has(target, key) {
       return Reflect.has(target, key)
@@ -668,6 +688,9 @@ export class RoseliaScript {
         return (prop: object, ...children: any[]) => this.$createElement(key, prop, ...children);
       }
       return target[key]
+    },
+    apply: (_target, thisArg, args) => {
+      return Reflect.apply(this.inRenderMode ? this.$createElement : hyperScript, thisArg, args);
     }
   }))
 

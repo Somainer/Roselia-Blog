@@ -77,7 +77,7 @@
               {{ toast.text }}
             </v-alert>
             <v-slide-x-transition hide-on-leave>
-              <router-view :userData="userData" :toast="showToast"></router-view>
+              <router-view :userData="userData" :toast="showToast" :currentColorScheme="currentColorScheme"></router-view>
             </v-slide-x-transition>
           </v-col>
         </v-row>
@@ -136,6 +136,7 @@ export default {
         { icon: 'refresh', text: 'Token Refresh', to: {name: 'tokenRefresh'}, cond: this.userData.rftoken },
         { icon: 'verified_user', text: 'Remote Login', to: {name: 'remoteLogin'} },
         { divider: true },
+        { icon: 'info', text: 'About', to: {name: 'about'} },
         { icon: 'exit_to_app', text: 'Log Out', to: {name: 'login', params: {logout: true}} }
       ].filter(itm => !itm.hasOwnProperty('cond') || itm.cond)
     }
