@@ -29,8 +29,8 @@ class GithubOauth(GeneralOauth):
 
     @classmethod
     def get_user_information(cls, token):
-        resp = requests.get('https://api.github.com/user', {
-            'access_token': token
+        resp = requests.get('https://api.github.com/user', headers={
+            'Authorization': f'token {token}'
         })
         js = resp.json()
         return js.get('login')
