@@ -1,6 +1,6 @@
 # Roselia-Blog
 
-Roselia-Blog is a blog engine. Its front-end is mostly written in TypeScript and Vue, while its back-end is written in Python.
+Roselia-Blog is a blog engine. Its front-end is mostly written in TypeScript and Vue, while its back-end is written in C# and F#.
 
 English | [简体中文](./README-CN.md)
 
@@ -8,37 +8,34 @@ English | [简体中文](./README-CN.md)
 These are steps you should take after cloning this repo.
 
 ### Prerequisite
-* `Python 3.6+` (because of string interpolations).
+* `Visual Studio 2019+` (because of .net 5).
 * `NodeJS`  (to compile the front-end).
 * `Yarn pkg` The package manager for NodeJS.
-
-Then install the dependencies via `pip install -r requirements.txt`.
-Then change current work dir to `./frontend` and execute `yarn`.
 
 ### Configuration
 There are three configs you need to change based on your conditions.
 In general, you do not need to change configs with a default value except blog title, motto and link.
 
-In `api_server/config.py` you could change:
-* `BLOG_LINK`: The link to your blog webpage.
-* `BLOG_INFO`: Change title, motto as you like. (For server-side static page rendering.)
-* `DEBUG`: Make sure it is `False` if you want to run it in production.
-* `ANTI_SEO`: Disable SEO optimization if this is `True`. If so, contents won’t be rendered per user request. Note that spiders which might execute user JavaScript like Google may also get the content.
+In `config.toml` you could change:
+* `link`: The link to your blog webpage.
+* `title`: Change title.
+* `motto`: Change motto.
+* `antiSEO`: Disable SEO optimization if this is `True`. If so, contents won’t be rendered per user request. Note that spiders which might execute user JavaScript like Google may also get the content.
 * `HOST`: The listening host, default `0.0.0.0`.
 * `PORT`: The listening port, default 5000.
 * `DB_PATH`: The database address,can be SQL addresses.
 * `UPLOAD_DIR`: The image upload directory. Make it empty to disable directly upload images to this server.
 
-In `api_server/secret.py` you could change:
-* `APP_KEY` & `APP_SALT`: The application key and salt for token generation. Change it to `gen_key()` to generate a random key every launch, or change it to a custom `str` value.
+In `secret.toml` you could change:
+* `appKey` & `appSecret`: The application key and salt for token generation. Change it to `gen_key()` to generate a random key every launch, or change it to a custom `str` value.
 * `GITHUB_CLIENT_ID` & `GITHUB_CLIENT_SECRET`: the id and secret for GitHub OAuth, keep it empty to disable it.
 * `MICROSOFT_CLIENT_ID` & `MICROSOFT_CLIENT_SECRET`: the id and secret for MSA OAuth, keep it empty to disable it.
 * `CHEVERETO_API_KEY` & `CHEVERETO_API_ENDPOINT`: the api enpoint and key for uploading images to the chevereto service. Keep them empty to disable this upload channel.
 * `SM_MS_API_TOKEN`: The api token to upload images to `sm.ms` image hosting server. Keep it empty to disable this channel.
 
 In `frontend/src/common/config.js`, you could change (in bottom `export default` clause):
-* `title`: The title of blog.
-* `motto`: The motto of blog.
+<!-- * `title`: The title of blog. -->
+<!-- * `motto`: The motto of blog. -->
 * `apiBase`: The api base URL of the site, default `/api`.
 * `theme`: The theme of the blog.
 * `enableRoseliaScript`: Control whether enable the in post rendering JavaScript.
@@ -51,7 +48,7 @@ In `frontend/src/common/config.js`, you could change (in bottom `export default`
 
 Basically, you only need to change title and motto and footName.
 
-### Build
+<!-- ### Build
 After installing all dependencies, you just execute `api_server/roselia.py build` to build the front-end.
 
 ### Start
@@ -70,7 +67,7 @@ command could be:
 > * copy-assets Copy **built** front-end assets to static, then replace CSS and JS in templates.
 > * build-frontend Build the front end.
 > * build = compress-assets + build-front-end + copy-assets
-> * assets = compress-assets + copy-assets
+> * assets = compress-assets + copy-assets -->
 
 ## Features
 If you are writing codes or formulas in articles, this blog is suitable for you because this blog has native, out-of-the-box support of following functions:
