@@ -58,6 +58,18 @@ interface RecursiveCommentProps {
 
 export default tsx.componentFactoryOf<RecursiveCommentProps>().create({
   name: 'recursive-comment',
+  components: {
+    VTimeline,
+    VTimelineItem,
+    VRow,
+    VCol,
+    VChip, 
+    VBtn, 
+    VSlideXTransition, 
+    VIcon,
+    VAvatar,
+    VImg
+  },
   props: {
     comments: {
       type: Array,
@@ -75,18 +87,18 @@ export default tsx.componentFactoryOf<RecursiveCommentProps>().create({
   },
   render(): VNode {
     return (
-      <VCol cols={10} sm={7} offset-sm={2}>
+      <v-col cols={10} sm={7} offset-sm={2}>
         {this.renderComments(this.comments as RoseliaComment[])}
-      </VCol>
+      </v-col>
     )
   },
   methods: {
     renderComments(comments: RoseliaComment[]): VNode {
       return (
-        <VTimeline dense align-top>
-          <VSlideXTransition group>
+        <v-timeline dense align-top>
+          <v-slide-x-transition group>
             {comments.map(comment => (
-              <VTimelineItem
+              <v-timeline-item
                 key={comment.id}
                 class="mb-3" fill-dot
                 color={
@@ -94,11 +106,11 @@ export default tsx.componentFactoryOf<RecursiveCommentProps>().create({
                 }
                 id={`comment-${comment.id}`}
               >
-                {(comment as WithAuthor).author && (comment as WithAuthor).author.avatar ? <VAvatar slot="icon">
-                  <VImg src={(comment as WithAuthor).author.avatar}></VImg>
-                </VAvatar> : null}
-                <VRow justify={"space-between"}>
-                  <VCol cols={7}>
+                {(comment as WithAuthor).author && (comment as WithAuthor).author.avatar ? <v-avatar slot="icon">
+                  <v-img src={(comment as WithAuthor).author.avatar}></v-img>
+                </v-avatar> : null}
+                <v-row justify={"space-between"}>
+                  <v-col cols={7}>
                     {this.infoLabel(getNickname(comment), comment.color || ((comment as WithAuthor).author ? 'secondary' : '#bbbbbb'), false,
                       (this.getUsername(comment)) ? { name: 'userTimeline', params: {username: this.getUsername(comment)}} : undefined)}
                     {this.myUsername && caselessEqual(this.getUsername(comment), this.myUsername) ? (
@@ -112,33 +124,33 @@ export default tsx.componentFactoryOf<RecursiveCommentProps>().create({
                       <div domProps-innerHTML={comment.content}></div>
                     ) : comment.content }
                     
-                    {this.canAddComment && (<VBtn text icon onClick={() => this.$emit('reply-comment', comment.id)}>
-                      <VIcon>reply</VIcon>
-                    </VBtn>)}
-                    {this.canDeleteComment(comment) ? (<VBtn text icon color="error" small onClick={
+                    {this.canAddComment && (<v-btn text icon onClick={() => this.$emit('reply-comment', comment.id)}>
+                      <v-icon>reply</v-icon>
+                    </v-btn>)}
+                    {this.canDeleteComment(comment) ? (<v-btn text icon color="error" small onClick={
                       () => this.$emit('delete-comment', comment.id)
                     }>
-                      <VIcon>delete</VIcon>
-                    </VBtn>) : null}
-                  </VCol>
-                  <VCol cols={5} class={"text-right"}>
+                      <v-icon>delete</v-icon>
+                    </v-btn>) : null}
+                  </v-col>
+                  <v-col cols={5} class={"text-right"}>
                     {/* {utils.formatDate(comment.createdAt)} */}
                     <RelativeDateTime props={{date: comment.createdAt, brief: true}} />
-                  </VCol>
-                </VRow>
-                <VRow no-gutters dense justify={"start"}>
-                  <VCol cols={12}>
+                  </v-col>
+                </v-row>
+                <v-row no-gutters dense justify={"start"}>
+                  <v-col cols={12}>
                     {comment.replies.length ? (
                         <div>
                           {/* <span class="subheading grey--text">{comment.replies.length === 1 ? 'Reply' : 'Replies'}:</span> */}
                           {this.renderComments(comment.replies)}
                         </div>) : null}
-                  </VCol>
-                </VRow>
-              </VTimelineItem>
+                  </v-col>
+                </v-row>
+              </v-timeline-item>
             ))}
-          </VSlideXTransition>
-        </VTimeline>
+          </v-slide-x-transition>
+        </v-timeline>
       )
     },
     getUsername(c: RoseliaComment) {
@@ -147,10 +159,10 @@ export default tsx.componentFactoryOf<RecursiveCommentProps>().create({
     infoLabel(text: string, color: string, outline: boolean = false, to?: object) {
       const calculatingColor = (this as any).$vuetify.theme.currentTheme[color] || color
       const chip = (
-        <VChip small color={color} outlined={outline} class={{
+        <v-chip small color={color} outlined={outline} class={{
           'ml-0': true,
           'white--text': !outline && selectByLuminance(calculatingColor, false, true, true)
-        }} to={to}>{text}</VChip>
+        }} to={to}>{text}</v-chip>
       )
       return to ? (
         <router-link to={to}>{chip}</router-link>

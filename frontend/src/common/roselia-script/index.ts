@@ -18,8 +18,10 @@ import { INotification } from '@/common/api/notifications'
 import {summonDialog} from './summonDialog'
 import Vue from 'vue';
 import { mapEntries } from '../helpers';
-import { createElement, RoseliaVNode, vNodeHasProps } from './vnode'
+import { RoseliaVNode, vNodeHasProps, createElement } from './vnode'
+import { h, hyperScript } from './creater-syntax-sugars'
 import { RoseliaDomOwner } from './dom'
+import { createContext, IRoseliaScriptContext } from './context'
 import { compileTemplate, compileTemplateBody } from './compiler'
 import * as PluginStorage from '@/common/api/plugin-storage'
 declare global {
@@ -65,29 +67,33 @@ function replaceTemplate(template: string, delim: string[], replace: (s: string,
   return template.replace(new RegExp((delim || ['{{', '}}']).join('\\s*?(([\\s\\S]+?))\\s*?'), 'gm'), replace)
 }
 
+function evalOnExpr(expr: string, context: any) {
+  const funcTemplate = (expr: string) => `with(data) { with (states) { with(functions) {return (${expr});}}}`
+  const bigC = /^([a-zA-Z_$]+[a-zA-Z_0-9]*){([\s\S]+)}/.exec(expr)
+  let res
+  let isSingleCall = false
+  if (bigC) {
+    let [_inp, fn, ctx] = bigC
+    const func = (context[fn] || context.functions[fn])
+    if (_.isFunction(func)) {
+      res = func(unescapeFromHTML(ctx))
+      isSingleCall = true
+    }
+  }
+  if (!isSingleCall) {
+    expr = unescapeFromHTML(expr)!
+    res = (new Function('data', funcTemplate(expr))).call(context, context)
+  }
+  return res
+}
+
 function render (template: string, context: any, delim: string[]) { // A not so naive template engine.
-  const funcTemplate = expr => `with(data) { with (states) { with(functions) {return (${expr});}}}`
   const innerRenderer = expr => {
     if (!config.enableRoseliaScript) {
       return `<pre><code>${expr}</code></pre>`
     }
     try {
-      const bigC = /^([a-zA-Z_$]+[a-zA-Z_0-9]*){([\s\S]+)}/.exec(expr)
-      let res
-      let isSingleCall = false
-      if (bigC) {
-        let [_inp, fn, ctx] = bigC
-        const func = (context[fn] || context.functions[fn])
-        if (_.isFunction(func)) {
-          res = func(unescapeFromHTML(ctx))
-          isSingleCall = true
-        }
-      }
-      if (!isSingleCall) {
-        expr = unescapeFromHTML(expr)
-        res = (new Function('data', funcTemplate(expr))).call(context, context)
-      }
-      return handleRenderResult(res)
+      return handleRenderResult(evalOnExpr(expr, context))
     } catch (e) {
       console.log('On rendering:', expr)
       console.error(e)
@@ -104,6 +110,7 @@ function render (template: string, context: any, delim: string[]) { // A not so 
   })
 }
 
+const shouldBypassSelfish = Symbol('shouldBypassSelfish');
 function selfish<T extends object, K extends keyof T> (target: T, forbid?: K[]): T {
   const cache = new WeakMap()
   const forbidden = new Set(forbid)
@@ -113,12 +120,19 @@ function selfish<T extends object, K extends keyof T> (target: T, forbid?: K[]):
       if (forbidden.has(key)) return null;
       const value = Reflect.get(target, key)
       if (!_.isFunction(value)) return value
+      if (value[shouldBypassSelfish]) {
+        return value;
+      }
       if (!cache.has(value)) {
         cache.set(value, value.bind(target))
       }
       return cache.get(value)
     }
   })
+}
+selfish.byPass = <T>(object: T) => {
+  object[shouldBypassSelfish] = true;
+  return object;
 }
 
 function sandbox<T extends object>(target: T): T {
@@ -212,6 +226,14 @@ class RoseliaRenderer {
       this.scriptEvaluator.inRenderMode = false
     }
     // return render(template, this.context, ['(?:Roselia|roselia|r|R){{', '}}'])
+  }
+
+  evaluateOn(exporession: string) {
+    try {
+      return evalOnExpr(exporession, this.context)
+    } catch (e) {
+      return undefined
+    }
   }
 
   cleanScript(template: string) {
@@ -314,10 +336,14 @@ class RoseliaRenderer {
     this.scriptEvaluator._effectManager.reset()
     this.scriptEvaluator.stateManager.reset()
   }
+
+  destroy() {
+    this.scriptEvaluator._domOwner.destroy();
+  }
 }
 
 
-class RoseliaScript {
+export class RoseliaScript {
   app: any
   customFunctions: object
   functions: object
@@ -500,12 +526,16 @@ class RoseliaScript {
     })
   }
 
-  importJS (url: string, onComplete?: any) {
-    const jsNode = document.createElement('script')
-    jsNode.onload = onComplete
-    jsNode.async = true
-    jsNode.src = url
-    document.body.appendChild(jsNode)
+  importJS(url: string, onComplete?: any) {
+    return new Promise((resolve, reject) => {
+      const jsNode = document.createElement('script')
+      jsNode.addEventListener('load', onComplete)
+      jsNode.addEventListener('load', resolve)
+      jsNode.addEventListener('error', reject)
+      jsNode.async = true
+      jsNode.src = url
+      document.body.appendChild(jsNode)
+    })
   }
 
   def(name: string | string[], func: any) {
@@ -607,9 +637,62 @@ class RoseliaScript {
     //   })
     // }
     // return el
-    if (this.inRenderMode) return this.createNativeElement(type, prop, (children || []) as (Node | string)[])
+    if (this.inRenderMode) {
+      if (_.isFunction(type)) {
+        return type({
+          ...(prop || {}),
+          children: children || []
+        })
+      }
+      return this.createNativeElement(type, prop, (children || []) as (Node | string)[])
+    }
     return createElement(type, prop || null, ...(children as RoseliaVNode[] || []))
   }
+
+  /**
+   * A syntax sugar for easy creating elements:
+   * def('h', $createElement)
+   * h('div', 
+   *  h('h1', 'Title')
+   *  h('h2', 'Subtitle')
+   * )
+   */
+  $createElement(tag: string, prop: object, ...children: RoseliaVNode[]) {
+    if (this.inRenderMode) {
+      if (_.isArray(tag)) return this.createNativeElement('div', {}, tag)
+      if (typeof prop !== 'object' || prop instanceof Node) {
+        // Excluding null
+        children = [prop as any, ...children]
+        prop = {}
+      }
+      return this.createElement(tag as keyof HTMLElementTagNameMap, prop, children)
+    }
+
+    return h(tag, prop, ...children)
+  }
+
+  /**
+   * A more efficient syntax sugar for easy creating elements:
+   * def('h', hyperScript)
+   * h('div', 
+   *  h.h1('Title')
+   *  h.h2(Subtitle')
+   * )
+   */
+  hyperScript = selfish.byPass(new Proxy(hyperScript, {
+    has(target, key) {
+      return Reflect.has(target, key)
+    },
+    get: (target, key: string) => {
+      if (this.inRenderMode) {
+        return (prop: object, ...children: any[]) => this.$createElement(key, prop, ...children);
+      }
+      return target[key]
+    },
+    apply: (_target, thisArg, args) => {
+      return Reflect.apply(this.inRenderMode ? this.$createElement : hyperScript, thisArg, args);
+    }
+  }))
 
   createNativeElement<K extends keyof HTMLElementTagNameMap>(
     type: K,
@@ -875,17 +958,18 @@ class RoseliaScript {
     
   }
 
-  useInterval(fn: () => void, threshold: number | null) {
+  useInterval(fn: () => void, threshold: number | null, deps: any[] = []) {
     this.useEffect(() => {
       if (typeof threshold === 'number') {
         const timer = setInterval(() => fn(), threshold)
         return () => clearInterval(timer)
       }
-    }, [threshold])
+    }, [threshold, ...deps])
   }
 
   useEffect(fn: () => Optional<UnitFunction>, deps: any[] = []) {
-    this._effectManager.useEffect(fn, deps)
+    if (this.inRenderMode) this._effectManager.useEffect(fn, deps)
+    this._domOwner.useEffect(fn, deps)
   }
 
   useState<S>(state: S | (() => S)) {
@@ -893,8 +977,38 @@ class RoseliaScript {
     else return this._domOwner.useState(state);
   }
 
-  useRef<S>(): RefObject<S> {
-    return this.useState({current: null})[0]
+  useRef<S>(init: S): RefObject<S> {
+    return this.useState({ current: init })[0]
+  }
+
+  useMemo<S>(compute: () => S, deps: any[] = []) {
+    if (this.inRenderMode) {
+      return compute()
+    }
+    return this._domOwner.useMemo(compute, deps)
+  }
+
+  useCallback(fn: () => void, deps: any[]) {
+    return this.useMemo(() => fn, deps)
+  }
+
+  useReactiveState<S extends object>(init: S | (() => S)) {
+    const [state, setState] = this.useState(init);
+    return this.useMemo(() => new Proxy(state, {
+      set(target, key, value) {
+        const result = Reflect.set(target, key, value);
+        setState(target);
+        return result;
+      }
+    }), [])
+  }
+
+  createContext<T>(defaultValue: T) {
+    return createContext(defaultValue)
+  }
+
+  useContext<T>(context: IRoseliaScriptContext<T>) {
+    return this._domOwner.useContext(context)
   }
 
   /** @deprecated Use function props directly. */

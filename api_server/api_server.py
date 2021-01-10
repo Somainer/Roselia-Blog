@@ -86,6 +86,15 @@ if DEBUG:
         response.headers['Access-Control-Allow-Methods'] = 'POST'
         response.headers['Access-Control-Allow-Headers'] = 'x-requested-with,content-type'
         return response
+    
+    @app.route('/<string:path>.js')
+    def worker_js(path):
+        import requests
+        response = make_response(requests.get('http://localhost:8080/{}.js'.format(path)).content)
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        response.headers['Access-Control-Allow-Methods'] = 'POST'
+        response.headers['Access-Control-Allow-Headers'] = 'x-requested-with,content-type'
+        return response
 
 
     @app.route('/fonts/<string:path>')
@@ -543,7 +552,7 @@ def login():
             }
     username = acm.find_user(username).username
     # log.v("User logged in successfully!", username=username, role=code)
-    emit('user_login', conn_info(), room=username)
+    socket_namespace.emit_to_user('user_login', conn_info(), username)
     return {
         'success': True, 'token': token_processor.iss_token(username, code)[1]['token'],
         'role': code,

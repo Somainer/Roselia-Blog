@@ -26,6 +26,10 @@ export const isObject = (value: any): value is object => {
     const type = typeof value
     return value != null && (type === 'object' || type === 'function')
 }
+export const isSymbol = (value: any): value is symbol => {
+    const type = typeof value
+    return type == 'symbol' || (type === 'object' && value != null && getTag(value) == '[object Symbol]')
+  }
 
 const baseExtend = (dst: any, objs: any[], deep: boolean) => {
     objs.forEach(obj => {

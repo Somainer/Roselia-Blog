@@ -32,7 +32,7 @@ export class RoseliaStorage<T extends object = any> {
         this.onStorageChanged()
     }
 
-    public getItem(key: keyof T) {
+    public getItem<K extends keyof T>(key: K): T[K] {
         const payload = this.payload
         return payload && payload[key]
     }

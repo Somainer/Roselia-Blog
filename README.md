@@ -131,6 +131,30 @@ createElement<K extends keyof HTMLElementTagNameMap>(
   }>)`: Change the extra display settings. `metaBelowImage` controls whether the metadata of post is below the image.
 `blurMainImage` controls if blur the dominant image. `disableSideNavigation` controls whether disable the side navigation.
 * `sendNotification(notification: INotification)`: Send a notification to user (via the global notification bus).
+* `hyperScript` is a convenient shortcut for creating elements without passing children as array. Also, HTML tags can also be used as an attribute to be element creaters. In most cases, we aliasing this value as `h` to make our code shorter via `def('h', hyperScript)`;
+Example: 
+```JavaScript
+defState('userName', ''),
+hyperScript.div(
+    hyperScript.h1('Hello', ' ', 'World!'),
+    hyperScript.span({
+        className: 'heimu'
+    }, 'This content is hidden.'),
+    'Who are you?',
+    hyperScript('input', {
+        value: userName,
+        onInput() {
+            userName = this.value;
+        }
+    }),
+    hyperScript('button', {
+        onClick() {
+            userName = '';
+            toast('Submitted!', 'success')
+        }
+    }, 'Submit')
+)
+```
 
 ### Hooks
 Roselia-Script supports react-like hooks, which is inspired both by Vue and React.
@@ -193,6 +217,62 @@ function useInterval(callback: () => void, interval: number | null): void {
             return () => clearInterval(timer)
         }
     }, [interval])
+}
+```
+
+#### useReactiveState
+```typescript
+declare function useReactiveState<S extends object>(init: S | (() => S)): S;
+```
+
+This hook takes an initial state, then returns a reactive proxy (not recursively listened). Then `Roselia-Script` will listen to its property changes, each change will cause a refresh. Since it is not deeply listened, make sure to mutate the value in the first layer.
+
+#### useMemo / useCallback
+```typescript
+declare function useMemo<S>(compute: () => S, deps: any[] = []): S;
+function useCallback(callback: () => void, deps: any[]) {
+    return useMemo(() => callback, deps)
+}
+```
+`useMemo` prevents duplicate computing of time-intensive works. It takes the computing function which takes no argument and produces the value. This value will be memorized each call until elements of `deps` changes.
+
+#### Contexts
+```typescript
+interface IRoseliaScriptContext<T> {
+    Provider: (props: { value: T }) => RoseliaVNode
+}
+declare function createContext<T>(defaultValue: T): IRoseliaScriptContext<T>;
+
+declare function useContext<T>(context: IRoseliaScriptContext<T>): T;
+```
+
+To use context, first you should create a context, then render a context provider component just like what `React` does.
+In contrast, we do not have a consumer and function as props in `Roselia-Script`,
+instead we use just `useContext` hook.
+`useContext` hook takes a context (**not its provider**), and returns the contextual value, if not context found, the default value will be produced.
+
+```typescript
+const ThemeContext = createContext(null);
+const ThemedButton = ({text}) => {
+    const theme = useContext(ThemeContext)
+    return hyperScript.button({
+        style: {
+            background: theme.primary
+        },
+    }, text)
+}
+const App = () => {
+    return hyperScript(
+        ThemeContext.Provider, 
+        {
+            value: {
+                primary: '#6670ed'
+            }
+        },
+        hyperScript(ThemedButton, {
+            text: 'Themed Button'
+        })
+    )
 }
 ```
 

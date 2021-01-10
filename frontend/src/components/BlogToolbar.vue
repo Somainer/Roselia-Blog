@@ -12,7 +12,7 @@
     </v-toolbar-title>
     <v-spacer></v-spacer>
     <v-toolbar-items v-if="!shouldHaveToolbar">
-      <v-btn dark text @click="dialog = true" v-if="canAskYukina">
+      <v-btn dark text @click="dialog = true" v-if="canAskYukina || canChatWithContextualUser">
         <v-badge color="secondary" :value="notifications.length">
           <span slot="badge">{{ notifications.length }}</span>
           <v-icon>question_answer</v-icon>
@@ -88,7 +88,7 @@
       </v-list-item-content>
     </v-list-item>
   </v-list>
-  <v-list dense class="pt-0" v-if="canAskYukina">
+  <v-list dense class="pt-0" v-if="canAskYukina || canChatWithContextualUser">
     
     <v-list-item @click="dialog = true">
       <v-list-item-action>
@@ -96,15 +96,19 @@
       </v-list-item-action>
 
       <v-list-item-content>
-        <v-list-item-title>Ask Yukina for Help</v-list-item-title>
+        <v-list-item-title v-if="canChatWithContextualUser">Chat with {{ contextualUsername }}</v-list-item-title>
+        <v-list-item-title v-else>Ask Yukina for Help</v-list-item-title>
       </v-list-item-content>
     </v-list-item>
   </v-list>
   </v-navigation-drawer>
+    <div v-if="canChatWithContextualUser">
+      <chat-box :dialog="dialog" :username="currentChatingWith || contextualUsername" @input="v => {dialog = v}" />
+    </div>
     <v-dialog
       v-model="dialog"
       :width="responseList.length ? 1000 :500"
-      v-if="canAskYukina"
+      v-else-if="canAskYukina"
     >
       <v-card>
         <v-card-title
@@ -177,12 +181,15 @@ import {executeCommand, askYukinaForHelp} from '@/custom-command/luis.ts'
 import {mapToCamelCase} from '../common/helpers'
 import GlobalEvents from 'vue-global-events'
 import RecursiveComments from './RecursiveComments'
+import { ChatBox } from './chat-box.tsx'
+import { botUserMeta } from '../common/api/user';
 
 export default {
   name: 'blog-toolbar',
   components: {
     GlobalEvents,
-    RecursiveComments
+    RecursiveComments,
+    ChatBox
   },
   props: ['userData', 'route', 'realTitle', 'noDrawer', 'shouldHide'],
   data () {
@@ -192,8 +199,7 @@ export default {
       command: '',
       loading: false,
       notUnderstand: false,
-      responseList: [],
-      userMeta: {}
+      responseList: []
     }
   },
   methods: {
@@ -231,7 +237,7 @@ export default {
         content: this.command,
         replies: [],
         createdAt: new Date,
-        author: this.userMeta.username ? this.userMeta : this.userData,
+        author: (this.userMeta && this.userMeta.username) ? this.userMeta : this.userData,
         nickname: 'New Staff',
         color: 'accent'
       }]
@@ -257,14 +263,11 @@ export default {
           content: content.content,
           replies: [],
           createdAt: content.time ? new Date(content.time) : new Date,
-          author: {
-            nickname: 'Yukina (Bot)',
-            avatar: 'https://img.lisa.moe/images/2019/04/15/GQ6GLDt_.jpg'
-          },
+          author: botUserMeta,
           color: content.color
         }]
     },
-    ...mapMutations(['clearNotifications'])
+    ...mapMutations(['clearNotifications', 'setChatingWith'])
   },
   computed: {
     title() {
@@ -276,22 +279,43 @@ export default {
     canAskYukina() {
       return meta.enableAskYukina
     },
-    ...mapState(['notifications'])
+    contextualUsername() {
+      if (this.$route.name === 'userTimeline') {
+        return this.$route.params.username;
+      }
+      return ''
+    },
+    canChatWithContextualUser() {
+      return (this.contextualUsername || this.currentChatingWith) && this.userData
+    },
+    ...mapState(['notifications', 'currentChatingWith']),
+    ...mapState({
+      userMeta: 'currentUser'
+    })
   },
   watch: {
     shouldHaveToolbar(val) {
       if(!val) this.drawer = false
     },
+    currentChatingWith(username) {
+      this.dialog = !!username
+      if (!this.canChatWithContextualUser) {
+        if (username) this.dialog = true;
+      }
+    },
     dialog(val) {
       if(val) {
-        this.$nextTick(() => this.$refs.command.focus())
-        if(!this.userMeta.username) {
-           utils.fetchJSONWithSuccess(utils.apiFor('user', 'user-meta'), 'GET', {
-              username: this.userData.username
-            }).then(data => {
-              this.userMeta = mapToCamelCase(data)
-            })
+        this.$nextTick(() => this.$refs.command && this.$refs.command.focus())
+        if (!this.currentChatingWith && this.canChatWithContextualUser) {
+          this.setChatingWith(this.contextualUsername)
         }
+        // if(!this.userMeta.username) {
+        //    utils.fetchJSONWithSuccess(utils.apiFor('user', 'user-meta'), 'GET', {
+        //       username: this.userData.username
+        //     }).then(data => {
+        //       this.userMeta = mapToCamelCase(data)
+        //     })
+        // }
         this.notifications.forEach(n => {
           this.addDialog({
             ...n,
@@ -299,10 +323,12 @@ export default {
           })
         })
         this.clearNotifications()
+      } else {
+        this.setChatingWith(undefined)
       }
     },
     userData() {
-      this.userMeta = {}
+      // this.userMeta = {}
       this.responseList = []
     }
   }

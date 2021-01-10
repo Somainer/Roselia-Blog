@@ -175,6 +175,30 @@ changeExtraDisplaySettings(settings: Partial<{
 
 `sendNotification(notification: INotification)`: 向用户发送通知 (通过通知总线)
 
+`hyperScript`是createElement的简便操作，该函数使得我们不需要将children以数组的形式传入，直接使用参数就行，此外，如果props为空，则可以直接不传该prop。访问其属性可以获得一个函数，可以直接构造出那个HTML元素。在大多数情况下，我们直接将其命名为`h`，可以精简代码。一般我们这样可以精简：`def('h', hyperScript);`下面看一个例子：
+```JavaScript
+defState('userName', ''),
+hyperScript.div(
+    hyperScript.h1('Hello', ' ', 'World!'),
+    hyperScript.span({
+        className: 'heimu'
+    }, 'This content is hidden.'),
+    'Who are you?',
+    hyperScript('input', {
+        value: userName,
+        onInput() {
+            userName = this.value;
+        }
+    }),
+    hyperScript('button', {
+        onClick() {
+            userName = '';
+            toast('Submitted!', 'success')
+        }
+    }, 'Submit')
+)
+```
+
 ### Hooks
 Roselia-Script 支持类似于`React`的hook。这个功能收到了Vue和React的启发（~~读书人的事，怎么能说是抄呢~~），该功能可以帮助用户撰写出响应式的文章。
 我们有如下约定：如果某API能在当前上下文中添加变量，则该API以`def`开头，hook API以`use`开头。
@@ -240,6 +264,62 @@ function useInterval(callback: () => void, interval: number | null): void {
             return () => clearInterval(timer)
         }
     }, [interval])
+}
+```
+
+#### useReactiveState
+```typescript
+declare function useReactiveState<S extends object>(init: S | (() => S)): S;
+```
+
+这个hook接受一个初始值，返回一个Proxy（该Proxy不能递归监听其子属性的变化）。对该Proxy的属性的修改都会引发一次更新。因为这个不是递归监听的，所以要保证每次对元素的修改都是对第一层元素的修改。
+
+#### useMemo / useCallback
+```typescript
+declare function useMemo<S>(compute: () => S, deps: any[] = []): S;
+function useCallback(callback: () => void, deps: any[]) {
+    return useMemo(() => callback, deps)
+}
+```
+
+`useMemo` 可以防止耗时任务的重复计算。该hook接受一个计算函数，该函数不接受任何参数，返回计算后的值，该值将会被缓存，每次调用都会返回缓存的值，直到deps数组的元素发生了更改。
+
+#### 上下文
+```typescript
+interface IRoseliaScriptContext<T> {
+    Provider: (props: { value: T }) => RoseliaVNode
+}
+declare function createContext<T>(defaultValue: T): IRoseliaScriptContext<T>;
+
+declare function useContext<T>(context: IRoseliaScriptContext<T>): T;
+```
+
+在使用Context前，你需要先用`createContext`创建一个。然后渲染`context.Provider`组件，这个行为和`React`一致。
+不一样的是，我们不提供consumer组件，我们用来`useContext` hook替代，这样就足够了。
+`useContext` hook 接受一个context（**不是其Provider**），返回其值，如果找不到这样的上下文，则返回默认值。
+
+```typescript
+const ThemeContext = createContext(null);
+const ThemedButton = ({text}) => {
+    const theme = useContext(ThemeContext)
+    return hyperScript.button({
+        style: {
+            background: theme.primary
+        },
+    }, text)
+}
+const App = () => {
+    return hyperScript(
+        ThemeContext.Provider, 
+        {
+            value: {
+                primary: '#6670ed'
+            }
+        },
+        hyperScript(ThemedButton, {
+            text: 'Themed Button'
+        })
+    )
 }
 ```
 

@@ -38,7 +38,7 @@ const raspiTheme = {
   success: '#229977'
 }
 
-export default {
+module.exports = {
   title: BLOG_TITLE,
   motto: BLOG_MOTTO,
   apiBase: apiBase,

@@ -24,7 +24,7 @@ export default new Vuetify({
   },
   icons: {
     values: {
-      brand: new Proxy({}, {
+      brand: new Proxy({} as any, {
         get (target, key) {
           if (Reflect.has(target, key)) {
             return Reflect.get(target, key)

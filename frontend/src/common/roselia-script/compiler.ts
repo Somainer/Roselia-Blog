@@ -22,7 +22,7 @@ const fragmentToLiteral = (fragment: StringContentFragment) => {
     return fragment.value
 }
 
-const splitStringContentToFragment = (fragments: string, delim?: [string, string]): StringContentFragment[] => {
+export const splitStringContentToFragment = (fragments: string, delim?: [string, string]): StringContentFragment[] => {
     delim = delim  || ['(?:r|R|roselia|Roselia){{', '}}']
     const result = fragments.split(new RegExp(delim.join('\\s*?([\\s\\S]+?)\\s*?'), 'gm')).map((value, index) => {
         if (index & 1) {
@@ -147,12 +147,12 @@ export function emitFragmentToBody(fragment: RoseliaTemplateFragment): string {
     const children = `[${fragment.children.map(value => {
         if (isStringContentFragment(value)) {
             if (value.type === 'string') return stringToLiteral(value.value)
-            return `__r(function() { return (${value.value}); }, null, [])`
+            return `__r(() => { return (${value.value}); }, null, [])`
         }
         return emitFragmentToBody(value)
     }).join(', ')}]`;
     const shouldBeFunction = Object.values(fragment.props).some(x => _.isArray(x) && x.some(y => y.type !== 'string'))
     const elementCreater = `__r('${fragment.tag}', ${props}, ${children})`
-    if (shouldBeFunction) return `__r(function() { return ${elementCreater} }, null, [])`
+    if (shouldBeFunction) return `__r(() => { return ${elementCreater} }, null, [])`
     return elementCreater
 }
