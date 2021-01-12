@@ -13,11 +13,11 @@ namespace RoseliaBlogTest
         public void TestBasicMarkdown()
         {
             const string markdownString = @"
-# Title
-[](/index)
-![img](/favicon.png)
-## Subtitle          
-";
+                # Title
+                [](/index)
+                ![img](/favicon.png)
+                ## Subtitle          
+            ";
             var rfmPipeline = RoseliaFavoredMarkdown.RoseliaFavoredMarkdown.Pipeline;
             var pipeline = ClonePipeline(rfmPipeline);
             RemoveRoselia(pipeline);
