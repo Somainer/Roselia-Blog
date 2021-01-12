@@ -1,4 +1,4 @@
-﻿module RoseliaCore.Util
+﻿module RoseliaBlog.RoseliaCore.Util
 
 let inline mapFromDict dict =
     dict |> Seq.map (|KeyValue|) |> Map.ofSeq
