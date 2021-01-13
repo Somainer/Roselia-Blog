@@ -14,7 +14,7 @@
     </None>
     <Compile Include="Util.fs" />
     <Compile Include="Config.fs" />
-    <Compile Include="RoseliaFavoredMarkdown.fs" />
+    <Compile Include="RoseliaFlavoredMarkdown.fs" />
   </ItemGroup>
 
   <ItemGroup>

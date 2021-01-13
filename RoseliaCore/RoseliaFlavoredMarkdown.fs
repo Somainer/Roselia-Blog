@@ -1,4 +1,4 @@
-﻿module RoseliaBlog.RoseliaCore.RoseliaFavoredMarkdown
+﻿module RoseliaBlog.RoseliaCore.RoseliaFlavoredMarkdown
 
 open System.Text.RegularExpressions
 
@@ -24,19 +24,17 @@ type SpoilerBlockingExtension() =
     
     interface IMarkdownExtension with
         member this.Setup(pipeline) =
-            let emphasis = pipeline.InlineParsers.FindExact<EmphasisInlineParser>()
-            match emphasis with
+            match pipeline.InlineParsers.FindExact<EmphasisInlineParser>() with
             | null -> ()
-            | _ ->
+            | emphasis ->
                 emphasis.EmphasisDescriptors.Add(EmphasisDescriptor ('~', 1, 1, true));
         
         member this.Setup(_pipeline, renderer) =
             match renderer with
             | :? HtmlRenderer as hr ->
-                let emphasis = hr.ObjectRenderers.FindExact<EmphasisInlineRenderer>()
-                match emphasis with
+                match hr.ObjectRenderers.FindExact<EmphasisInlineRenderer>() with
                 | null -> ()
-                | _ ->
+                | emphasis ->
                     let prevDelegate = emphasis.GetTag
                     emphasis.GetTag <-
                         fun emph ->
@@ -91,8 +89,8 @@ type RoseliaScriptExtension () =
             |> renderer.ObjectRenderers.Add
     
 /// The RFM extension.
-type RoseliaFavoredMarkdown() =
-    static member val Pipeline = RoseliaFavoredMarkdown.MakePipeline
+type RoseliaFlavoredMarkdown() =
+    static member val Pipeline = RoseliaFlavoredMarkdown.MakePipeline
     
     static member private MakePipeline =
         let pipeline =
