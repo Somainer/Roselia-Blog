@@ -1,4 +1,5 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using System;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using RoseliaBlog.RoseliaCore;
 
@@ -38,6 +39,10 @@ namespace RoseliaBlogTest
         [TestMethod]
         public void TestCpuUsage()
         {
+            if (OperatingSystem.IsMacOS())
+            {
+                Assert.Inconclusive("Not supported in macOS");
+            }
             var usage = PlatformInfo.CpuUsage.GetUsage;
             Assert.IsNotNull(usage);
         }
@@ -48,6 +53,11 @@ namespace RoseliaBlogTest
         [TestMethod]
         public void TestMemoryUsage()
         {
+            if (OperatingSystem.IsMacOS())
+            {
+                Assert.Inconclusive("Not supported in macOS");
+            }
+            
             var usage = PlatformInfo.MemoryUsage.GetUsage;
             
             Assert.IsTrue(usage.Available > 0);

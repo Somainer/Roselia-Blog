@@ -287,3 +287,13 @@ docs/_book
 test/
 
 # End of https://www.toptal.com/developers/gitignore/api/aspnetcore,vue
+.ionide
+
+# Old version roselia-blog assets
+api_server/
+static_assets/
+env/
+frontend/dist
+static/
+log.txt
+RoseliaBlog/Frontend/dist

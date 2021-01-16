@@ -4,7 +4,7 @@ using RoseliaBlog.RoseliaCore;
 namespace RoseliaBlogTest
 {
     [TestClass]
-    public class CoreTest
+    public class ConfigTest
     {
         [TestMethod]
         public void TestLoadConfig()

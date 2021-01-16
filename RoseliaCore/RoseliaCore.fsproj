@@ -16,7 +16,11 @@
     <Compile Include="Config.fs" />
     <Compile Include="RoseliaFlavoredMarkdown.fs" />
     <Compile Include="PlatformInfo.fs" />
+    <Compile Include="Token\TokenModel.fs" />
     <Compile Include="Token\TokenTypes.fs" />
+    <Compile Include="Token\TokenProcessor.fs" />
+    <Compile Include="Database\Models\User.fs" />
+    <Compile Include="Database\Models\Post.fs" />
   </ItemGroup>
 
   <ItemGroup>

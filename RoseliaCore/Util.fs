@@ -11,3 +11,13 @@ let inline tryGetFromDictWithType<'a, 'b when 'b :> System.Collections.Generic.I
     | _ when not found -> None
     | :? 'a as x -> Some x
     | _ -> None
+
+[<Struct>]
+type OptionalBuilder =
+    member inline this.Bind(opt, binder) =
+        opt
+        |> Option.bind binder
+    
+    member inline this.Return(value) = Some value
+    
+let optional = OptionalBuilder()
