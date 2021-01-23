@@ -1,4 +1,4 @@
-module RoseliaBlog.RoseliaCore.Token.TokenModel
+namespace RoseliaBlog.RoseliaCore.Token
 
 open System.Security.Claims
 

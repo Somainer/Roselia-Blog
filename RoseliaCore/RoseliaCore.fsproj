@@ -21,12 +21,21 @@
     <Compile Include="Token\TokenProcessor.fs" />
     <Compile Include="Database\Models\User.fs" />
     <Compile Include="Database\Models\Post.fs" />
+    <Compile Include="Database\Models\Comment.fs" />
+    <Compile Include="Database\Models\OAuth.fs" />
+    <Compile Include="Database\Models\Catalog.fs" />
+    <Compile Include="Database\Models\Tag.fs" />
+    <Compile Include="Database\Models\PluginStorage.fs" />
+    <Compile Include="Database\Models\Relations.fs" />
+    <Compile Include="Database\Context.fs" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="FSharp.SystemTextJson" Version="0.15.14" />
     <PackageReference Include="Markdig" Version="0.22.1" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.2" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="5.0.2" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="5.0.2" />
     <PackageReference Include="Statiq.Highlight" Version="1.0.0-beta.32" />
     <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="5.0.0" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.8.0" />

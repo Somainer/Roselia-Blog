@@ -1,7 +1,6 @@
 ﻿module RoseliaBlog.RoseliaCore.Token.TokenTypes
 
 open System.Security.Claims
-open System.Text.Json.Serialization
 open Microsoft.IdentityModel.Tokens
 
 type RoseliaTokenType =
@@ -49,7 +48,7 @@ let MakeUserCredential info = MakeToken RoseliaTokenType.UserCredential info
 let MakeRefreshToken info = MakeToken RoseliaTokenType.Refresh info
 let MakeSuperUserToken info = MakeToken RoseliaTokenType.SuperUser info
 
-let ToModel token : TokenModel.TokenModel = {
+let ToModel token : TokenModel = {
     ExpireSeconds =
         token.TokenType
         |> GetExpirationMinutes

@@ -10,7 +10,6 @@ open RoseliaBlog.RoseliaCore
 open RoseliaBlog.RoseliaCore.Config
 open RoseliaBlog.RoseliaCore.Token.TokenTypes
 open Util
-open TokenModel
 
 let private GetSecurityKey () =
     $"{Config.Secrets.AppKey}{Config.Secrets.AppSecret}{Config.Secrets.AppSalt}"

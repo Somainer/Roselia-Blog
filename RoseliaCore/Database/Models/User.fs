@@ -1,10 +1,14 @@
-module RoseliaBlog.RoseliaCore.Database.Models.User
+namespace RoseliaBlog.RoseliaCore.Database.Models
 
 open System.ComponentModel.DataAnnotations
 open System.ComponentModel.DataAnnotations.Schema
 open System.Security.Cryptography
 open System.Text
+open Microsoft.EntityFrameworkCore
 
+[<CLIMutable>]
+[<Table("user")>]
+[<Index("UserName", IsUnique = true)>]
 type User = {
     [<Column("user_id")>]
     [<Key>]

@@ -1,0 +1,102 @@
+namespace RoseliaCore.Database
+
+open Microsoft.EntityFrameworkCore
+open RoseliaBlog.RoseliaCore
+open RoseliaBlog.RoseliaCore.Database.Models
+open RoseliaCore.Database.Models
+open RoseliaCore.Database.Models.Relations
+
+type DbType =
+    | SqlDb = 0
+    | InMemoryDb = 1
+
+type RoseliaBlogDbContext(dbType: DbType) =
+    inherit DbContext()
+    
+    member this.GetUtcDate = "datetime('now')"
+    
+    static member OpenSqlConnection =
+        new RoseliaBlogDbContext(DbType.SqlDb)
+        
+    static member OpenInMemoryConnection =
+        new RoseliaBlogDbContext(DbType.InMemoryDb)
+    
+    override this.OnConfiguring optionsBuilder =
+        match dbType with
+        | DbType.SqlDb ->
+            optionsBuilder.UseSqlite Config.Config.Secrets.DataBaseConnectionString
+        | DbType.InMemoryDb ->
+            optionsBuilder.UseInMemoryDatabase (nameof RoseliaBlogDbContext)
+        | _ -> optionsBuilder
+        |> ignore
+    
+    override this.OnModelCreating modelBuilder =
+        modelBuilder.Entity<OAuth>()
+            .HasKey ("UserId", "OAuthAdapter")
+        |> ignore
+        modelBuilder.Entity<Comment>()
+            .HasOne(fun c -> c.ToArticle)
+            .WithMany()
+            .OnDelete(DeleteBehavior.Cascade)
+        |> ignore
+        
+        modelBuilder.Entity<Post>()
+            .Property(fun p -> p.CreatedTime)
+            .HasDefaultValueSql(this.GetUtcDate)
+        |> ignore
+        
+        modelBuilder.Entity<Post>()
+            .Property(fun p -> p.LastEditedTime)
+            .HasDefaultValueSql(this.GetUtcDate)
+        |> ignore
+        
+        modelBuilder.Entity<Comment>()
+            .Property(fun p -> p.CreatedAt)
+            .HasDefaultValueSql(this.GetUtcDate)
+        |> ignore
+            
+    
+    [<DefaultValue>]
+    val mutable private users : User DbSet
+    member this.Users
+        with get() = this.users and set value = this.users <- value
+    
+    [<DefaultValue>]
+    val mutable private posts : Post DbSet
+    member this.Posts
+        with get() = this.posts and set value = this.posts <- value
+    
+    [<DefaultValue>]
+    val mutable private comments : Comment DbSet
+    member this.Comments
+        with get() = this.comments and set value = this.comments <- value
+    
+    [<DefaultValue>]
+    val mutable private tags : Tag DbSet
+    member this.Tags
+        with get() = this.tags and set value = this.tags <- value
+    
+    [<DefaultValue>]
+    val mutable private pluginStorage : PluginStorage DbSet
+    member this.PluginStorage
+        with get() = this.pluginStorage and set value = this.pluginStorage <- value
+    
+    [<DefaultValue>]
+    val mutable private oAuth : OAuth DbSet
+    member this.OAuth
+        with get() = this.oAuth and set value = this.oAuth <- value
+    
+    [<DefaultValue>]
+    val mutable private postTags : PostTag DbSet
+    member this.PostTags
+        with get() = this.postTags and set value = this.postTags <- value
+    
+    [<DefaultValue>]
+    val mutable private catalogs : Catalog DbSet
+    member this.Catalogs
+        with get() = this.catalogs and set value = this.catalogs <- value
+        
+    [<DefaultValue>]
+    val mutable private postCatalog : PostCatalog DbSet
+    member this.PostCatalog
+        with get() = this.postCatalog and set value = this.postCatalog <- value

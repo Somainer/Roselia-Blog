@@ -2,7 +2,7 @@
 using System.Text.RegularExpressions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Markdig;
-using RoseliaBlog.RoseliaCore;
+using RoseliaBlog.RoseliaCore.RoseliaFlavoredMarkdown;
 
 namespace RoseliaBlogTest
 {
@@ -18,7 +18,7 @@ namespace RoseliaBlogTest
                 ![img](/favicon.png)
                 ## Subtitle          
             ";
-            var rfmPipeline = RoseliaFlavoredMarkdown.RoseliaFlavoredMarkdown.Pipeline;
+            var rfmPipeline = RoseliaFlavoredMarkdown.Pipeline;
             var pipeline = ClonePipeline(rfmPipeline);
             RemoveRoselia(pipeline);
             var defaultResult = Markdown.ToHtml(markdownString, pipeline);
@@ -33,7 +33,7 @@ namespace RoseliaBlogTest
         public void TestSpoilerBlocking(string markdownString)
         {
             StringAssert.Contains(ConvertUsingRoselia(markdownString), 
-                new RoseliaFlavoredMarkdown.SpoilerBlockingExtension().HtmlClassName);
+                new SpoilerBlockingExtension().HtmlClassName);
         }
 
         [TestMethod]
@@ -49,13 +49,13 @@ namespace RoseliaBlogTest
             var result = ConvertUsingRoselia(markdownString);
             
             // Label should be overriden.
-            StringAssert.Contains(result, new RoseliaFlavoredMarkdown.RoseliaScriptRenderer().OverridenLabel);
+            StringAssert.Contains(result, new RoseliaScriptRenderer().OverridenLabel);
             // Result should contains the code exactly.
             StringAssert.Contains(result, match.Groups[2].Value);
         }
 
         private static string ConvertUsingRoselia(string markdown) =>
-            Markdown.ToHtml(markdown, RoseliaFlavoredMarkdown.RoseliaFlavoredMarkdown.Pipeline);
+            Markdown.ToHtml(markdown, RoseliaFlavoredMarkdown.Pipeline);
         private static MarkdownPipeline ClonePipeline(MarkdownPipeline oldPipeline)
         {
             var pipeline = new MarkdownPipelineBuilder();
@@ -70,7 +70,7 @@ namespace RoseliaBlogTest
         private static void RemoveRoselia(MarkdownPipeline pipeline)
         {
             _ = pipeline.Extensions
-                .RemoveAll(extension => extension is RoseliaFlavoredMarkdown.IRoseliaExtension);
+                .RemoveAll(extension => extension is IRoseliaExtension);
         }
     }
 }

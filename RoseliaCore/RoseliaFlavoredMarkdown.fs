@@ -1,4 +1,4 @@
-﻿module RoseliaBlog.RoseliaCore.RoseliaFlavoredMarkdown
+﻿namespace RoseliaBlog.RoseliaCore.RoseliaFlavoredMarkdown
 
 open System.Text.RegularExpressions
 
