@@ -20,35 +20,35 @@ type User = {
     
     [<Column("password")>]
     [<MaxLength(72)>]
-    Password: string
+    mutable Password: string
     
     [<Column("nickname")>]
     [<MaxLength(72)>]
-    Nickname: string
+    mutable Nickname: string
     
     [<Column("role")>]
     [<Required>]
-    Role: int
+    mutable Role: int
     
     [<Column("mail")>]
     [<MaxLength(64)>]
-    Mail: string
+    mutable Mail: string
     
     [<Column("avatar")>]
     [<MaxLength(256)>]
-    Avatar: string
+    mutable Avatar: string
     
     [<Column("totp_code")>]
     [<MaxLength(64)>]
-    TotpCode: string
+    mutable TotpSecret: string
     
     [<Column("banner")>]
     [<MaxLength(256)>]
-    BannerImage: string
+    mutable BannerImage: string
     
     [<Column("motto")>]
     [<MaxLength(256)>]
-    Motto: string
+    mutable Motto: string
 }
 
 module PasswordDigest =

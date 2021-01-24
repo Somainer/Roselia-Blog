@@ -1,9 +1,11 @@
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RoseliaBlog.RoseliaCore.Database.Models;
-using RoseliaCore.Database;
+using RoseliaBlog.RoseliaCore.Database;
+using RoseliaBlog.RoseliaCore.Managements;
 
 namespace RoseliaBlogTest
 {
@@ -65,6 +67,32 @@ namespace RoseliaBlogTest
             context.SaveChanges();
             
             Assert.IsFalse(context.Comments.Any());
+        }
+
+        [TestMethod]
+        public async Task TestUserMutation()
+        {
+            await using var context = RoseliaBlogDbContext.OpenSqlConnection;
+            var userName = Guid.NewGuid().ToString("N");
+            _ = await context.Users.AddAsync(new User()
+            {
+                UserId = 0,
+                UserName = userName,
+                Role = 0
+            });
+            await context.SaveChangesAsync();
+            context.ChangeTracker.Clear();
+
+            await UserManagement.MutateUserWithException(userName, user =>
+            {
+                Assert.IsTrue(user.UserId > 0);
+                user.Role = 2;
+            });
+
+            var user = await UserManagement.FindUserByUsername(userName);
+            Assert.AreEqual(2, user.Value.Role);
+            context.Users.Remove(user.Value);
+            await context.SaveChangesAsync();
         }
     }
 }

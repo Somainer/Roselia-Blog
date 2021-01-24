@@ -1,4 +1,4 @@
-namespace RoseliaCore.Database.Models
+namespace RoseliaBlog.RoseliaCore.Database.Models
 
 open System.ComponentModel.DataAnnotations
 open System.ComponentModel.DataAnnotations.Schema

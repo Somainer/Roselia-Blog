@@ -25,7 +25,7 @@ type PluginStorage = {
     Key: string
     
     [<Column("content")>]
-    Content: string
+    mutable Content: string
     
     [<Column("create_time")>]
     [<DatabaseGenerated(DatabaseGeneratedOption.Identity)>]

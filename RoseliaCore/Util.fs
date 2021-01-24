@@ -1,6 +1,8 @@
 ﻿module RoseliaBlog.RoseliaCore.Util
 
+open System
 open System.Linq.Expressions
+open System.Runtime.CompilerServices
 open Microsoft.FSharp.Linq.RuntimeHelpers
 
 let inline mapFromDict dict =
@@ -34,3 +36,20 @@ let inline ExprToLinq (expr: Quotations.Expr<'a -> 'b>) : Expression<System.Func
     let call = linq :?> MethodCallExpression
     let lambda = call.Arguments.[0] :?> LambdaExpression
     Expression.Lambda<System.Func<'a, 'b>>(lambda.Body, lambda.Parameters)
+
+[<Extension>]
+type FSFuncUtil =
+    [<Extension>]
+    static member ToFSharpFunc (func : Func<'a, 'b>) = func.Invoke
+    
+    [<Extension>]
+    static member ToFSharpFunc (func : Func<'a>) = func.Invoke
+    
+    [<Extension>]
+    static member ToFSharpFunc (func : Action<'a>) = func.Invoke
+
+module Option =
+    let inline ofObject x =
+        match box x with
+        | null -> None
+        | _ -> Some x

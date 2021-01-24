@@ -14,23 +14,23 @@ open Microsoft.EntityFrameworkCore
 type Post = {
     [<Key>]
     [<Column("post_id")>]
-    PostId: int
+    mutable PostId: int
     
     [<Column("display_id")>]
-    DisplayId: string
+    mutable DisplayId: string
     
     [<Column("title")>]
-    Title: string
+    mutable Title: string
     
     [<Column("subtitle")>]
     [<DefaultValue("")>]
-    Subtitle: string
+    mutable Subtitle: string
     
     [<Column("content")>]
-    Content: string
+    mutable Content: string
     
     [<Column("md_content")>]
-    MarkdownContent: string
+    mutable MarkdownContent: string
     
     [<Column("create_time")>]
     [<DatabaseGenerated(DatabaseGeneratedOption.Identity)>]
@@ -49,22 +49,22 @@ type Post = {
     Author: User
     
     [<Column("cover")>]
-    Cover: string
+    mutable Cover: string
     
     [<Column("secret")>]
     [<DefaultValue(0)>]
-    Secret: int
+    mutable Secret: int
     
     [<Column("hidden")>]
     [<DefaultValue(false)>]
-    Hidden: bool
+    mutable Hidden: bool
     
     [<Column("dark_title")>]
     [<DefaultValue(false)>]
-    IsTitleDark: bool
+    mutable IsTitleDark: bool
     
     [<Column("enable_comment")>]
     [<DefaultValue(true)>]
     [<JsonPropertyName("enable_comment")>]
-    IsCommentEnabled: bool
+    mutable IsCommentEnabled: bool
 }

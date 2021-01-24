@@ -1,10 +1,9 @@
-namespace RoseliaCore.Database
+namespace RoseliaBlog.RoseliaCore.Database
 
 open Microsoft.EntityFrameworkCore
 open RoseliaBlog.RoseliaCore
 open RoseliaBlog.RoseliaCore.Database.Models
-open RoseliaCore.Database.Models
-open RoseliaCore.Database.Models.Relations
+open RoseliaBlog.RoseliaCore.Database.Models.Relations
 
 type DbType =
     | SqlDb = 0
@@ -22,6 +21,8 @@ type RoseliaBlogDbContext(dbType: DbType) =
         new RoseliaBlogDbContext(DbType.InMemoryDb)
     
     override this.OnConfiguring optionsBuilder =
+        optionsBuilder.EnableSensitiveDataLogging true
+        |> ignore
         match dbType with
         | DbType.SqlDb ->
             optionsBuilder.UseSqlite Config.Config.Secrets.DataBaseConnectionString

@@ -1,9 +1,8 @@
-namespace RoseliaCore.Database.Models.Relations
+namespace RoseliaBlog.RoseliaCore.Database.Models.Relations
 
 open System.ComponentModel.DataAnnotations.Schema
 open Microsoft.EntityFrameworkCore
 open RoseliaBlog.RoseliaCore.Database.Models
-open RoseliaCore.Database.Models
 
 [<CLIMutable>]
 [<Table("post_catalogs")>]
