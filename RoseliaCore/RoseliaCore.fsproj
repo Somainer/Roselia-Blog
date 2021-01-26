@@ -14,31 +14,39 @@
     <Compile Include="Config.fs" />
     <Compile Include="RoseliaFlavoredMarkdown.fs" />
     <Compile Include="PlatformInfo.fs" />
+    <Compile Include="StructuralCopy.fs" />
     <Compile Include="Token\TokenModel.fs" />
     <Compile Include="Token\TokenTypes.fs" />
     <Compile Include="Token\TokenProcessor.fs" />
+    <Compile Include="Database\Models\Tag.fs" />
+    <Compile Include="Database\Models\Catalog.fs" />
     <Compile Include="Database\Models\User.fs" />
     <Compile Include="Database\Models\Post.fs" />
     <Compile Include="Database\Models\Comment.fs" />
     <Compile Include="Database\Models\OAuth.fs" />
-    <Compile Include="Database\Models\Catalog.fs" />
-    <Compile Include="Database\Models\Tag.fs" />
     <Compile Include="Database\Models\PluginStorage.fs" />
     <Compile Include="Database\Models\Relations.fs" />
     <Compile Include="Database\Context.fs" />
     <Compile Include="Database\KVStorage.fs" />
     <Compile Include="ApiModels\TotpBindResult.fs" />
+    <Compile Include="ApiModels\UserInfo.fs" />
+    <Compile Include="ApiModels\Article.fs" />
+    <Compile Include="ApiModels\Comment.fs" />
     <Compile Include="Managements\Helpers.fs" />
     <Compile Include="Managements\OtpManagement.fs" />
     <Compile Include="Managements\UserManagement.fs" />
     <Compile Include="Managements\PostManagement.fs" />
+    <Compile Include="Managements\CommentManagement.fs" />
+    <Compile Include="OAuth\Adapter.fs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="FSharp.SystemTextJson" Version="0.15.14" />
+    <PackageReference Include="HtmlSanitizer" Version="5.0.376" />
     <PackageReference Include="Markdig" Version="0.22.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.2" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="5.0.2" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="5.0.2" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="5.0.0" />
     <PackageReference Include="Otp.NET" Version="1.2.2" />
     <PackageReference Include="Statiq.Highlight" Version="1.0.0-beta.32" />
     <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="5.0.0" />

@@ -102,3 +102,6 @@ type RoseliaFlavoredMarkdown() =
         
         pipeline.Build()
         
+module RoseliaFlavoredMarkdown =
+    let ConvertToHtml markdown =
+        Markdown.ToHtml(markdown, RoseliaFlavoredMarkdown.Pipeline)

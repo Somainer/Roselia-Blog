@@ -67,4 +67,7 @@ type Post = {
     [<DefaultValue(true)>]
     [<JsonPropertyName("enable_comment")>]
     mutable IsCommentEnabled: bool
+    
+    Tags: Tag ICollection
+    Catalogs: Catalog ICollection
 }

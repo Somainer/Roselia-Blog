@@ -58,7 +58,7 @@ namespace RoseliaBlog
 
                 if (env.IsDevelopment())
                 {
-                    spa.UseVueCli(npmScript: "serve");
+                    spa.UseVueCli(npmScript: "serve", runner: ScriptRunnerType.Yarn);
                 }
 
             });

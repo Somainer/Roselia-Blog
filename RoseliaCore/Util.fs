@@ -37,6 +37,8 @@ let inline ExprToLinq (expr: Quotations.Expr<'a -> 'b>) : Expression<System.Func
     let lambda = call.Arguments.[0] :?> LambdaExpression
     Expression.Lambda<System.Func<'a, 'b>>(lambda.Body, lambda.Parameters)
 
+let inline (|SameReturnTypeAs|) (_ : unit -> 'a) (x : 'a) = x
+
 [<Extension>]
 type FSFuncUtil =
     [<Extension>]

@@ -1,6 +1,7 @@
 namespace RoseliaBlog.RoseliaCore.Database
 
 open Microsoft.EntityFrameworkCore
+open Microsoft.Extensions.Logging
 open RoseliaBlog.RoseliaCore
 open RoseliaBlog.RoseliaCore.Database.Models
 open RoseliaBlog.RoseliaCore.Database.Models.Relations
@@ -12,6 +13,10 @@ type DbType =
 type RoseliaBlogDbContext(dbType: DbType) =
     inherit DbContext()
     
+    let DbLoggerFactory =
+        LoggerFactory.Create
+            (fun builder -> builder.AddConsole() |> ignore)
+    
     member this.GetUtcDate = "datetime('now')"
     
     static member OpenSqlConnection =
@@ -21,7 +26,9 @@ type RoseliaBlogDbContext(dbType: DbType) =
         new RoseliaBlogDbContext(DbType.InMemoryDb)
     
     override this.OnConfiguring optionsBuilder =
-        optionsBuilder.EnableSensitiveDataLogging true
+        optionsBuilder
+            .EnableSensitiveDataLogging(true)
+            .UseLoggerFactory(DbLoggerFactory)
         |> ignore
         match dbType with
         | DbType.SqlDb ->

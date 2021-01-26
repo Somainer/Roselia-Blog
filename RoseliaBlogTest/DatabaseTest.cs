@@ -94,5 +94,19 @@ namespace RoseliaBlogTest
             context.Users.Remove(user.Value);
             await context.SaveChangesAsync();
         }
+
+        [TestMethod]
+        public async Task TestTracking()
+        {
+            await using var context = Helpers.GetContext();
+            var post = new Post()
+            {
+                PostId = 0,
+                Owner = 1,
+            };
+            context.Add(post);
+            await context.SaveChangesAsync();
+            Assert.IsTrue(post.PostId > 0);
+        }
     }
 }

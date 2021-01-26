@@ -4,8 +4,8 @@ open FSharp.Control.Tasks.V2
 open Microsoft.EntityFrameworkCore
 open RoseliaBlog.RoseliaCore.Database.Models
 open RoseliaBlog.RoseliaCore.Util
-open RoseliaBlog.RoseliaCore.Database
 open RoseliaBlog.RoseliaCore.ApiModels
+open RoseliaBlog.RoseliaCore.Database
 
 let GetUserById (userId : int) =
     task {
@@ -21,7 +21,7 @@ let inline private queryUser (userName : string) (context : RoseliaBlogDbContext
 
 let FindUserByUsername userName =
     task {
-        use context = Helpers.GetContext()
+        use context = GetContextWithoutTracking()
         let! user = queryUser userName context
         return Option.ofObject user
     }
@@ -76,7 +76,7 @@ let CheckAndGetUserByPassword userName password =
             | _ -> None
     }
 
-let ForceSetPassword user newPassword level =
+let ForceSetPassword (user : User) newPassword level =
     let shouldChange =
         match level with
         | Some lv -> lv > user.Role
@@ -164,7 +164,7 @@ let RemoveTotp userName code =
 /// <param name="newRole">The new role of that user.</param>
 /// <param name="changedByRole">The role of operator user.</param>
 let ChangeRole userName newRole changedByRole =
-    let change user =
+    let change (user : User) =
         if changedByRole <= user.Role || newRole >= changedByRole then
             Error "Can not change whose role is larger than you."
         else if newRole < 0 then
