@@ -100,7 +100,7 @@ type Copier<'TFrom, 'TTo>
     
     member private this.MakeMapper () =
         this.MapperExpression()
-            .Compile() .Invoke
+            .Compile().Invoke
             
     member this.GetAssignerExpression () =
         let sourceVar = Expression.Parameter(typeof<'TFrom>, "source")
@@ -127,10 +127,16 @@ type Copier<'TFrom, 'TTo>
         this
     
     member this.Copy (from : 'TFrom) =
-        this.Converter.Value from
+        match box from with
+        | null when missingPolicy = CopierMissingPolicy.Ignore -> Util.Default
+        | null -> invalidArg "source" "Source can not be null"
+        | _ -> this.Converter.Value from
     
     member this.Assign source target =
-        this.Assigner.Value (source, target)
+        match box source with
+        | null when missingPolicy = CopierMissingPolicy.Ignore -> Util.Default
+        | null -> invalidArg "source" "Source can not be null"
+        | _ -> this.Assigner.Value (source, target)
         
 type CopierBuilder<'TFrom, 'TTo>() =
     let mutable missingPolicy = CopierMissingPolicy.Error

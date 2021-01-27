@@ -60,8 +60,7 @@ let FindCatalogByLink (link : string) =
         .FirstOrDefaultAsync(fun c -> c.CatalogEternalLink.ToLower() = link.ToLower())
     |> Task.map Option.ofObject
 
-let FilterPostsInVision (userOption : User option) tagOption catalogOption =
-    use context = GetContextWithoutTracking()
+let FilterPostsInVision (SameReturnTypeAs GetContext context) (userOption : User option) tagOption catalogOption =
     let mutable postQuery = context.Posts.AsQueryable()
     postQuery <-
         match userOption with
@@ -100,7 +99,10 @@ let FilterPostsInVision (userOption : User option) tagOption catalogOption =
             |> Option.map FindCatalog
             |> Task.flattenOption
             |> Task.flatMap (function
-                | None -> FindCatalogByLink catalogOption.Value
+                | None ->
+                    catalogOption
+                    |> Option.map FindCatalogByLink
+                    |> Task.flattenOption
                 | some -> Task.unit some) with
         | Some catalog ->
             let lastQuery = postQuery
@@ -122,6 +124,7 @@ let private AddTag tagName =
         let tag = {
             Tag.TagId = 0
             Tag.TagName = Tag.GetDisplayedName tagName
+            Tag.Posts = Default
         }
         context.Tags.Add tag
         |> ignore
@@ -145,7 +148,8 @@ let GetPostCount level =
 
 let PreviousPostId pid user =
     task {
-        let! posts = FilterPostsInVision user None None
+        use context = GetContextWithoutTracking()
+        let! posts = FilterPostsInVision context user None None
         return! posts
             .Where(fun p -> p.PostId < pid)
             .OrderByDescending(fun p -> p.PostId)
@@ -156,7 +160,8 @@ let PreviousPostId pid user =
     
 let NextPostId pid user =
     task {
-        let! posts = FilterPostsInVision user None None
+        use context = GetContextWithoutTracking()
+        let! posts = FilterPostsInVision context user None None
         return! posts
             .Where(fun p -> p.PostId > pid)
             .OrderByDescending(fun p -> p.PostId)
@@ -228,19 +233,51 @@ let EditPost postId (article : Article) role formatMarkdown =
 
 let GetPosts offset count user tag catalog =
     task {
-        let! postQuery = FilterPostsInVision user tag catalog
-        return! postQuery
-            .OrderByDescending(fun p -> p.PostId)
-            .Skip(offset).Take(count)
-            .Select(Article.BriefArticleFromPostTransformer.Copy)
-            .ToListAsync()
+        use context = GetContextWithoutTracking()
+        let! postQuery = FilterPostsInVision context user tag catalog
+        let! posts =
+            postQuery
+                .Include(fun p -> p.Author)
+                .Include(fun p -> p.Tags)
+                .Include(fun p -> p.Catalogs)
+                .OrderByDescending(fun p -> p.PostId)
+                .Skip(offset).Take(count)
+                .ToListAsync()
+        
+        return posts
+                .Select(Article.BriefArticleFromPostTransformer.Copy)
+                .ToList()
+    }
+
+let GetPostsAndCount offset count user tag catalog =
+    task {
+        use context = GetContextWithoutTracking()
+        let! postQuery = FilterPostsInVision context user tag catalog
+        let! posts =
+            postQuery
+                .Include(fun p -> p.Author)
+                .Include(fun p -> p.Tags)
+                .Include(fun p -> p.Catalogs)
+                .OrderByDescending(fun p -> p.PostId)
+                .Skip(offset).Take(count)
+                .ToArrayAsync()
+        
+        let articles =
+            posts.Select(Article.BriefArticleFromPostTransformer.Copy).ToList()
+        let! count = postQuery.CountAsync()
+        
+        return (count, articles)
     }
     
 let GetPostsFromAuthor (author : User) offset count user =
     task {
+        use context = GetContextWithoutTracking()
         let! posts =
-            FilterPostsInVision user None None
+            FilterPostsInVision context user None None
         return! posts
+            .Include(fun p -> p.Author)
+            .Include(fun p -> p.Tags)
+            .Include(fun p -> p.Catalogs)
             .Where(fun p -> p.Owner = author.UserId)
             .OrderByDescending(fun p -> p.PostId)
             .Skip(offset).Take(count)

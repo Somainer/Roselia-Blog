@@ -3,6 +3,7 @@ namespace RoseliaBlog.RoseliaCore.ApiModels
 open RoseliaBlog.RoseliaCore.Database.Models
 open RoseliaBlog.RoseliaCore.StructuralCopy
 
+[<CLIMutable>]
 type UserInfo = {
     Id: int
     Username: string
@@ -12,6 +13,7 @@ type UserInfo = {
     Avatar: string
 }
 
+[<CLIMutable>]
 type FullUserInfo = {
     Id: int
     Username: string
@@ -28,11 +30,13 @@ module UserInfo =
     let UserInfoFromUserTransformer =
         StructuralCopy.NewBuilder<User, UserInfo>
         |> StructuralCopy.mapTo <@ fun u -> u.UserId @> <@ fun u -> u.Id @>
+        |> StructuralCopy.mapTo <@ fun u -> u.UserName @> <@ fun u -> u.Username @>
         |> StructuralCopy.build
     
     let FullUserInfoFromUserTransformer =
         StructuralCopy.NewBuilder<User, FullUserInfo>
         |> StructuralCopy.mapTo <@ fun u -> u.UserId @> <@ fun u -> u.Id @>
+        |> StructuralCopy.mapTo <@ fun u -> u.UserName @> <@ fun u -> u.Username @>
         |> StructuralCopy.mapTo <@ fun u -> u.BannerImage @> <@ fun u -> u.Banner @>
         |> StructuralCopy.mapTo <@ fun u -> not (System.String.IsNullOrEmpty u.TotpSecret) @> <@ fun u -> u.Totp @>
         |> StructuralCopy.build

@@ -4,6 +4,7 @@ open System
 open RoseliaBlog.RoseliaCore.Database.Models
 open RoseliaBlog.RoseliaCore.StructuralCopy
 
+[<CLIMutable>]
 type CommentInfo = {
     Id: int
     ToArticle: int

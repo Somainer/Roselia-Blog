@@ -1,5 +1,7 @@
 namespace RoseliaBlog.RoseliaCore.Database
 
+open System
+open System.Collections.Generic
 open Microsoft.EntityFrameworkCore
 open Microsoft.Extensions.Logging
 open RoseliaBlog.RoseliaCore
@@ -13,10 +15,11 @@ type DbType =
 type RoseliaBlogDbContext(dbType: DbType) =
     inherit DbContext()
     
-    let DbLoggerFactory =
+    static let DbLoggerFactory =
         LoggerFactory.Create
             (fun builder -> builder.AddConsole() |> ignore)
     
+    new() = new RoseliaBlogDbContext(DbType.SqlDb)
     member this.GetUtcDate = "datetime('now')"
     
     static member OpenSqlConnection =
@@ -62,7 +65,24 @@ type RoseliaBlogDbContext(dbType: DbType) =
             .Property(fun p -> p.CreatedAt)
             .HasDefaultValueSql(this.GetUtcDate)
         |> ignore
-            
+        
+        modelBuilder.Entity<Post>()
+            .HasMany(Util.ExprToLinqCovariant <@ fun p -> p.Tags @>)
+            .WithMany(Util.ExprToLinqCovariant <@ fun (t : Tag) -> t.Posts @>)
+            .UsingEntity<PostTag>(
+                Func<_, _>(fun p -> p.HasOne(fun xs -> xs.Tag).WithMany()),
+                Func<_, _>(fun p -> p.HasOne(fun xs -> xs.Post).WithMany())
+            ).HasKey("PostId", "TagId")
+        |> ignore
+        
+        modelBuilder.Entity<Post>()
+            .HasMany(Util.ExprToLinqCovariant <@ fun p -> p.Catalogs @>)
+            .WithMany(Util.ExprToLinqCovariant <@ fun p -> p.Posts @>)
+            .UsingEntity<PostCatalog>(
+                Func<_, _>(fun p -> p.HasOne(fun xs -> xs.Catalog).WithMany()),
+                Func<_, _>(fun p -> p.HasOne(fun xs -> xs.Post).WithMany())
+            ).HasKey("PostId", "CatalogId")
+        |> ignore
     
     [<DefaultValue>]
     val mutable private users : User DbSet

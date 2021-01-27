@@ -297,3 +297,4 @@ frontend/dist
 static/
 log.txt
 RoseliaBlog/Frontend/dist
+*.db

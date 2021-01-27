@@ -1,12 +1,10 @@
 namespace RoseliaBlog.RoseliaCore.Database.Models.Relations
 
 open System.ComponentModel.DataAnnotations.Schema
-open Microsoft.EntityFrameworkCore
 open RoseliaBlog.RoseliaCore.Database.Models
 
 [<CLIMutable>]
 [<Table("post_catalogs")>]
-[<Keyless>]
 type PostCatalog = {
     [<Column("post_id")>]
     PostId: int
@@ -19,7 +17,6 @@ type PostCatalog = {
 
 [<CLIMutable>]
 [<Table("post_tags")>]
-[<Keyless>]
 type PostTag = {
     [<Column("post_id")>]
     PostId: int

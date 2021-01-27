@@ -74,9 +74,13 @@ module Config =
             }
         }
 
+    let private GetConfigFilePath file =
+        System.IO.Path.Combine
+            (typeof<RoseliaConfig>.Assembly.Location, "../", file)
+    
     let LoadDefaultConfig () =
-        let configContent = System.IO.File.ReadAllText "config.toml"
-        let secretContent = System.IO.File.ReadAllText "secrets.toml"
+        let configContent = System.IO.File.ReadAllText (GetConfigFilePath "config.toml")
+        let secretContent = System.IO.File.ReadAllText (GetConfigFilePath "secrets.toml")
         
         readConfig configContent secretContent
 

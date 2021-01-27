@@ -31,13 +31,16 @@ let optional = OptionalBuilder()
 /// This function is not a duplicate because the type annotation is not required.
 let inline Default<'a> = Unchecked.defaultof<'a>
 
-let inline ExprToLinq (expr: Quotations.Expr<'a -> 'b>) : Expression<System.Func<'a, 'b>> =
+let inline ExprToLinqCovariant (expr: Quotations.Expr<'a -> 'b>) : Expression<System.Func<'a, 'c>> =
     let linq = LeafExpressionConverter.QuotationToExpression expr
     let call = linq :?> MethodCallExpression
     let lambda = call.Arguments.[0] :?> LambdaExpression
-    Expression.Lambda<System.Func<'a, 'b>>(lambda.Body, lambda.Parameters)
+    Expression.Lambda<System.Func<'a, 'c>>(lambda.Body, lambda.Parameters)
 
-let inline (|SameReturnTypeAs|) (_ : unit -> 'a) (x : 'a) = x
+let inline ExprToLinq (expr: Quotations.Expr<'a -> 'b>) : Expression<System.Func<'a, 'b>> =
+    ExprToLinqCovariant expr
+
+let inline (|SameReturnTypeAs|) (_ : _ -> 'a) (x : 'a) = x
 
 [<Extension>]
 type FSFuncUtil =

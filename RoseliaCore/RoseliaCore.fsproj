@@ -18,8 +18,6 @@
     <Compile Include="Token\TokenModel.fs" />
     <Compile Include="Token\TokenTypes.fs" />
     <Compile Include="Token\TokenProcessor.fs" />
-    <Compile Include="Database\Models\Tag.fs" />
-    <Compile Include="Database\Models\Catalog.fs" />
     <Compile Include="Database\Models\User.fs" />
     <Compile Include="Database\Models\Post.fs" />
     <Compile Include="Database\Models\Comment.fs" />
@@ -40,9 +38,9 @@
     <Compile Include="OAuth\Adapter.fs" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="FSharp.SystemTextJson" Version="0.15.14" />
+    <PackageReference Include="FSharp.SystemTextJson" Version="0.16.6" />
     <PackageReference Include="HtmlSanitizer" Version="5.0.376" />
-    <PackageReference Include="Markdig" Version="0.22.1" />
+    <PackageReference Include="Markdig" Version="0.23.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.2" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="5.0.2" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="5.0.2" />

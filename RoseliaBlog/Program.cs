@@ -6,6 +6,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
+using RoseliaBlog.RoseliaCore.Database;
 
 namespace RoseliaBlog
 {
@@ -13,6 +15,7 @@ namespace RoseliaBlog
     {
         public static void Main(string[] args)
         {
+            EnsureDatabaseCreated();
             CreateHostBuilder(args).Build().Run();
         }
 
@@ -26,5 +29,11 @@ namespace RoseliaBlog
                 {
                     webBuilder.UseStartup<Startup>();
                 });
+
+        private static void EnsureDatabaseCreated()
+        {
+            using var context = RoseliaBlogDbContext.OpenSqlConnection;
+            context.Database.EnsureCreated();
+        }
     }
 }

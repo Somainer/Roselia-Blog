@@ -43,12 +43,13 @@
         <v-timeline
           :dense="$vuetify.breakpoint.smAndDown"
         >
-        <v-slide-x-transition group>
+<!--        <v-slide-x-transition group>-->
           <v-timeline-item
             v-for="(post) in postData"
             :key="post.id"
             fill-dot
             color="accent"
+            transition="slide-x-transition"
           >
             <v-avatar v-if="!userInfo.username && post.author && post.author.avatar" slot="icon">
               <v-img :src="post.author.avatar"></v-img>
@@ -97,7 +98,7 @@
               </v-card>
             </div>
           </v-timeline-item>
-        </v-slide-x-transition>
+<!--        </v-slide-x-transition>-->
         </v-timeline>
         <v-row
           align="center"

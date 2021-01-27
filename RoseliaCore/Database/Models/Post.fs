@@ -6,6 +6,7 @@ open System.ComponentModel
 open System.ComponentModel.DataAnnotations
 open System.ComponentModel.DataAnnotations.Schema
 open System.Text.Json.Serialization
+open System.Text.RegularExpressions
 open Microsoft.EntityFrameworkCore
 
 [<CLIMutable>]
@@ -71,3 +72,35 @@ type Post = {
     Tags: Tag ICollection
     Catalogs: Catalog ICollection
 }
+and
+    [<CLIMutable>]
+    [<Table("tag")>]
+    [<Index("TagName", IsUnique = true)>]
+    Tag = {
+        [<Key; Column("tag_id")>]
+        TagId: int
+        
+        [<Column("tag_name"); MaxLength(64)>]
+        TagName: string
+        
+        Posts: Post ICollection
+    }
+and
+    [<CLIMutable>]
+    [<Table("catalog")>]
+    Catalog = {
+        [<Key; Column("catalog_id")>]
+        CatalogId: int
+        
+        [<Column("catalog_eternal_link")>]
+        CatalogEternalLink: string
+        
+        [<Column("catalog_name")>]
+        CatalogName: string
+        
+        Posts: Post ICollection
+    }
+
+module Tag =
+    let GetDisplayedName name =
+        Regex.Replace(name, @"\s+", "-")
