@@ -1,4 +1,4 @@
-namespace RoseliaBlog.RoseliaCore.Database.Models
+namespace rec RoseliaBlog.RoseliaCore.Database.Models
 
 open System
 open System.Collections.Generic
@@ -72,34 +72,34 @@ type Post = {
     Tags: Tag ICollection
     Catalogs: Catalog ICollection
 }
-and
-    [<CLIMutable>]
-    [<Table("tag")>]
-    [<Index("TagName", IsUnique = true)>]
-    Tag = {
-        [<Key; Column("tag_id")>]
-        TagId: int
-        
-        [<Column("tag_name"); MaxLength(64)>]
-        TagName: string
-        
-        Posts: Post ICollection
-    }
-and
-    [<CLIMutable>]
-    [<Table("catalog")>]
-    Catalog = {
-        [<Key; Column("catalog_id")>]
-        CatalogId: int
-        
-        [<Column("catalog_eternal_link")>]
-        CatalogEternalLink: string
-        
-        [<Column("catalog_name")>]
-        CatalogName: string
-        
-        Posts: Post ICollection
-    }
+
+[<CLIMutable>]
+[<Table("catalog")>]
+type Catalog = {
+    [<Key; Column("catalog_id")>]
+    CatalogId: int
+    
+    [<Column("catalog_eternal_link")>]
+    CatalogEternalLink: string
+    
+    [<Column("catalog_name")>]
+    CatalogName: string
+    
+    Posts: Post ICollection
+}
+
+[<CLIMutable>]
+[<Table("tag")>]
+[<Index("TagName", IsUnique = true)>]
+type Tag = {
+    [<Key; Column("tag_id")>]
+    TagId: int
+    
+    [<Column("tag_name"); MaxLength(64)>]
+    TagName: string
+    
+    Posts: Post ICollection
+}
 
 module Tag =
     let GetDisplayedName name =
