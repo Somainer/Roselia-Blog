@@ -145,7 +145,7 @@ export default {
       this.loading = true
       return utils.fetchJSONWithSuccess(utils.apiFor('user', 'change-meta'), 'POST', {
         changes: {
-          [key]: value
+          [key]: value || ''
         }
       }).then(result => {
           this.toast(`Your ${key} has changed!`, 'success')

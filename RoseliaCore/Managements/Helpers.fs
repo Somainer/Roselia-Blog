@@ -58,3 +58,8 @@ module Task =
         | None -> unit None
     
     let inline all (xs : Task<'a> seq) = Task.WhenAll xs
+    
+    let inline bindOptionAsync f op =
+        match op with
+        | None -> unit None
+        | Some value -> f value

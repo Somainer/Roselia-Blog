@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using RoseliaBlog.RoseliaCore.Database;
 using VueCliMiddleware;
@@ -26,7 +27,12 @@ namespace RoseliaBlog
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddControllers();
+            services
+                .AddControllers()
+                .AddJsonOptions(option =>
+                {
+                    option.JsonSerializerOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
+                });
             services.AddSpaStaticFiles(configuration =>
             {
                 configuration.RootPath = "Frontend/dist";

@@ -35,7 +35,11 @@
     <Compile Include="Managements\UserManagement.fs" />
     <Compile Include="Managements\PostManagement.fs" />
     <Compile Include="Managements\CommentManagement.fs" />
+    <Compile Include="Managements\PluginStorageManagement.fs" />
     <Compile Include="OAuth\Adapter.fs" />
+    <Compile Include="Image\ImageManager.fs" />
+    <Compile Include="Image\FileSystemImageManager.fs" />
+    <Compile Include="Image\SMMSImageManager.fs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="FSharp.SystemTextJson" Version="0.16.6" />
@@ -46,7 +50,6 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="5.0.2" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="5.0.0" />
     <PackageReference Include="Otp.NET" Version="1.2.2" />
-    <PackageReference Include="Statiq.Highlight" Version="1.0.0-beta.32" />
     <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="5.0.0" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.8.0" />
     <PackageReference Include="TaskBuilder.fs" Version="2.2.0-alpha" />

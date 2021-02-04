@@ -2,7 +2,10 @@
 
 open System
 open System.Linq.Expressions
+open System.Net.Http
 open System.Runtime.CompilerServices
+open System.Text.Json
+open FSharp.Control.Tasks.V2
 open Microsoft.FSharp.Linq.RuntimeHelpers
 
 let inline mapFromDict dict =
@@ -58,3 +61,13 @@ module Option =
         match box x with
         | null -> None
         | _ -> Some x
+
+[<Extension>]
+type HttpUtil () =
+    [<Extension>]
+    static member GetJsonAsync<'a> (response : HttpResponseMessage) =
+        task {
+            let! content = response.Content.ReadAsStringAsync()
+            return JsonSerializer.Deserialize<'a> content
+        }
+        

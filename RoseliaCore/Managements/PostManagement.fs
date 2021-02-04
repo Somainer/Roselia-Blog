@@ -1,6 +1,7 @@
 module RoseliaBlog.RoseliaCore.Managements.PostManagement
 
 open System.Linq
+open System.Runtime.CompilerServices
 open FSharp.Control.Tasks.V2
 open Microsoft.EntityFrameworkCore
 open RoseliaBlog.RoseliaCore
@@ -12,9 +13,19 @@ open RoseliaBlog.RoseliaCore.StructuralCopy
 open RoseliaBlog.RoseliaCore.Util
 open RoseliaBlog.RoseliaCore.ApiModels
 
+[<Extension>]
+type PostQueryExtension =
+    [<Extension>]
+    static member IncludeRelations (query : IQueryable<Post>) =
+        query
+            .Include(fun p -> p.Author)
+            .Include(fun p -> p.Tags)
+            .Include(fun p -> p.Catalogs)
+
 let inline private queryPost id (context : RoseliaBlogDbContext) =
     context.Posts
         .AsQueryable()
+        .IncludeRelations()
         .FirstOrDefaultAsync(fun p -> p.PostId = id)
 
 let GetPost id =
@@ -31,6 +42,7 @@ let FindPostByDisplayId (displayId : string) =
         let! post =
             context.Posts
                 .AsQueryable()
+                .IncludeRelations()
                 .FirstOrDefaultAsync(fun p -> p.DisplayId.ToLower() = displayId.ToLower())
                 
         return Option.ofObject post
@@ -146,28 +158,34 @@ let GetPostCount level =
         .AsQueryable()
         .CountAsync(fun p -> p.Secret <= level)
 
-let PreviousPostId pid user =
-    task {
-        use context = GetContextWithoutTracking()
-        let! posts = FilterPostsInVision context user None None
-        return! posts
-            .Where(fun p -> p.PostId < pid)
-            .OrderByDescending(fun p -> p.PostId)
-            .Select(fun p -> p.PostId)
-            .DefaultIfEmpty(-1)
-            .FirstAsync()
-    }
-    
 let NextPostId pid user =
     task {
         use context = GetContextWithoutTracking()
         let! posts = FilterPostsInVision context user None None
-        return! posts
-            .Where(fun p -> p.PostId > pid)
-            .OrderByDescending(fun p -> p.PostId)
-            .Select(fun p -> p.PostId)
-            .DefaultIfEmpty(-1)
-            .FirstAsync()
+        let! ids =
+            posts
+                .Where(fun p -> p.PostId < pid)
+                .OrderByDescending(fun p -> p.PostId)
+                .Select(fun p -> p.PostId)
+                .Take(1)
+                .ToListAsync()
+        
+        return ids.DefaultIfEmpty(-1).First()
+    }
+    
+let PreviousPostId pid user =
+    task {
+        use context = GetContextWithoutTracking()
+        let! posts = FilterPostsInVision context user None None
+        let! ids =
+            posts
+                .Where(fun p -> p.PostId > pid)
+                .OrderBy(fun p -> p.PostId)
+                .Select(fun p -> p.PostId)
+                .Take(1)
+                .ToListAsync()
+            
+        return ids.DefaultIfEmpty(-1).First()
     }
 
 let PostFromArticleTransformer =
@@ -202,7 +220,8 @@ let AddPost (article : Article) owner formatMarkdown =
         context.Posts.Add post
         |> ignore
         
-        return! context.SaveChangesAsync()
+        let! _ = context.SaveChangesAsync()
+        return Result<unit, string>.Ok()
     }
 
 let EditPost postId (article : Article) role formatMarkdown =
@@ -269,20 +288,23 @@ let GetPostsAndCount offset count user tag catalog =
         return (count, articles)
     }
     
-let GetPostsFromAuthor (author : User) offset count user =
+let GetPostsFromAuthorAndCount (author : User) offset count user =
     task {
         use context = GetContextWithoutTracking()
         let! posts =
             FilterPostsInVision context user None None
-        return! posts
-            .Include(fun p -> p.Author)
-            .Include(fun p -> p.Tags)
-            .Include(fun p -> p.Catalogs)
-            .Where(fun p -> p.Owner = author.UserId)
-            .OrderByDescending(fun p -> p.PostId)
-            .Skip(offset).Take(count)
-            .Select(Article.BriefArticleFromPostTransformer.Copy)
-            .ToListAsync()
+        let! postsInPage =
+            posts
+                .Include(fun p -> p.Author)
+                .Include(fun p -> p.Tags)
+                .Include(fun p -> p.Catalogs)
+                .Where(fun p -> p.Owner = author.UserId)
+                .OrderByDescending(fun p -> p.PostId)
+                .Skip(offset).Take(count).ToListAsync()
+                |> Task.map (Seq.map Article.BriefArticleFromPostTransformer.Copy)
+        let! count = posts.CountAsync()
+        
+        return (count, postsInPage)
     }
     
 let RemovePost postId level =

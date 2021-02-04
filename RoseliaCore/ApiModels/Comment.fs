@@ -1,6 +1,7 @@
 namespace RoseliaBlog.RoseliaCore.ApiModels
 
 open System
+open RoseliaBlog.RoseliaCore
 open RoseliaBlog.RoseliaCore.Database.Models
 open RoseliaBlog.RoseliaCore.StructuralCopy
 
@@ -21,5 +22,5 @@ module Comment =
         |> StructuralCopy.mapTo <@ fun c -> c.CommentId @> <@ fun c -> c.Id @>
         |> StructuralCopy.mapTo <@ fun c -> c.ReplyTo.GetValueOrDefault 0 @> <@ fun c -> c.ReplyTo @>
         |> StructuralCopy.mapTo <@ fun c -> c.PostId @> <@ fun c -> c.ToArticle @>
-        |> StructuralCopy.mapTo <@ fun c -> UserInfo.UserInfoFromUserTransformer.Copy c.Author @> <@ fun c -> c.Author @>
+        |> StructuralCopy.mapTo <@ fun c -> if isNull (box c.Author) then Util.Default else UserInfo.UserInfoFromUserTransformer.Copy c.Author @> <@ fun c -> c.Author @>
         |> StructuralCopy.build

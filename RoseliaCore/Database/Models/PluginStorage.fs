@@ -18,7 +18,7 @@ type PluginStorage = {
     User: int
     
     [<Column("index_key")>]
-    IndexKey: string
+    mutable IndexKey: string
     
     [<Column("key")>]
     [<MaxLength(64); Required>]

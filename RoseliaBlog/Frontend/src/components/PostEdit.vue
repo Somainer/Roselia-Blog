@@ -356,7 +356,7 @@ export default {
       }
       return {
         postID: this.addPost ? undefined : this.postData.id,
-        data: mapToUnderline(data),
+        data: data, //mapToUnderline(data),
         markdown: this.markdown
       }
     },

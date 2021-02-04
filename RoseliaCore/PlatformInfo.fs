@@ -16,6 +16,7 @@ type PlatformInfo = {
                 "Windows"
             else if OperatingSystem.IsMacOS() then
                 match Environment.OSVersion.Version.Major with
+                | v when v > 10 -> "macOS"
                 | 10 ->
                     match Environment.OSVersion.Version.Minor with
                     | x when x < 8 -> "MAC OS X"

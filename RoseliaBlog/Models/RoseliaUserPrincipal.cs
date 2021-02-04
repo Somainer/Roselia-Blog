@@ -27,13 +27,13 @@ namespace RoseliaBlog.Models
         public string? UserName => UserToken?.UserName;
         public bool IsAuthenticated => UserToken is not null;
 
-        public async Task<FSharpOption<User>> GetUnderlyingUser()
+        public async Task<FSharpOption<User>?> GetUnderlyingUser()
         {
             if (this.IsAuthenticated)
             {
                 return await UserManagement.FindUserByUsername(this.UserName);
             }
-            
+
             return FSharpOption<User>.None;
         }
     }

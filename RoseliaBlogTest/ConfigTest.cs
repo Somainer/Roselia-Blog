@@ -1,5 +1,7 @@
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using RoseliaBlog.RoseliaCore;
+using RoseliaBlog.RoseliaCore.Image;
 
 namespace RoseliaBlogTest
 {
@@ -39,6 +41,14 @@ namespace RoseliaBlogTest
             Assert.IsNull(Config.GetConfig<string>("name"));
             Assert.IsNotNull(Config.GetConfig<string>("title"));
             Assert.IsNull(Config.GetConfig<int>("title"));
+        }
+
+        [TestMethod]
+        public void TestImageManagerDiscovery()
+        {
+            var image = ImageManagement.DiscoverImageManagers().ToArray();
+            Assert.IsTrue(image.Any());
+            Assert.IsTrue(image.All(m => m.IsEnabled()));
         }
     }
 }

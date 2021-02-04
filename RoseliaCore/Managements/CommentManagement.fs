@@ -30,7 +30,7 @@ let AddComment toPost content toComment fromUser nickname =
                 use context = GetContext()
                 context.Comments.Add comment |> ignore
                 let! _ = context.SaveChangesAsync()
-                return Ok()
+                return Ok comment.CommentId
             | _ -> return Error "You are not allowed to comment."
             
         }
@@ -94,10 +94,14 @@ let GetComment commentId =
         use context = GetContextWithoutTracking()
         return! context.Comments
             .Where(fun c -> c.CommentId = commentId)
+            .Include(fun c -> c.Author)
             .SingleOrDefaultAsync()
         |> Task.map Option.ofObject
     }
     
+let GetCommentInfo commentId =
+    GetComment commentId
+    |> Task.map (Option.map Comment.CommentInfoTransformer.Copy)
 
 let DeleteComment commentId byUser =
     task {
@@ -131,6 +135,7 @@ let ForceDeleteComment commentId =
 let private GetCommentQuery postId (SameReturnTypeAs GetContext context) =
     context.Comments
         .Where(fun c -> c.PostId = postId)
+        .Include(fun c -> c.Author)
         .OrderByDescending(fun c -> c.CommentId)
 
 let GetComments postId limit offset =
@@ -140,8 +145,8 @@ let GetComments postId limit offset =
         
         return!
             query.Skip(offset).Take(limit)
-                .Select(Comment.CommentInfoTransformer.Copy)
                 .ToListAsync()
+            |> Task.map (Seq.map(Comment.CommentInfoTransformer.Copy) >> Seq.toList)
     }
 
 let GetCommentCount postId =

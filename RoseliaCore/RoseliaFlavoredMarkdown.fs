@@ -57,7 +57,7 @@ type RoseliaScriptInline (label : string, code : string) =
 
 type RoseliaScriptParser () =
     inherit InlineParser()
-    let regex = Regex(@"(r|R|Roselia|roselia){{([\s\S]+)}}")
+    let regex = Regex(@"\G(r|R|Roselia|roselia){{([\s\S]+?)}}")
     override this.Match (processor, slice) =
         let matchResult = regex.Match(slice.Text, slice.Start)
         if matchResult.Success then
@@ -75,6 +75,8 @@ type RoseliaScriptRenderer () =
 
     override this.Write(renderer: HtmlRenderer, obj: RoseliaScriptInline): unit =
         renderer.Write(sprintf "%s{{ %s }}" this.OverridenLabel obj.Code) |> ignore
+        for o in obj do
+            renderer.Write o
 
 type RoseliaScriptExtension () =
     interface IRoseliaExtension with
@@ -99,6 +101,7 @@ type RoseliaFlavoredMarkdown() =
                 .Use<SpoilerBlockingExtension>()
                 .Use<RoseliaScriptExtension>()
         pipeline.Extensions.TryRemove<Extensions.EmphasisExtras.EmphasisExtraExtension>() |> ignore
+//        pipeline.UseEmphasisExtras() |> ignore
         
         pipeline.Build()
         

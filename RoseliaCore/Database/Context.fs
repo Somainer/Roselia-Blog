@@ -1,7 +1,6 @@
 namespace RoseliaBlog.RoseliaCore.Database
 
 open System
-open System.Collections.Generic
 open Microsoft.EntityFrameworkCore
 open Microsoft.Extensions.Logging
 open RoseliaBlog.RoseliaCore
@@ -50,6 +49,12 @@ type RoseliaBlogDbContext(dbType: DbType) =
             .WithMany()
             .OnDelete(DeleteBehavior.Cascade)
         |> ignore
+        modelBuilder.Entity<Comment>()
+            .HasMany()
+            .WithOne(fun c -> c.ReplyToComment)
+            .HasForeignKey("ReplyTo")
+            .OnDelete(DeleteBehavior.SetNull)
+        |> ignore
         
         modelBuilder.Entity<Post>()
             .Property(fun p -> p.CreatedTime)
@@ -63,6 +68,16 @@ type RoseliaBlogDbContext(dbType: DbType) =
         
         modelBuilder.Entity<Comment>()
             .Property(fun p -> p.CreatedAt)
+            .HasDefaultValueSql(this.GetUtcDate)
+        |> ignore
+        
+        modelBuilder.Entity<PluginStorage>()
+            .Property(fun p -> p.CreatedTime)
+            .HasDefaultValueSql(this.GetUtcDate)
+        |> ignore
+        
+        modelBuilder.Entity<PluginStorage>()
+            .Property(fun p -> p.LastEditedTime)
             .HasDefaultValueSql(this.GetUtcDate)
         |> ignore
         

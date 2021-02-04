@@ -1,5 +1,6 @@
 module RoseliaBlog.RoseliaCore.Managements.UserManagement
 
+open System.Linq
 open FSharp.Control.Tasks.V2
 open Microsoft.EntityFrameworkCore
 open RoseliaBlog.RoseliaCore.Database.Models
@@ -65,6 +66,12 @@ let AddUser username password role =
     context.Users.Add user |> ignore
     context.SaveChangesAsync()
 
+type UserVerificationError =
+    | NoSuchUser = 1
+    | WrongPassword = 2
+    | MissingTotpCode = 3
+    | WrongTotpCode = 4
+
 let CheckAndGetUserByPassword userName password =
     let digestedPassword = PasswordDigest.MakeDigest password
     task {
@@ -74,6 +81,13 @@ let CheckAndGetUserByPassword userName password =
             match user with
             | Some u when u.Password = digestedPassword -> user
             | _ -> None
+    }
+
+let UserToTokenBase (user : User) : RoseliaBlog.RoseliaCore.Token.TokenTypes.RoseliaUserBase =
+    {
+        UserRole = user.Role
+        Id = user.UserId
+        UserName = user.UserName
     }
 
 let ForceSetPassword (user : User) newPassword level =
@@ -127,10 +141,8 @@ let BindTotp userName =
     MutateUser doBind userName
 
 let private CheckTotpOfUser user code =
-    if isNull user.TotpSecret then
-        true
-    else
-        OtpManagement.VerifyCode user.TotpSecret code
+    System.String.IsNullOrEmpty user.TotpSecret
+        || OtpManagement.VerifyCode user.TotpSecret code
     
 let CheckTotp userName code =
     task {
@@ -140,6 +152,22 @@ let CheckTotp userName code =
             | None -> false
             | Some u ->
                 CheckTotpOfUser u code
+    }
+    
+let CheckAndGetUserByPasswordAndCode userName password code =
+    task {
+        let digestedPassword = PasswordDigest.MakeDigest password
+        match! FindUserByUsername userName with
+        | Some user when user.Password = digestedPassword ->
+            return
+                if CheckTotpOfUser user code then
+                    Ok user
+                else if System.String.IsNullOrEmpty code then
+                    Error UserVerificationError.MissingTotpCode
+                else Error UserVerificationError.WrongTotpCode
+        
+        | Some _ -> return Error UserVerificationError.WrongPassword
+        | None -> return Error UserVerificationError.NoSuchUser
     }
 
 let HasTotpVerification userName =
@@ -174,3 +202,15 @@ let ChangeRole userName newRole changedByRole =
             Ok ()
         
     MutateUser change userName
+    
+let GetAllUserBelowLevel role =
+    task {
+        use context = GetContextWithoutTracking()
+        let! users =
+            context.Users.AsQueryable()
+                .Where(fun u -> u.Role < role)
+                .ToListAsync()
+        
+        return users
+            |> Seq.map UserInfo.UserInfoFromUserTransformer.Copy
+    }

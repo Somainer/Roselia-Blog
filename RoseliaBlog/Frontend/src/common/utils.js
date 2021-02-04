@@ -157,12 +157,18 @@ utils.fetchJSONWithSuccess = function (...args) {
 
 utils.getTokenExpiryTime = function (token) {
   try {
-    let head = token.split('.')[0]
+    let parts = token.split('.')
+    let head = parts[0]
     let {exp} = JSON.parse(window.atob(head))
+    if (!exp) {
+      exp = JSON.parse(window.atob(parts[1])).exp
+    }
     return new Date(exp * 1000)
   } catch (e) {
     console.error(e)
-    return new Date()
+    let date = new Date();
+    date.setTime(date.getTime() + 60 * 60 * 1000);
+    return date
   }
 }
 

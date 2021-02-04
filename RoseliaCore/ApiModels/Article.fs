@@ -8,6 +8,7 @@ open RoseliaBlog.RoseliaCore.StructuralCopy
 
 [<CLIMutable>]
 type Article = {
+    Id: int
     Title: string
     Subtitle: string
     Content: string
@@ -27,6 +28,7 @@ type Article = {
 module Article =
     let private ArticleFromPostTransformerBuilder () =
         StructuralCopy.NewBuilder<Post, Article>
+        |> StructuralCopy.mapTo <@ fun p -> p.PostId @> <@ fun a -> a.Id @>
         |> StructuralCopy.mapTo <@ fun p -> p.IsCommentEnabled @> <@ fun a -> a.EnableComment @>
         |> StructuralCopy.mapTo <@ fun p -> p.IsTitleDark @> <@ fun a -> a.DarkTitle @>
         |> StructuralCopy.mapTo <@ fun p -> p.Cover @> <@ fun a -> a.Img @>

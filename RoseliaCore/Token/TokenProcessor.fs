@@ -97,3 +97,43 @@ let CreateToken token =
     token
     |> TokenTypes.ToModel
     |> IssueToken
+
+
+[<Literal>]
+let CommentRemovalTokenType = "CommentRemoval"
+[<Literal>]
+let CommentIdClaimKey = "CommentId"
+let IssueCommentRemovalToken commentId =
+    let model = {
+        ExpireSeconds = 60L * 60L
+        Claims = [|
+            Claim(CommentIdClaimKey, commentId.ToString())
+            Claim(nameof(RoseliaTokenType), CommentRemovalTokenType)
+        |]
+        SecurityAlgorithm = SecurityAlgorithms.HmacSha256
+    }
+    
+    IssueToken model
+    
+let VerifyCommentRemovalToken token =
+    match GetModelFromToken token with
+    | None -> None
+    | Some m ->
+        let isTokenTypeRight =
+            m
+            |> Map.tryFind (nameof RoseliaTokenType)
+            |> Option.contains CommentRemovalTokenType
+        if isTokenTypeRight then
+            m
+            |> Map.tryFind CommentIdClaimKey
+            |> Option.map Convert.ToInt32
+        else None
+
+let RefreshCredentialToken token =
+    match token.TokenType with
+    | RoseliaTokenType.Refresh ->
+        let newToken = {
+            token with TokenType = RoseliaTokenType.UserCredential
+        }
+        Some (CreateToken newToken)
+    | _ -> None

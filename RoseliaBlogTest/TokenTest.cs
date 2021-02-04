@@ -24,12 +24,13 @@ namespace RoseliaBlogTest
                 Encoding.UTF8.GetString(Convert.FromBase64String(AutoPadBase64(payload)));
             
             StringAssert.Contains(decodedPayload, TokenTypes.RoseliaTokenType.UserCredential.ToString());
+            Assert.IsNotNull(TokenProcessor.ValidateRoseliaToken(serialized));
         }
 
         [TestMethod]
         public void TestTokenValidation()
         {
-            var tokenBase = new TokenTypes.RoseliaUserBase(1, "", 0);
+            var tokenBase = new TokenTypes.RoseliaUserBase(1, "ABC", 0);
             var token = TokenTypes.MakeUserCredential(tokenBase);
             var tokenString = TokenProcessor.CreateToken(token);
 
