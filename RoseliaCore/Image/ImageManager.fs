@@ -29,19 +29,13 @@ module ImageManagement =
         Config.GetSecret<'a> key
 
     let DiscoverImageManagers () =
-        seq {
-            for t in typeof<IImageManager>.Assembly.GetTypes() do
-                if t.IsClass && not t.IsAbstract && t.IsAssignableTo(typeof<IImageManager>) then
-                    let ctor = t.GetConstructor([||])
-                    if not (isNull ctor) then
-                        let manager = ctor.Invoke([||]) :?> IImageManager
-                        if manager.IsEnabled() then
-                            yield manager
-        }
+        Util.DiscoverImplementations<IImageManager>()
+        |> Seq.filter (fun im -> im.IsEnabled())
         
     let ImageManagers = DiscoverImageManagers()
     let ImageManagerDict =
-        ImageManagers.Select(fun m -> m.Identifier, m)
+        ImageManagers
+        |> Seq.map (fun m -> m.Identifier, m)
         |> Map.ofSeq
 
     let DefaultImageManager =

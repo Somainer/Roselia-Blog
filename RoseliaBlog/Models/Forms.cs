@@ -43,4 +43,12 @@ namespace RoseliaBlog.Models.Forms
     {
         public UserChangeModels Changes { get; set; }
     }
+
+    public class OauthLoginState
+    {
+        public string Base { get; set; }
+        public string Redirect { get; set; }
+        
+        public string Type { get; set; }
+    }
 }

@@ -34,6 +34,11 @@ let optional = OptionalBuilder()
 /// This function is not a duplicate because the type annotation is not required.
 let inline Default<'a> = Unchecked.defaultof<'a>
 
+let inline StringIsNotNullOrEmpty s =
+    s
+    |> String.IsNullOrEmpty
+    |> not
+
 let inline ExprToLinqCovariant (expr: Quotations.Expr<'a -> 'b>) : Expression<System.Func<'a, 'c>> =
     let linq = LeafExpressionConverter.QuotationToExpression expr
     let call = linq :?> MethodCallExpression
@@ -71,3 +76,13 @@ type HttpUtil () =
             return JsonSerializer.Deserialize<'a> content
         }
         
+let DiscoverImplementations<'a> () =
+    seq {
+        for t in typeof<'a>.Assembly.GetTypes() do
+            if t.IsClass
+               && not t.IsAbstract
+               && t.IsAssignableTo(typeof<'a>) then
+                let ctor = t.GetConstructor([||])
+                if not (isNull ctor) then
+                    yield ctor.Invoke([||]) :?> 'a
+    }

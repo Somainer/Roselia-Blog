@@ -132,6 +132,13 @@ let IsMaster (user : User) =
         .AsQueryable()
         .AllAsync(fun x -> user.Role >= x.Role)
 
+let HasNoUser () =
+    task {
+        use context = GetContextWithoutTracking()
+        let! hasUser = context.Users.AnyAsync()
+        return not hasUser
+    }
+
 let BindTotp userName =
     let doBind user =
         let bindResult = OtpManagement.GenerateRandom user.UserName

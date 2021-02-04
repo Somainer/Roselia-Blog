@@ -69,7 +69,7 @@ export default {
           ...data,
           su_token: undefined
         })
-        utils.saveSUToken(data.su_token)
+        utils.saveSUToken(data.su_token || data.suToken)
       }).finally(_ => {
         this.loading = false
       })

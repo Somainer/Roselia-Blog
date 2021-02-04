@@ -92,7 +92,7 @@ type RoseliaBlogDbContext(dbType: DbType) =
         
         modelBuilder.Entity<Post>()
             .HasMany(Util.ExprToLinqCovariant <@ fun p -> p.Catalogs @>)
-            .WithMany(Util.ExprToLinqCovariant <@ fun p -> p.Posts @>)
+            .WithMany(Util.ExprToLinqCovariant <@ fun (p : Catalog) -> p.Posts @>)
             .UsingEntity<PostCatalog>(
                 Func<_, _>(fun p -> p.HasOne(fun xs -> xs.Catalog).WithMany()),
                 Func<_, _>(fun p -> p.HasOne(fun xs -> xs.Post).WithMany())
