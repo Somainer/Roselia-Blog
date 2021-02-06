@@ -1,4 +1,4 @@
-﻿module RoseliaBlog.RoseliaCore.Token.TokenTypes
+﻿module rec RoseliaBlog.RoseliaCore.Token.TokenTypes
 
 open System.Security.Claims
 open Microsoft.IdentityModel.Tokens
@@ -21,7 +21,12 @@ type RoseliaUserBase = {
     Id: int
     UserName: string
     UserRole: int
-}
+} with
+    static member op_Implicit (source : RoseliaUserToken) : RoseliaUserBase = {
+        Id = source.Id
+        UserName = source.UserName
+        UserRole = source.UserRole
+    }
 
 type RoseliaUserToken = {
     Id: int

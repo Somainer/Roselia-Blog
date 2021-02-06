@@ -65,10 +65,27 @@ namespace RoseliaBlog
             if (option is null) return null;
             return mapper(option.Value);
         }
+        
+        public static async Task<FSharpOption<U>> FlatMapAsync<T, U>(this FSharpOption<T> option, Func<T, Task<FSharpOption<U>>> mapper)
+        {
+            if (option is null) return null;
+            return await mapper(option.Value);
+        }
+        
+        public static async Task<FSharpOption<U>> FlatMapAsync<T, U>(this Task<FSharpOption<T>> option, Func<T, Task<FSharpOption<U>>> mapper)
+        {
+            return await (await option).FlatMapAsync(mapper);
+        }
 
         public static FSharpOption<U> Map<T, U>(this FSharpOption<T> option, Func<T, U> mapper) =>
             option.FlatMap(x => new FSharpOption<U>(mapper(x)));
 
+        public static Task<FSharpOption<U>> MapAsync<T, U>(this FSharpOption<T> option, Func<T, Task<U>> mapper) =>
+            option.FlatMapAsync(async x => new FSharpOption<U>(await mapper(x)));
+        
+        public static async Task<FSharpOption<U>> MapAsync<T, U>(this Task<FSharpOption<T>> option, Func<T, Task<U>> mapper) =>
+            await (await option).MapAsync(mapper);
+        
         public static FSharpOption<T> Filter<T>(this FSharpOption<T> option, Predicate<T> predicate)
         {
             if (option is not null && predicate(option.Value)) return option;

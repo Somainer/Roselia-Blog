@@ -1,10 +1,12 @@
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Net.Http.Headers;
 using RoseliaBlog.Middleware;
 using RoseliaBlog.Models;
 using RoseliaBlog.Models.Forms;
 using RoseliaBlog.RoseliaCore.Managements;
 using RoseliaBlog.RoseliaCore.Token;
+using RoseliaCore.Managements;
 using static RoseliaBlog.RoseliaCore.Managements.UserManagement;
 
 namespace RoseliaBlog.Controllers
@@ -71,6 +73,81 @@ namespace RoseliaBlog.Controllers
                 Success = token is not null,
                 Token = token?.Value
             });
+        }
+
+        [Route("code/gen")]
+        public IActionResult GenerateLoginCode()
+        {
+            return Ok(new
+            {
+                Success = true,
+                Code = RemoteLoginManagement.GetRandomCode(GetConnectionInfo())
+            });
+        }
+
+        [Route("code/scan/{code}")]
+        [HttpPost]
+        [TokenAuthentication(AllowAnonymous = false, RequiredTokenType = TokenTypes.RoseliaTokenType.UserCredential)]
+        public IActionResult ScanLoginCode(string code)
+        {
+            var token = this.GetUser().UserToken;
+            var success = RemoteLoginManagement.ScanCode(code, token);
+            var record = RemoteLoginManagement.GetRecordOption(code)?.Value;
+            return Ok(new
+            {
+                Success = success,
+                Msg = record?.ConnectionInfo
+            });
+        }
+
+        [HttpPost]
+        [Route("code/confirm/{code}")]
+        [TokenAuthentication(AllowAnonymous = false, RequiredTokenType = TokenTypes.RoseliaTokenType.UserCredential)]
+        public IActionResult ConfirmRemoteLogin(string code)
+        {
+            var success =
+                RemoteLoginManagement.ConfirmLogin(code, this.GetUser().UserToken);
+            return Ok(new
+            {
+                Success = success
+            });
+        }
+
+        [HttpPost]
+        [Route("code/{code}")]
+        public IActionResult GetRemoteLoginCodeInfo(string code)
+        {
+            var info = 
+                RemoteLoginManagement.GetRecordOption(code)?.Value;
+            if (info is null) return NotFound();
+
+            string token = null;
+            var user = info.User?.Value;
+            if (info.IsConfirmed && user is not null)
+            {
+
+                var model = TokenTypes.MakeUserCredential(user);
+                token = TokenProcessor.CreateToken(model);
+            }
+
+            return Ok(new
+            {
+                Success = true,
+                Data = new
+                {
+                    Username = user?.UserName,
+                    Role = user?.UserRole,
+                    Token = token
+                }
+            });
+        }
+
+        private RemoteLoginManagement.ConnectionInfo GetConnectionInfo()
+        {
+            var ip = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "";
+            var userAgent = Request.Headers[HeaderNames.UserAgent];
+            var clientInfo = UAParser.Parser.GetDefault().Parse(userAgent);
+            return new RemoteLoginManagement.ConnectionInfo(ip, clientInfo.UA.Family, clientInfo.OS.Family);
         }
     }
 }

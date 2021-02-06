@@ -14,6 +14,7 @@ using RoseliaBlog.RoseliaCore.Database.Models;
 using RoseliaBlog.RoseliaCore.Managements;
 using RoseliaBlog.RoseliaCore.RoseliaFlavoredMarkdown;
 using RoseliaBlog.RoseliaCore.Token;
+using RoseliaCore.Managements;
 
 namespace RoseliaBlog.Controllers
 {
@@ -158,7 +159,32 @@ namespace RoseliaBlog.Controllers
                 .ToActionResult();
         }
 
-        private async Task<IActionResult> GetArticleResponse(Post? post)
+        [HttpPost]
+        [Route("share")]
+        [TokenAuthentication(AllowAnonymous = false, RequiredTokenType = TokenTypes.RoseliaTokenType.UserCredential)]
+        public async Task<IActionResult> SharePost([FromBody] JsonElement shareForm)
+        {
+            var postId =
+                shareForm.GetPropertyOption("pid").FlatMap(x => x.GetIntOption());
+            if (postId is null) return NotFound();
+            var result = await SharedManagement.SharePost(postId.Value, this.GetUser().Role);
+            return RoseliaApiResult.OfOption(result, "Post not found.").ToActionResult(Ok);
+        }
+
+        [Route("get-shared/{shareId}")]
+        [TokenAuthentication(AllowAnonymous = true, RequiredTokenType = TokenTypes.RoseliaTokenType.UserCredential)]
+        public async Task<IActionResult> GetSharedPost(string shareId)
+        {
+            var postId = SharedManagement.GetSharedPostId(shareId);
+            var result =
+                await postId
+                    .FlatMapAsync(PostManagement.GetPost)
+                    .MapAsync(post => GetArticleResponse(post, ignorePermission: true));
+            
+            return result?.Value ?? NotFound();
+        }
+
+        private async Task<IActionResult> GetArticleResponse(Post? post, bool ignorePermission = false)
         {
             if (post is null)
             {
@@ -166,7 +192,7 @@ namespace RoseliaBlog.Controllers
             }
 
             var userPrinciple = this.GetUser();
-            if (userPrinciple.PermissionLevel < post.Secret)
+            if (!ignorePermission && userPrinciple.PermissionLevel < post.Secret)
             {
                 return NotFound();
             }
@@ -180,15 +206,21 @@ namespace RoseliaBlog.Controllers
             );
         }
 
-        private IActionResult ConvertPostToArticle(int nextId, int lastId, Post post, bool needMarkdown)
+        internal IActionResult ConvertPostToArticle(int nextId, int lastId, Post post, bool needMarkdown)
         {
             var article = ArticleModule.ArticleFromPostTransformer.Copy(post);
             article.Content = needMarkdown ? post.MarkdownContent : post.Content;
+
+            return ConvertPostToArticle(nextId, lastId, article);
+        }
+        
+        internal static IActionResult ConvertPostToArticle(int nextId, int lastId, Article article)
+        {
             dynamic result = Expando.FromObject(article);
             result.Prev = lastId;
             result.Next = nextId;
 
-            return Ok(result);
+            return new OkObjectResult(result);
         }
 
         private IActionResult GeneratePostMetaFromPost(FSharpOption<Post>? postOption)

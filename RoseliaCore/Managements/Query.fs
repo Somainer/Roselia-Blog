@@ -6,29 +6,14 @@ open Microsoft.EntityFrameworkCore
 open RoseliaBlog.RoseliaCore.Managements.Helpers
 open RoseliaBlog.RoseliaCore.Util
 
-type Linq.QueryBuilder with
-    [<NoDynamicInvocation; CustomOperation("firstOption")>]
-    member inline this.FirstOption(source : Linq.QuerySource<'a, 'b>) =
-        this.Select(source, Option.ofObject)
+type IQueryable<'a> with
+    [<NoDynamicInvocation>]
+    member inline this.FirstOption() =
+        this.FirstOrDefault()
+        |> Option.ofObject
     
-    [<NoDynamicInvocation; CustomOperation("firstOptionAsync")>]
-    member inline this.FirstOptionAsync (source : Linq.QuerySource<'a, 'b>) =
-        (source.Source :?> IQueryable<'a>)
+    [<NoDynamicInvocation>]
+    member inline this.FirstOptionAsync () =
+        this
             .FirstOrDefaultAsync()
             |> Task.map Option.ofObject
-
-    [<NoDynamicInvocation; CustomOperation("toListAsync")>]
-    member inline this.ToListAsync (source : Linq.QuerySource<'a, _>) =
-        (source.Source :?> IQueryable<'a>).ToListAsync()
-        
-    [<NoDynamicInvocation; CustomOperation("includes")>]
-    member inline this.Includes (source : Linq.QuerySource<'a, 'b>, [<ProjectionParameter>] projection : 'a -> 'c) =
-        Linq.QuerySource<'a, 'b>((source.Source :?> IQueryable<'a>).Include(projection))
-    
-    [<NoDynamicInvocation; CustomOperation("anyAsync")>]
-    member inline this.AnyAsync (source : Linq.QuerySource<'a, 'b>, [<ProjectionParameter>] predicate : 'a -> bool) =
-        (source.Source :?> IQueryable<'a>).AnyAsync(predicate)
-    
-    [<NoDynamicInvocation; CustomOperation("notEmptyAsync")>]
-    member inline this.NotEmptyAsync (source : Linq.QuerySource<'a, 'b>) =
-        (source.Source :?> IQueryable<'a>).AnyAsync()

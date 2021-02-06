@@ -1,6 +1,7 @@
 module RoseliaCore.OAuth.OAuthManagement
 
 open FSharp.Control.Tasks.V2
+open Microsoft.EntityFrameworkCore
 open RoseliaBlog.RoseliaCore.OAuth
 open RoseliaBlog.RoseliaCore.Database.Models
 open RoseliaBlog.RoseliaCore.Managements
@@ -12,13 +13,18 @@ let LoginWithCode (adapter : IOauthAdapter) code request =
         let! token = adapter.GetAccessToken code request
         let! underlyingUser = adapter.GetUserInformation token
         use context = GetContextWithoutTracking()
-        let! record = query {
-            for record in context.OAuth do
-            where (record.UnderlyingUser = underlyingUser
-                   && record.OAuthAdapter = adapter.Name)
-            includes record.User
-            firstOptionAsync
-        }
+        let recordQuery =
+            query {
+                for record in context.OAuth do
+                where (record.UnderlyingUser = underlyingUser
+                       && record.OAuthAdapter = adapter.Name)
+                select record
+            }
+        
+        let! record =
+            recordQuery
+                .Include(fun r -> r.UserId)
+                .FirstOptionAsync()
         
         return record
         |> Option.map (fun r -> r.User)
@@ -44,12 +50,13 @@ let AddAdapter userName (adapter : IOauthAdapter) oauthUser =
         use context = GetContext()
         match! UserManagement.FindUserByUsername userName with
         | Some user ->
-            match!
-                query { for record in context.OAuth do
-                        where (record.UnderlyingUser = oauthUser
-                               && record.OAuthAdapter = adapter.Name)
-                        firstOptionAsync
-                } with
+            let recordsQuery =
+                query {
+                    for record in context.OAuth do
+                    where (record.UnderlyingUser = oauthUser
+                           && record.OAuthAdapter = adapter.Name)
+                }
+            match! recordsQuery.FirstOptionAsync() with
             | None -> ()
             | Some record ->
                 context.OAuth.Remove record |> ignore
@@ -59,4 +66,45 @@ let AddAdapter userName (adapter : IOauthAdapter) oauthUser =
             do! AddRecordUnchecked user adapter.Name oauthUser
             return Ok ()
         | None -> return Error "Such user does not exist."
+    }
+
+let GetAdapters userName =
+    task {
+        match! UserManagement.FindUserByUsername userName with
+        | None -> return Error "User not found,"
+        | Some user ->
+            use context = GetContextWithoutTracking()
+            let! adapters =
+                query {
+                    for record in context.OAuth.AsQueryable() do
+                    where (record.UserId = user.UserId)
+                }
+                |> EntityFrameworkQueryableExtensions.ToListAsync
+            
+            return Ok (seq {
+                for adapter in adapters do
+                    yield
+                        {|
+                            Adapter = adapter.OAuthAdapter
+                            User = adapter.UnderlyingUser
+                        |}
+            })
+    }
+
+let RemoveAdapter userName adapter =
+    task {
+        match! UserManagement.FindUserByUsername userName with
+        | None -> return Error "User not found."
+        | Some user ->
+            use context = GetContext()
+            let! record =
+                query {
+                    for r in context.OAuth.AsQueryable() do
+                    where (r.UserId = user.UserId && r.OAuthAdapter = adapter)
+                }
+                |> EntityFrameworkQueryableExtensions.ToListAsync
+            
+            context.RemoveRange record
+            let! _ = context.SaveChangesAsync()
+            return Ok ()
     }

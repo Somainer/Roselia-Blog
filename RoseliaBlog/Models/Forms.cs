@@ -31,7 +31,7 @@ namespace RoseliaBlog.Models.Forms
         public string Avatar { get; set; }
         public string Banner { get; set; }
 
-        public static Copier<UserChangeModels, User> Transformer { get; } =
+        public static readonly Copier<UserChangeModels, User> Transformer =
             StructuralCopy.NewBuilder<UserChangeModels, User>()
                 .MapTo(u => u.Banner, u => u.BannerImage)
                 .SkipNullValues(true)

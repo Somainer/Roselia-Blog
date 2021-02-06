@@ -90,6 +90,13 @@ namespace RoseliaBlog.Controllers
                 return Redirect(redirect ?? "/");
             }
 
+            if (actionType == "bind")
+            {
+                return await BindUserToAdapter(adapterName, 
+                    state, code, Request.Query.GetStringOption("token")?.Value,
+                    baseUrl, redirect);
+            }
+
             var user = await OAuthManagement.LoginWithCode(adapter, code, new()
             {
                 Callback = GetCallbackUrl(adapterName)
@@ -106,14 +113,52 @@ namespace RoseliaBlog.Controllers
             return Redirect($"/login?token={token}");
         }
 
+        public async Task<IActionResult> BindUserToAdapter(
+            string adapterName,
+            [FromQuery] string state,
+            [FromQuery] string code,
+            [FromQuery] string token,
+            [FromQuery(Name = "base")] string baseUrl,
+            [FromQuery] string redirect
+        )
+        {
+            var userModel = TokenProcessor.ValidateRoseliaToken(token)?.Value;
+            if (!OAuthAdapter.AdaptersDict.TryGetValue(adapterName, out var adapter)
+                || userModel is null)
+            {
+                return Redirect("/");
+            }
+
+            var accessToken = await adapter.GetAccessToken(code, new OauthRequest()
+            {
+                Callback = GetCallbackUrl(adapterName)
+            });
+
+            var oauthUser = await adapter.GetUserInformation(accessToken);
+            var bindResult = await OAuthManagement.AddAdapter(userModel.UserName, adapter, oauthUser);
+            const string urlBase = "/userspace/oauth-accounts";
+
+            if (bindResult.IsOk)
+            {
+                return Redirect($"{urlBase}?succeed={adapterName}");
+            }
+
+            return Redirect($"{urlBase}?error={bindResult.ErrorValue}");
+        }
+
         private string GetCallbackUrl(string adapterName)
+        {
+            return GetCallbackUrl(adapterName, Url);
+        }
+
+        internal static string GetCallbackUrl(string adapterName, IUrlHelper url)
         {
             var ud = new RouteValueDictionary
             {
                 {nameof(adapterName), adapterName}
             };
             
-            return Url.Action("OauthLoginCallback", ud);
+            return url.Action("OauthLoginCallback", "OAuthLogin", ud);
         }
     }
 }

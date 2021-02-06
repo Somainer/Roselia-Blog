@@ -1,6 +1,7 @@
 namespace RoseliaBlog.RoseliaCore.Database.KVStorage
 
 open System
+open System.Collections.Concurrent
 open System.Collections.Generic
 open System.Runtime.CompilerServices
 
@@ -21,7 +22,11 @@ module RoseliaKVStorageHelpers =
 [<Extension>]
 type RoseliaKVStorageExtension =
     [<Extension>]
-    static member PutRandom (this: RoseliaKVStorage<'TValue>) value =
+    static member PutRandom (this: #RoseliaKVStorage<'TValue>, value) =
         let key = RoseliaKVStorageHelpers.GenRandomUUID ()
         this.Add(key, value)
         key
+
+module RoseliaKVStorage =
+    let GetDefault<'a> () : RoseliaKVStorage<'a> =
+        upcast ConcurrentDictionary()
