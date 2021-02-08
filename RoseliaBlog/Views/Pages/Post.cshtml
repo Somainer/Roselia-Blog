@@ -1,0 +1,9 @@
+@using RoseliaBlog.Views.Pages
+@model RoseliaBlog.RoseliaCore.ApiModels.Article
+
+
+@await Html.PartialAsync("Skeleton", new Skeleton()
+{
+    BodyContent = await Html.PartialAsync("PostContent", Model),
+    HeaderContent = await Html.PartialAsync("PostMetaTags", Model)
+})

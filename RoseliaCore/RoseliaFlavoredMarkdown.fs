@@ -108,3 +108,7 @@ type RoseliaFlavoredMarkdown() =
 module RoseliaFlavoredMarkdown =
     let ConvertToHtml markdown =
         Markdown.ToHtml(markdown, RoseliaFlavoredMarkdown.Pipeline)
+
+    let CleanupScript content =
+        let regex = Regex(@"(r|R|Roselia|roselia){{([\s\S]+?)}}")
+        regex.Replace(content, "")

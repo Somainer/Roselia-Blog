@@ -1,9 +1,27 @@
 ﻿namespace RoseliaBlog.RoseliaCore
 
+open System
 open System.Collections.Generic
 open System.Runtime.CompilerServices
 
 open Tomlyn
+
+[<CLIMutable>]
+type BlogTheme = {
+    Primary: string
+    Secondary: string
+    Accent: string
+    Error: string
+    Warning: string
+    Info: string
+    Success: string
+} with
+    static member FromTable (table : Tomlyn.Model.TomlTable) =
+        let themeType = typeof<BlogTheme>
+        let theme = themeType.GetConstructor([||]).Invoke([||]) :?> BlogTheme
+        for prop in themeType.GetProperties() do
+            prop.SetValue(theme, table.[prop.Name.ToLower()])
+        theme
 
 type RoseliaSecrets = {
     AppKey: string
@@ -18,7 +36,9 @@ type RoseliaSecrets = {
 type RoseliaConfig = {
     Title: string
     Motto: string
-    Link: string
+    Link: Uri
+    UrlPrefix: string
+    Theme: BlogTheme
     Secrets: RoseliaSecrets
     ConfigStorage: IReadOnlyDictionary<string, obj>
 } with
@@ -45,6 +65,10 @@ module Config =
         let title = configNode.["title"] :?> string
         let motto = configNode.["motto"] :?> string
         let link = configNode.["link"] :?> string
+        let url = Uri link
+        let urlPrefix =
+            if url.AbsolutePath.EndsWith "/" then url.AbsolutePath.TrimEnd '/'
+            else url.AbsolutePath
         
         let inline nonEmpty s =
             s |> System.String.IsNullOrEmpty |> not
@@ -63,7 +87,9 @@ module Config =
         {
             Title = title
             Motto = motto
-            Link = link
+            Link = url
+            UrlPrefix = urlPrefix
+            Theme = BlogTheme.FromTable(unbox configNode.["theme"])
             ConfigStorage = configNode
             Secrets = {
                 AppKey = appKey
@@ -97,3 +123,5 @@ module Config =
     let GetSecret<'a> key : 'a option =
         Config.Secrets.GetSecret key
    
+    let UrlWithHost url =
+       Uri(Config.Link, Config.UrlPrefix + url)

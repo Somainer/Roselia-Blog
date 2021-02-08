@@ -1,0 +1,12 @@
+@using RoseliaBlog.RoseliaCore
+
+@{
+    var title = Config.Config.Title;
+    var motto = Config.Config.Motto;
+}
+
+<meta name="description" content="@title - @motto">
+<meta property="og:site_name" content="@title" />
+<meta property="og:type" content="object" />
+<meta property="og:title" content="@title" />
+<meta property="og:description" content="@title - @motto" />

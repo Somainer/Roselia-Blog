@@ -42,7 +42,7 @@ module.exports = {
   title: BLOG_TITLE,
   motto: BLOG_MOTTO,
   apiBase: apiBase,
-  theme: roseliaTheme,
+  theme: process.env.BLOG_THEME || roseliaTheme,
   // theme: mohuetyTheme,
   enableRoseliaScript: true,
   enableAskYukina: false,

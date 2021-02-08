@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+using RoseliaBlog.Models;
 using RoseliaBlog.RoseliaCore.Database;
 using VueCliMiddleware;
 
@@ -36,7 +37,9 @@ namespace RoseliaBlog
             services.AddSpaStaticFiles(configuration =>
             {
                 configuration.RootPath = "Frontend/dist";
+                CompiledAssetsManager.Read(configuration.RootPath);
             });
+            services.AddRazorPages();
             // services.AddDbContext<RoseliaBlogDbContext>();
             // services.AddDatabaseDeveloperPageExceptionFilter();
         }
@@ -47,6 +50,7 @@ namespace RoseliaBlog
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
+                CompiledAssetsManager.UseDebug();
             }
 
             app.UseRouting();

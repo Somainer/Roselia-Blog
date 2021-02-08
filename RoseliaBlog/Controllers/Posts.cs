@@ -206,6 +206,7 @@ namespace RoseliaBlog.Controllers
             );
         }
 
+        [NonAction]
         internal IActionResult ConvertPostToArticle(int nextId, int lastId, Post post, bool needMarkdown)
         {
             var article = ArticleModule.ArticleFromPostTransformer.Copy(post);
@@ -214,6 +215,7 @@ namespace RoseliaBlog.Controllers
             return ConvertPostToArticle(nextId, lastId, article);
         }
         
+        [NonAction]
         internal static IActionResult ConvertPostToArticle(int nextId, int lastId, Article article)
         {
             dynamic result = Expando.FromObject(article);

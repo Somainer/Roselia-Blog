@@ -21,8 +21,8 @@ type Comment = {
     [<Column("reply_to")>]
     ReplyTo: int Nullable
     
-    [<ForeignKey("ReplyTo")>]
-    ReplyToComment: Comment
+//    [<ForeignKey("ReplyTo")>]
+//    ReplyToComment: Comment
     
     [<Column("content")>]
     [<Required>]

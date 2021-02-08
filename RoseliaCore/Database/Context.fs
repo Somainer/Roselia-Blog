@@ -49,12 +49,12 @@ type RoseliaBlogDbContext(dbType: DbType) =
             .WithMany()
             .OnDelete(DeleteBehavior.Cascade)
         |> ignore
-        modelBuilder.Entity<Comment>()
-            .HasMany()
-            .WithOne(fun c -> c.ReplyToComment)
-            .HasForeignKey("ReplyTo")
-            .OnDelete(DeleteBehavior.SetNull)
-        |> ignore
+//        modelBuilder.Entity<Comment>()
+//            .HasMany()
+//            .WithOne<Comment>("ReplyTo")
+//            .HasForeignKey("ReplyTo")
+//            .OnDelete(DeleteBehavior.SetNull)
+//        |> ignore
         
         modelBuilder.Entity<Post>()
             .Property(fun p -> p.CreatedTime)

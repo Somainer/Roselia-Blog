@@ -3,6 +3,7 @@ const webpack = require('webpack')
 process.env.VUE_APP_VERSION = require('./package.json').version
 const fs = require('fs')
 const path = require('path')
+const ManifestPlugin = require('./src/manifest.js')
 const TOML = require('@iarna/toml')
 const config = require('./src/common/config.js')
 const configPath = path.resolve(__dirname, '..', '..', 'config.toml')
@@ -35,14 +36,17 @@ module.exports = {
         plugins: [
             new webpack.DefinePlugin({
                 'process.env.BLOG_TITLE': `"${config.title}"`,
-                'process.env.BLOG_MOTTO': `"${config.motto}"`
+                'process.env.BLOG_MOTTO': `"${config.motto}"`,
+                'process.env.BLOG_LINK': `"${config.link}"`,
+                "process.env.BLOG_THEME": JSON.stringify(config.theme)
             }),
             new MonacoEditorWebpackPlugin({
                 languages: [
                     'html', 'javascript', 'typescript', 'markdown'
                 ],
                 filename: 'unions-road.[name].[contenthash].js'
-            })
+            }),
+            new ManifestPlugin()
         ]
     }
 }

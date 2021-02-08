@@ -1,0 +1,26 @@
+@using RoseliaBlog.Controllers
+@using RoseliaBlog.RoseliaCore
+@model RoseliaBlog.RoseliaCore.ApiModels.Article
+
+@{
+    var absoluteLink = Config.UrlWithHost(PagesController.GetPostLinkViaArticle(Model, Url)).ToString();
+}
+
+@if (!string.IsNullOrEmpty(Model.Img))
+{
+      <meta name="twitter:image:src"
+            content="@Model.Img" />
+      
+      <meta property="og:image"
+            content="@Model.Img" />
+}
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="@Model.Title" />
+<meta name="twitter:description"
+      content="@Model.Subtitle" />
+<meta property="og:site_name" content="@Config.Config.Title" />
+<meta property="og:type" content="object" />
+<meta property="og:title" content="@Model.Title" />
+<meta property="og:url" content="@absoluteLink" />
+<meta property="og:description"
+      content="@Model.Subtitle" />

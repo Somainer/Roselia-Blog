@@ -2,3 +2,12 @@ title = "Roselia-Blog"
 # title = "Somainer's Blog"
 motto = "Do what you want to do, be who you want to be."
 link = "https://roselia.moe/blog/"
+
+[theme]
+primary = "#6670ed"
+secondary = "#890f87"
+accent = "#dd0087"
+error = "#FF4A4A"
+warning = "#dd2200"
+info = "#00aabc"
+success = "#229977"

@@ -1,0 +1,44 @@
+@using RoseliaBlog.RoseliaCore
+@using RoseliaBlog.Controllers
+@model IEnumerable<RoseliaBlog.RoseliaCore.ApiModels.Article>
+
+@{
+    var currentPage = ViewData["current"] as int? ?? 0;
+    var totalPage = ViewData["total"] as int? ?? 0;
+}
+<h1>@Config.Config.Title</h1>
+<span>@Config.Config.Motto</span>
+
+<ul>
+    @foreach (var article in Model)
+    {
+        <li>
+            @if (!string.IsNullOrEmpty(article.Img))
+            {
+                <img src="@article.Img">
+            }
+            <a href="@PagesController.GetPostLinkViaArticle(article, Url)">
+                <h2>@article.Title</h2>
+            </a>
+            <h3>@article.Subtitle</h3>
+            Author: @article.Author?.Nickname
+
+            @article.Created
+            @foreach (var tag in article.Tags ?? Enumerable.Empty<string>())
+            {
+                <a href="@Url.Action("Index", new { tag })">@tag</a>
+            }
+        </li>
+    }
+</ul>
+
+@if (currentPage > 1)
+{
+    <a href="@Url.Action("Index", new { page = currentPage - 1})">Prev</a>
+}
+@currentPage / @totalPage
+
+@if (currentPage < totalPage)
+{
+    <a href="@Url.Action("Index", new { page = currentPage + 1})">Next</a>
+}

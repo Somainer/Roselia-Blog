@@ -1,0 +1,31 @@
+@using RoseliaBlog.RoseliaCore
+@model RoseliaBlog.RoseliaCore.ApiModels.Article
+
+<a href="@Url.Action("Index")">
+    <h4>@Config.Config.Title</h4>
+</a>
+
+<h1>@Model.Title</h1>
+<h4>@Model.Subtitle</h4>
+
+@if (!string.IsNullOrEmpty(Model.Img))
+{
+    <img src="@Model.Img">
+}
+
+<h4>@Model.Created</h4>
+<h4>@Model.Author?.Nickname</h4>
+
+@if (Model.Tags?.Any() ?? false)
+{
+    <ul>
+        @foreach (var tag in Model.Tags)
+        {
+            <li>
+                <a href="@Url.Action("Index", new { tag })">@tag</a>
+            </li>
+        }
+    </ul>
+}
+
+<div>@Html.Raw(Model.Content)</div>

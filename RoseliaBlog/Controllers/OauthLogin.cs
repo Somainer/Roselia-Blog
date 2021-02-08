@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using RoseliaBlog.Models;
 using RoseliaBlog.Models.Forms;
+using RoseliaBlog.RoseliaCore;
 using RoseliaBlog.RoseliaCore.Managements;
 using RoseliaBlog.RoseliaCore.OAuth;
 using RoseliaBlog.RoseliaCore.Token;
@@ -76,7 +77,7 @@ namespace RoseliaBlog.Controllers
         {
             if (!OAuthAdapter.AdaptersDict.TryGetValue(adapterName, out var adapter))
             {
-                return Redirect("/");
+                return RedirectToAction("Index", "Pages");
             }
             
             var st = 
@@ -87,7 +88,7 @@ namespace RoseliaBlog.Controllers
 
             if (code is null)
             {
-                return Redirect(redirect ?? "/");
+                return redirect is null ? RedirectToAction("Index", "Pages") : Redirect(redirect);
             }
 
             if (actionType == "bind")
@@ -104,7 +105,7 @@ namespace RoseliaBlog.Controllers
 
             if (user is null)
             {
-                return Redirect("/");
+                return RedirectToAction("Index", "Pages");
             }
 
             var tokenBase = UserManagement.UserToTokenBase(user.Value);
@@ -126,7 +127,7 @@ namespace RoseliaBlog.Controllers
             if (!OAuthAdapter.AdaptersDict.TryGetValue(adapterName, out var adapter)
                 || userModel is null)
             {
-                return Redirect("/");
+                return RedirectToAction("Index", "Pages");
             }
 
             var accessToken = await adapter.GetAccessToken(code, new OauthRequest()
@@ -136,7 +137,7 @@ namespace RoseliaBlog.Controllers
 
             var oauthUser = await adapter.GetUserInformation(accessToken);
             var bindResult = await OAuthManagement.AddAdapter(userModel.UserName, adapter, oauthUser);
-            const string urlBase = "/userspace/oauth-accounts";
+            var urlBase = Config.UrlWithHost("/userspace/oauth-accounts").ToString();
 
             if (bindResult.IsOk)
             {
@@ -158,7 +159,7 @@ namespace RoseliaBlog.Controllers
                 {nameof(adapterName), adapterName}
             };
             
-            return url.Action("OauthLoginCallback", "OAuthLogin", ud);
+            return Config.UrlWithHost(url.Action("OauthLoginCallback", "OAuthLogin", ud)).ToString();
         }
     }
 }
