@@ -47,7 +47,24 @@ const baseExtend = (dst: any, objs: any[], deep: boolean) => {
     return dst;
 }
 
-export const merge = (to: any, ...source: any[]): any => {
+type Merge<T, U> =
+    T extends readonly (infer T1)[]
+    ? U extends readonly (infer U1)[] ? readonly Merge<T1, U1>[] : never
+    : T extends object
+    ? U extends object
+    ? {
+        [P in keyof (T & U)]:
+            P extends keyof T ?
+                P extends keyof U ? Merge<T[P], U[P]> : T[P] : (T & U)[P]
+    } : never : T | U;
+    
+
+type MergeFunc = {
+    <T, U>(t: T, u: U): Merge<T, U>
+    (to: any, ...source: any[]): any
+}
+
+export const merge: MergeFunc = (to: any, ...source: any[]): any => {
     return baseExtend(to, source, true)
 }
 

@@ -38,6 +38,10 @@ export const areSameType = (lhs: RoseliaVNode, rhs: RoseliaVNode) => {
     return true;
 }
 
+type MapListenerKey<K> = K extends `on${infer P}` ? `on${Capitalize<P>}` : never;
+
+type ExtractListeners<T> = { [P in keyof T as MapListenerKey<P>]: T[P] extends Function ? T[P] : never };
+
 export interface RoseliaFunctionVNode<T = any> extends Keyable {
     tag: (prop: T) => RoseliaVNode
     props: WithChildren<T>
@@ -45,7 +49,7 @@ export interface RoseliaFunctionVNode<T = any> extends Keyable {
 
 export interface RoseliaNativeVNode<T extends keyof HTMLElementTagNameMap | string = string> extends Keyable {
     tag: T
-    props: WithChildren<T extends keyof HTMLElementTagNameMap ? RecursivePartial<HTMLElementTagNameMap[T]> : object> & RefProp
+    props: WithChildren<T extends keyof HTMLElementTagNameMap ? RecursivePartial<HTMLElementTagNameMap[T] & ExtractListeners<HTMLElementTagNameMap[T]>> : object> & RefProp
 }
 
 export interface RoseliaControllVNode extends Keyable {
@@ -68,7 +72,7 @@ export interface RoseliaFunctionComponent<P = {}> {
 
 export function createElement<T extends keyof HTMLElementTagNameMap>(
     tag: T,
-    props: Keyable & RecursivePartial<HTMLElementTagNameMap[T]> | null,
+    props: Keyable & RecursivePartial<HTMLElementTagNameMap[T] & ExtractListeners<HTMLElementTagNameMap[T]>> | null,
     ...children: RoseliaVNode[]): RoseliaNativeVNode<T>;
 export function createElement<P>(
     tag: RoseliaFunctionComponent<P>,

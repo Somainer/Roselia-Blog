@@ -646,7 +646,7 @@ export class RoseliaScript {
       }
       return this.createNativeElement(type, prop, (children || []) as (Node | string)[])
     }
-    return createElement(type, prop || null, ...(children as RoseliaVNode[] || []))
+    return createElement(type, prop as object || null, ...(children as RoseliaVNode[] || []))
   }
 
   /**

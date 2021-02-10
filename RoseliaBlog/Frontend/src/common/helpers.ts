@@ -1,12 +1,42 @@
-export const camelCaseToUnderline = (s: string) => s.replace(/([A-Z])/g, "_$1").toLowerCase()
-export const underlineToCamelCase = (s: string) => s.replace(/_([a-zA-Z])/g, (_, s) => s.toUpperCase())
+export type ToCamelCase<S> =
+    S extends `${infer Head}_${infer Tail}`
+    ? `${Head}${Capitalize<ToCamelCase<Tail>>}`
+    : S;
+
+export type ToSnakeCase<S> =
+    S extends `${infer Head}${infer Tail}`
+    ? `${Head extends Capitalize<Head> ? "_" : ""}${Lowercase<Head>}${ToSnakeCase<Tail>}`
+    : S;
+
+export type ToCamelCaseObject<T> =
+    T extends object ?
+    { [K in keyof T as ToCamelCase<K>]: ToCamelCaseObject<T[K]> }
+    : T extends ReadonlyArray<infer P> ? ReadonlyArray<ToCamelCaseObject<P>>
+    : T;
+
+export type ToSnakeCaseObject<T> =
+    T extends object ?
+    { [K in keyof T as ToSnakeCase<K>]: ToSnakeCaseObject<T[K]> }
+    : T extends ReadonlyArray<infer P> ? ReadonlyArray<ToSnakeCaseObject<P>>
+    : T;
+
+export type Func<T, U> = (arg: T) => U;
+
+export const camelCaseToUnderline = <S extends string>(s: S): ToSnakeCase<S> => s.replace(/([A-Z])/g, "_$1").toLowerCase() as ToSnakeCase<S>
+export const underlineToCamelCase = <S extends string>(s: S): ToCamelCase<S> =>
+    s.replace(/_([a-zA-Z])/g, (_, s) => s.toUpperCase()) as ToCamelCase<S>
 
 export const mapEntries = (fn: (key: string, value: any) => any) => (obj: Object) => Object.entries(obj).map(([k, v]) => fn(k, v))
 
-export const tupleToDict = (tuples: [string, any][]) => tuples.reduce((o, arr) => ({
+export type TupleToDict<Tuple> =
+    Tuple extends [[infer K, infer V], ...infer Args]
+    ? K extends string ? Record<K, V> & TupleToDict<Args> : never
+    : Tuple extends [] ? never : object;
+
+export const tupleToDict = <T extends [string, any][]>(tuples: T): TupleToDict<T> => tuples.reduce((o, arr) => ({
     ...o,
     [arr[0]]: arr[1]
-}), {})
+}), {}) as any
 
 export const mapKeys = (fn: (s: string) => string) => (obj: object) => tupleToDict(mapEntries((s, a) => [fn(s), a])(obj))
 
@@ -29,9 +59,9 @@ export const deepMapKeys = (fn: (s: string) => string) => (obj: object): object 
 //     [arr[0]]: arr[1]
 // }), {})
 
-export const mapToCamelCase = deepMapKeys(underlineToCamelCase)
+export const mapToCamelCase: <T>(value: T) => ToCamelCaseObject<T> = deepMapKeys(underlineToCamelCase) as any
 
-export const mapToUnderline = deepMapKeys(camelCaseToUnderline)
+export const mapToUnderline: <T>(value: T) => ToSnakeCaseObject<T> = deepMapKeys(camelCaseToUnderline) as any
 
 export const safeDictGet = (...path: string[]) => (obj: object) => path.reduce((acc, attr) => typeof acc === 'undefined' ? undefined : acc[attr], obj)
 
