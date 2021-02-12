@@ -49,8 +49,18 @@ namespace RoseliaBlog.Models
                     var text = File.ReadAllText(filePath);
                     Assets = JsonSerializer.Deserialize<CompiledAssets>(text);
                     System.Diagnostics.Debug.Assert(Assets is not null);
-                    Assets.JavaScripts = AddUrlPrefix(Assets.JavaScripts).ToList();
-                    Assets.StyleSheets = AddUrlPrefix(Assets.StyleSheets).ToList();
+                    Assets.JavaScripts = 
+                        AddUrlPrefix(Assets.JavaScripts)
+                            // chunks.*.js must come before app.*.js
+                            .OrderByDescending(x => x)
+                            .ToList();
+                    
+                    Assets.StyleSheets = 
+                        AddUrlPrefix(Assets.StyleSheets)
+                            // chunks.*.css must come before app.*.css
+                            .OrderByDescending(x => x)
+                            .ToList();
+                    
                     IsAssetsInitialized = true;
                 }
                 catch (Exception ex) when (ex is IOException or JsonException)

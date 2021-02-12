@@ -6,7 +6,18 @@ let BLOG_MOTTO = process.env.BLOG_MOTTO || 'Do what you want to do, be who you w
 // const apiBase = '/api'
 // const apiBase = 'http://localhost:5000/api'
 // const apiBase = 'https://roselia.moe/blog/api'
-const urlPrefix = ''
+let prefix = '';
+let link = process.env.BLOG_LINK || ''
+if (process.env.NODE_ENV !== 'development') {
+  try {
+    prefix = (new URL(link)).pathname;
+    prefix = prefix.substring(0, prefix.length - 1)
+  } catch (e) {
+    prefix = link;
+  }
+}
+
+const urlPrefix = prefix
 // const urlPrefix = '/blog'
 const apiBase = `${urlPrefix}/api`
 const roseliaTheme = {

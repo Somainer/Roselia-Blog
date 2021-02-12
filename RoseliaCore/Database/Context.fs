@@ -14,10 +14,6 @@ type DbType =
 type RoseliaBlogDbContext(dbType: DbType) =
     inherit DbContext()
     
-    static let DbLoggerFactory =
-        LoggerFactory.Create
-            (fun builder -> builder.AddConsole() |> ignore)
-    
     new() = new RoseliaBlogDbContext(DbType.SqlDb)
     member this.GetUtcDate = "datetime('now')"
     
@@ -28,10 +24,6 @@ type RoseliaBlogDbContext(dbType: DbType) =
         new RoseliaBlogDbContext(DbType.InMemoryDb)
     
     override this.OnConfiguring optionsBuilder =
-        optionsBuilder
-            .EnableSensitiveDataLogging(true)
-            .UseLoggerFactory(DbLoggerFactory)
-        |> ignore
         match dbType with
         | DbType.SqlDb ->
             optionsBuilder.UseSqlite Config.Config.Secrets.DataBaseConnectionString

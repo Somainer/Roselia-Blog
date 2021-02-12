@@ -12,6 +12,9 @@ if (fs.existsSync(configPath)) {
         TOML.parse(fs.readFileSync(configPath))
     config.title = configFile.title
     config.motto = configFile.motto
+    config.link = process.env.NODE_ENV === 'development' ? '' : configFile.link;
+    config.theme = configFile.theme
+    
 } else {
     console.warn(`Config file in ${configPath} not found, using default config.`)
 }

@@ -11,6 +11,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using RoseliaBlog.Models;
+using RoseliaBlog.RoseliaCore;
 using RoseliaBlog.RoseliaCore.Database;
 using VueCliMiddleware;
 
@@ -33,6 +34,7 @@ namespace RoseliaBlog
                 .AddJsonOptions(option =>
                 {
                     option.JsonSerializerOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
+                    option.JsonSerializerOptions.Converters.Add(new DateTimeConverter());
                 });
             services.AddSpaStaticFiles(configuration =>
             {
@@ -56,6 +58,11 @@ namespace RoseliaBlog
             app.UseRouting();
             app.UseSpaStaticFiles();
             app.UseAuthorization();
+
+            if (!env.IsDevelopment())
+            {
+                app.UsePathBase(Config.Config.UrlPrefix);
+            }
 
             app.UseEndpoints(endpoints =>
             {
