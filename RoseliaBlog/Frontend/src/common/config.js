@@ -13,7 +13,7 @@ if (process.env.NODE_ENV !== 'development') {
     prefix = (new URL(link)).pathname;
     prefix = prefix.substring(0, prefix.length - 1)
   } catch (e) {
-    prefix = link;
+    prefix = link.endsWith("/") ? link.substring(0, link.length - 1) : link;
   }
 }
 

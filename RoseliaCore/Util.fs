@@ -20,6 +20,8 @@ let inline tryGetFromDictWithType<'a, 'b when 'b :> System.Collections.Generic.I
     | :? 'a as x -> Some x
     | _ -> None
 
+let inline implicitly (x : ^a) : ^b = ((^a or ^b) : (static member op_Implicit : ^a -> ^b) x) 
+
 [<Struct>]
 type OptionalBuilder =
     member inline this.Bind(opt, binder) =

@@ -1,5 +1,6 @@
 ﻿namespace RoseliaBlog.RoseliaCore.RoseliaFlavoredMarkdown
 
+open System
 open System.Text.RegularExpressions
 
 open Markdig
@@ -9,6 +10,7 @@ open Markdig.Renderers
 open Markdig.Renderers.Html
 open Markdig.Renderers.Html.Inlines
 open Markdig.Syntax.Inlines
+open RoseliaBlog.RoseliaCore.Util
 
 type IRoseliaExtension =
     abstract Name : string
@@ -109,6 +111,19 @@ module RoseliaFlavoredMarkdown =
     let ConvertToHtml markdown =
         Markdown.ToHtml(markdown, RoseliaFlavoredMarkdown.Pipeline)
 
-    let CleanupScript content =
+    
+    let private RemoveHeadingRoseliaDom (content : string) =
+        let index = content.IndexOf('\n')
+        if index > -1 then
+            let shouldRemoveFirstLine = content.Substring(0, index).Contains "---feature:"
+            if shouldRemoveFirstLine then
+                content.Substring(index)
+            else content
+        else content
+    
+    let CleanupScript (content : string) =
         let regex = Regex(@"(r|R|Roselia|roselia){{([\s\S]+?)}}")
-        regex.Replace(content, "")
+        
+        content
+        |> RemoveHeadingRoseliaDom
+        |> fun x -> regex.Replace(x, "")

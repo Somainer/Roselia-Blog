@@ -218,9 +218,7 @@ namespace RoseliaBlog.Controllers
         [NonAction]
         internal static IActionResult ConvertPostToArticle(int nextId, int lastId, Article article)
         {
-            dynamic result = Expando.FromObject(article);
-            result.Prev = lastId;
-            result.Next = nextId;
+            var result = article.WithAdjacentPostId(lastId, nextId);
 
             return new OkObjectResult(result);
         }

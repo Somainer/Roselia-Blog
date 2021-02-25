@@ -2,6 +2,7 @@ namespace RoseliaBlog.RoseliaCore.ApiModels
 
 open System
 open System.Linq
+open RoseliaBlog.RoseliaCore.ApiModels
 open RoseliaBlog.RoseliaCore.Database.Models
 open RoseliaBlog.RoseliaCore.StructuralCopy
 
@@ -23,7 +24,9 @@ type Article = {
     Created: DateTime
     LastEdit: DateTime
     Author: UserInfo
-}
+} with
+    member article.WithAdjacentPostId prevId nextId =
+        {| article with Prev = prevId; Next = nextId |}
 
 module Article =
     let private ArticleFromPostTransformerBuilder () =
