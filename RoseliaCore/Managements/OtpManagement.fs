@@ -15,7 +15,7 @@ let private MapToQuery (map : Map<string, string>) =
 let GetProvisioningUri name secret issuer =
     let uriBuilder = UriBuilder()
     uriBuilder.Scheme <- "otpauth"
-    let label = $"{Uri.EscapeUriString name}:{Uri.EscapeUriString issuer}"
+    let label = $"{Uri.EscapeDataString name}:{Uri.EscapeDataString issuer}"
     
     uriBuilder.Query <-
         Map.empty

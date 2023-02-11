@@ -88,3 +88,9 @@ let DiscoverImplementations<'a> () =
                 if not (isNull ctor) then
                     yield ctor.Invoke([||]) :?> 'a
     }
+
+module String =
+    let removeSuffix (suffix : string) (str : string) =
+        if str.EndsWith suffix then
+            str.Remove(str.Length - suffix.Length)
+        else str

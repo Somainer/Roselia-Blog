@@ -22,8 +22,9 @@ import RecursiveComments from './RecursiveComments';
 import type { IRoseliaUserData } from '@/common/UserInfoManager';
 import { IRoseliaUserMeta, IRoseliaPostComment } from '@/common/post-information';
 import { markdown } from '../common/roselia-markdown'
-import { getUserMeta } from '@/common/api/user';
+import { botUserMeta, getUserMeta } from '@/common/api/user';
 import { IInComechatMessage, sendMessage, getOnlineStatus } from '@/common/api/chat';
+import { askStream } from '@/common/api/chaptgpt';
 
 
 @Component({
@@ -48,6 +49,7 @@ import { IInComechatMessage, sendMessage, getOnlineStatus } from '@/common/api/c
 export class ChatBox extends Vue {
   @Prop() username!: string;
   @Prop() dialog!: boolean;
+  @Prop({default: false}) chatWithBot!: boolean;
   private targetUserMeta: IRoseliaUserMeta | undefined = undefined;
   private message: string = '';
   private isTargetUserOnline: boolean = false;
@@ -98,7 +100,8 @@ export class ChatBox extends Vue {
     const dialog: IInComechatMessage = {
       content: message,
       from: sender,
-      to: receiver
+      to: receiver,
+      createdAt: new Date
     }
     this.$store.commit('addChatHistory', {
       username: this.username,
@@ -106,13 +109,40 @@ export class ChatBox extends Vue {
     })
   }
 
-  sendMessage(message: string) {
-    sendMessage({
+  resetConversation() {
+    this.$store.commit('resetChatHistory', this.username)
+  }
+
+  async sendMessage(message: string) {
+    const messages = [...this.chatMessages]
+    this.addSingleConversation(message, false)
+    if (this.chatWithBot) {
+      this.addSingleConversation('.', true)
+      const index = this.chatMessages.length - 1
+      let lastHistory = this.chatMessages[index]
+      const updateChatContent = (response: string) => {
+        lastHistory = {...lastHistory, content: response}
+        this.$store.commit('setChatHistory', {
+          index, username: lastHistory.from, chat: lastHistory
+        })
+      }
+      let printDotTimer = setInterval(() => {
+        const lastContent = lastHistory.content
+        updateChatContent(lastContent.length > 6 ? '.' : `${lastContent}.`)
+      }, 500)
+      for await (const response of askStream(message, messages)) {
+        if (printDotTimer) {
+          clearInterval(printDotTimer)
+          printDotTimer = 0
+        }
+        updateChatContent(response)
+      }
+    }
+    else sendMessage({
       content: message,
       to: this.username,
       createdAt: new Date
     })
-    this.addSingleConversation(message, false)
   }
 
   handleSendMessage() {
@@ -150,6 +180,10 @@ export class ChatBox extends Vue {
               </v-avatar>
             </v-badge>
             <span class="ma-2">Chat with @{this.username}</span>
+            {!!this.chatMessages.length && <v-btn
+              small
+              onClick={this.resetConversation}
+            >Reset</v-btn>}
           </v-card-title>
           <v-card-text style="max-height: 62vh;" ref="history">
             <v-container grid-list-md>
@@ -213,6 +247,7 @@ export class ChatBox extends Vue {
               color="primary"
               rounded
               disabled={!this.message}
+              onClick={this.handleSendMessage}
             >
               <v-icon>send</v-icon>
             </v-btn>}
@@ -227,14 +262,18 @@ export class ChatBox extends Vue {
     immediate: true
   }) onDialogChanged(value: boolean) {
     if (value) {
-      getOnlineStatus(this.username).then((onlineStatus) => {
+      if (this.chatWithBot) this.isTargetUserOnline = true
+      else getOnlineStatus(this.username).then((onlineStatus) => {
         this.isTargetUserOnline = onlineStatus
       })
     }
   }
 
   public mounted() {
-    getUserMeta({ username: this.username }).then((userMeta) => {
+    if (this.chatWithBot) {
+      this.targetUserMeta = botUserMeta
+    }
+    else getUserMeta({ username: this.username }).then((userMeta) => {
       this.targetUserMeta = userMeta
     })
   }

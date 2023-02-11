@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net7.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
@@ -11,6 +11,7 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <Compile Include="Util.fs" />
+    <Compile Include="AsyncSeq.fs" />
     <Compile Include="Config.fs" />
     <Compile Include="RoseliaFlavoredMarkdown.fs" />
     <Compile Include="PlatformInfo.fs" />
@@ -39,6 +40,7 @@
     <Compile Include="Managements\PluginStorageManagement.fs" />
     <Compile Include="Managements\SharedManagement.fs" />
     <Compile Include="Managements\RemoteLoginManagement.fs" />
+    <Compile Include="Managements\ChatGPT.fs" />
     <Compile Include="OAuth\Adapter.fs" />
     <Compile Include="OAuth\GitHubOauthAdapter.fs" />
     <Compile Include="OAuth\MicrosoftAccountOauth.fs" />
@@ -48,15 +50,18 @@
     <Compile Include="Image\SMMSImageManager.fs" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="FSharp.SystemTextJson" Version="0.16.6" />
+    <PackageReference Include="AI.Dev.OpenAI.GPT" Version="1.0.2" />
+    <PackageReference Include="Betalgo.OpenAI.GPT3" Version="6.6.7" />
+    <PackageReference Include="FSharp.Control.AsyncSeq" Version="3.2.1" />
+    <PackageReference Include="FSharp.SystemTextJson" Version="1.1.23" />
     <PackageReference Include="HtmlSanitizer" Version="5.0.376" />
     <PackageReference Include="Markdig" Version="0.23.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.2" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="5.0.2" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="5.0.2" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="5.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.2" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="7.0.2" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="7.0.2" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="7.0.0" />
     <PackageReference Include="Otp.NET" Version="1.2.2" />
-    <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="5.0.0" />
+    <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="7.0.0" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.8.0" />
     <PackageReference Include="TaskBuilder.fs" Version="2.2.0-alpha" />
     <PackageReference Include="Tomlyn" Version="0.1.2" />

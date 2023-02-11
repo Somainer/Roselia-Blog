@@ -138,11 +138,10 @@ let private GetCommentQuery postId (SameReturnTypeAs GetContext context) =
         .Include(fun c -> c.Author)
         .OrderByDescending(fun c -> c.CommentId)
 
-let GetComments postId limit offset =
+let GetComments postId (limit: int) offset =
     task {
         use context = GetContextWithoutTracking()
         let query = GetCommentQuery postId context
-        
         return!
             query.Skip(offset).Take(limit)
                 .ToListAsync()

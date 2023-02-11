@@ -250,7 +250,7 @@ let EditPost postId (article : Article) role formatMarkdown =
         | _ -> return Error "Do not have access to modify that post"
     }
 
-let GetPosts offset count user tag catalog =
+let GetPosts offset (count: int) user tag catalog =
     task {
         use context = GetContextWithoutTracking()
         let! postQuery = FilterPostsInVision context user tag catalog
@@ -268,7 +268,7 @@ let GetPosts offset count user tag catalog =
                 .ToList()
     }
 
-let GetPostsAndCount offset count user tag catalog =
+let GetPostsAndCount offset (count: int) user tag catalog =
     task {
         use context = GetContextWithoutTracking()
         let! postQuery = FilterPostsInVision context user tag catalog
@@ -288,7 +288,7 @@ let GetPostsAndCount offset count user tag catalog =
         return (count, articles)
     }
     
-let GetPostsFromAuthorAndCount (author : User) offset count user =
+let GetPostsFromAuthorAndCount (author : User) offset (count: int) user =
     task {
         use context = GetContextWithoutTracking()
         let! posts =

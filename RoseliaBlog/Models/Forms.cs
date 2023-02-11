@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using RoseliaBlog.RoseliaCore.ApiModels;
 using RoseliaBlog.RoseliaCore.Database.Models;
@@ -51,4 +52,8 @@ namespace RoseliaBlog.Models.Forms
         
         public string Type { get; set; }
     }
+
+    public record ChatHistory(string From, string To, string Content);
+
+    public record ChatGptRequestForm(string Text, List<ChatHistory> History);
 }

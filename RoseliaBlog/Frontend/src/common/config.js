@@ -56,7 +56,7 @@ module.exports = {
   theme: process.env.BLOG_THEME || roseliaTheme,
   // theme: mohuetyTheme,
   enableRoseliaScript: true,
-  enableAskYukina: false,
+  enableAskYukina: true,
   footerName: 'Somainer',
   urlPrefix,
   images: {

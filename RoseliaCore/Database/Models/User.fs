@@ -8,7 +8,7 @@ open Microsoft.EntityFrameworkCore
 
 [<CLIMutable>]
 [<Table("user")>]
-[<Index("UserName", IsUnique = true)>]
+[<Index(propertyName="UserName", IsUnique = true)>]
 type User = {
     [<Column("user_id")>]
     [<Key>]

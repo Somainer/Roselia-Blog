@@ -11,7 +11,7 @@ open Microsoft.EntityFrameworkCore
 
 [<CLIMutable>]
 [<Table("post")>]
-[<Index("DisplayId", IsUnique = true)>]
+[<Index(propertyName="DisplayId", IsUnique = true)>]
 type Post = {
     [<Key>]
     [<Column("post_id")>]
@@ -90,7 +90,7 @@ type Catalog = {
 
 [<CLIMutable>]
 [<Table("tag")>]
-[<Index("TagName", IsUnique = true)>]
+[<Index(propertyName="TagName", IsUnique = true)>]
 type Tag = {
     [<Key; Column("tag_id")>]
     TagId: int

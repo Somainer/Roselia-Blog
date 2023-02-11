@@ -61,6 +61,23 @@ export default new Vuex.Store<IRoseliaStoreState>({
       username = username.toLowerCase()
       state.chatHistory = { ...state.chatHistory, [username]: (state.chatHistory[username] || []).concat(chat) }
     },
+    setChatHistory(state, {index, username, chat}: {
+      index: number, username: string, chat: IInComechatMessage
+    }) {
+      username = username.toLowerCase()
+      const history = [...state.chatHistory[username]]
+      history[index] = chat
+      state.chatHistory = {
+        ...state.chatHistory,
+        [username]: history
+      }
+    },
+    resetChatHistory(state, username: string) {
+      state.chatHistory = {
+        ...state.chatHistory,
+        [username.toLowerCase()]: []
+      }
+    },
     setUserMeta(state, meta: IRoseliaUserMeta) {
       state.currentUser = meta;
     },

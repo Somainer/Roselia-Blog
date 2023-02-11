@@ -102,13 +102,13 @@
     </v-list-item>
   </v-list>
   </v-navigation-drawer>
-    <div v-if="canChatWithContextualUser">
-      <chat-box :dialog="dialog" :username="currentChatingWith || contextualUsername" @input="v => {dialog = v}" />
+    <div v-if="canChatWithContextualUser || canAskYukina">
+      <chat-box :dialog="dialog" :username="canChatWithContextualUser ? currentChatingWith || contextualUsername : botUserMeta.username" :chatWithBot="!canChatWithContextualUser" @input="v => {dialog = v}" />
     </div>
     <v-dialog
       v-model="dialog"
       :width="responseList.length ? 1000 :500"
-      v-else-if="canAskYukina"
+      v-if="false"
     >
       <v-card>
         <v-card-title
@@ -199,7 +199,8 @@ export default {
       command: '',
       loading: false,
       notUnderstand: false,
-      responseList: []
+      responseList: [],
+      botUserMeta
     }
   },
   methods: {

@@ -77,8 +77,8 @@ type RoseliaBlogDbContext(dbType: DbType) =
             .HasMany(Util.ExprToLinqCovariant <@ fun p -> p.Tags @>)
             .WithMany(Util.ExprToLinqCovariant <@ fun (t : Tag) -> t.Posts @>)
             .UsingEntity<PostTag>(
-                Func<_, _>(fun p -> p.HasOne(fun xs -> xs.Tag).WithMany()),
-                Func<_, _>(fun p -> p.HasOne(fun xs -> xs.Post).WithMany())
+                Func<_, _>(fun (p: Metadata.Builders.EntityTypeBuilder<PostTag>) -> p.HasOne(fun xs -> xs.Tag).WithMany()),
+                Func<_, _>(fun (p: Metadata.Builders.EntityTypeBuilder<PostTag>) -> p.HasOne(fun xs -> xs.Post).WithMany())
             ).HasKey("PostId", "TagId")
         |> ignore
         
@@ -86,8 +86,8 @@ type RoseliaBlogDbContext(dbType: DbType) =
             .HasMany(Util.ExprToLinqCovariant <@ fun p -> p.Catalogs @>)
             .WithMany(Util.ExprToLinqCovariant <@ fun (p : Catalog) -> p.Posts @>)
             .UsingEntity<PostCatalog>(
-                Func<_, _>(fun p -> p.HasOne(fun xs -> xs.Catalog).WithMany()),
-                Func<_, _>(fun p -> p.HasOne(fun xs -> xs.Post).WithMany())
+                Func<_, _>(fun (p: Metadata.Builders.EntityTypeBuilder<PostCatalog>) -> p.HasOne(fun xs -> xs.Catalog).WithMany()),
+                Func<_, _>(fun (p: Metadata.Builders.EntityTypeBuilder<PostCatalog>) -> p.HasOne(fun xs -> xs.Post).WithMany())
             ).HasKey("PostId", "CatalogId")
         |> ignore
     
