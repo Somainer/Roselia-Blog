@@ -51,8 +51,9 @@ export const merge = (to: any, ...source: any[]): any => {
     return baseExtend(to, source, true)
 }
 
-export const omit = <T extends object, K extends keyof T>(obj: T, keys: K[]): Omit<T, K> => {
-    return Object.fromEntries(Object.entries(obj).filter(([key]) => !keys.includes(key as K))) as any
+export const omit = <T extends object, K extends PropertyKey>(obj: T, keys: K[]): Omit<T, Extract<keyof T, K>> => {
+    const stringKeys = keys.map(String)
+    return Object.fromEntries(Object.entries(obj).filter(([key]) => !stringKeys.includes(key))) as any
 }
 
 export const pick = <T extends object, K extends keyof T>(obj: T, keys: K[]): Pick<T, K> => {

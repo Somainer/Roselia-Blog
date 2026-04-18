@@ -1,197 +1,147 @@
 <template>
-  <v-app :dark="!currentColorScheme">
-    <blog-toolbar :userData="userData" :noDrawer="true">
-      <v-app-bar-nav-icon dark @click.native="drawer = !drawer"></v-app-bar-nav-icon>
+  <div>
+    <blog-toolbar :user-data="userData" :no-drawer="true">
+      <v-app-bar-nav-icon @click="drawer = !drawer"></v-app-bar-nav-icon>
     </blog-toolbar>
-    <v-navigation-drawer
-      v-model="drawer"
-      fixed
-      clipped
-      app
-    >
-      <v-list
-        dense
-      >
-        <template v-for="(item, i) in items">
-          <v-row
-            v-if="item.heading"
-            :key="i"
-            row
-            align-center
-          >
-            <v-col>
-              <v-subheader v-if="item.heading" inset>
-                {{ item.heading }}
-              </v-subheader>
-            </v-col>
-          </v-row>
-          <v-divider
-            v-else-if="item.divider"
-            :key="i"
-            dark
-            class="my-3"
-          ></v-divider>
+    <v-navigation-drawer v-model="drawer" temporary>
+      <v-list density="compact">
+        <template v-for="(item, i) in items" :key="i">
+          <v-list-subheader v-if="item.heading">{{ item.heading }}</v-list-subheader>
+          <v-divider v-else-if="item.divider" class="my-3"></v-divider>
           <v-list-item
             v-else-if="!item.click"
-            :key="i"
-            ripple
+            :prepend-icon="item.icon"
+            :title="item.text"
             :to="item.to"
-          >
-            <v-list-item-icon>
-              <v-icon>{{ item.icon }}</v-icon>
-            </v-list-item-icon>
-            <v-list-item-content>
-              <v-list-item-title class="grey--text">
-                {{ item.text }}
-              </v-list-item-title>
-            </v-list-item-content>
-          </v-list-item>
+          ></v-list-item>
           <v-list-item
             v-else
-            :key="i"
-            ripple
+            :prepend-icon="item.icon"
+            :title="item.text"
             @click="item.click"
-          >
-            <v-list-item-icon>
-              <v-icon>{{ item.icon }}</v-icon>
-            </v-list-item-icon>
-            <v-list-item-content>
-              <v-list-item-title class="grey--text">
-                {{ item.text }}
-              </v-list-item-title>
-            </v-list-item-content>
-          </v-list-item>
+          ></v-list-item>
         </template>
       </v-list>
     </v-navigation-drawer>
-    <v-content>
-      <v-container fluid fill-height>
+    <v-main>
+      <v-container fluid class="fill-height">
         <v-row justify="center" align="center">
-          <v-col cols="10" class="shrink">
-            <!--<h1 class="display-3">Well met, {{userData.username}}!</h1>-->
+          <v-col cols="10">
             <v-alert
+              v-if="toast.show"
               v-model="toast.show"
-              :type="toast.color"
-              transition="scale-transition"
+              :type="toast.color || 'info'"
+              closable
             >
               {{ toast.text }}
             </v-alert>
             <v-slide-x-transition hide-on-leave>
-              <router-view :userData="userData" :toast="showToast" :currentColorScheme="currentColorScheme"></router-view>
+              <router-view
+                :user-data="userData"
+                :toast="showToast"
+                :current-color-scheme="currentColorScheme"
+              ></router-view>
             </v-slide-x-transition>
           </v-col>
         </v-row>
       </v-container>
-    </v-content>
-    <toast v-bind="toast" @showChange="changeToast"></toast>
-
-  </v-app>
+    </v-main>
+    <toast v-model="toast.show" :text="toast.text" :color="toast.color"></toast>
+  </div>
 </template>
 
-<script>
-import BlogToolbar from './BlogToolbar'
+<script lang="ts">
+import { defineComponent, type PropType } from 'vue'
+import BlogToolbar from './BlogToolbar.vue'
 import utils from '@/common/utils'
-export default {
-  components: {BlogToolbar},
+
+export default defineComponent({
   name: 'blog-user-space',
-  data () {
-    return {
-      toast: {
-        show: false,
-        text: '',
-        color: ''
-      },
-      drawer: null,
-      removeListener: null
-    }
-  },
+  components: { BlogToolbar },
   props: {
-    currentColorScheme: Boolean,
-    userData: Object
+    currentColorScheme: { type: Boolean, default: true },
+    userData: { type: Object as PropType<any>, default: null }
+  },
+  data() {
+    return {
+      toast: { show: false, text: '', color: '' as any },
+      drawer: false as boolean,
+      removeListener: null as null | (() => void)
+    }
   },
   computed: {
-    items () {
+    items(): any[] {
+      const u = this.userData || {}
       return [
-        { icon: 'home', text: 'Home', to: {name: 'userspace'} },
+        { icon: 'mdi-home', text: 'Home', to: { name: 'userspace' } },
         { divider: true },
         { heading: 'Articles' },
-        { icon: 'add_circle', text: 'Write a new post', to: {name: 'edit'}, cond: this.userData.role },
-        // { icon: 'delete', text: 'Remove all drafts', click: this.removeAllDraft },
-        { icon: 'archive', text: 'Manage Drafts', to: {name: 'manageDrafts', cond: this.userData.role }},
-        { icon: 'list_alt', text: 'My Timeline', to: {name: 'userTimeline', params: {username: this.userData.username}}},
+        { icon: 'mdi-plus-circle', text: 'Write a new post', to: { name: 'edit' }, cond: u.role },
+        { icon: 'mdi-archive', text: 'Manage Drafts', to: { name: 'manageDrafts' }, cond: u.role },
+        { icon: 'mdi-timeline', text: 'My Timeline', to: { name: 'userTimeline', params: { username: u.username } } },
         { divider: true },
         { heading: 'My Account' },
-        { icon: 'account_box', text: 'Account Settings', to: {name: 'setNickname'}},
-        { icon: 'account_circle', text: 'OAuth Accounts', to: {name: 'oauthAccounts'}},
-        { icon: 'security', text: 'Two Step Auth', to: {name: 'twoStepAuth'} },
+        { icon: 'mdi-account-box', text: 'Account Settings', to: { name: 'setNickname' } },
+        { icon: 'mdi-account-circle', text: 'OAuth Accounts', to: { name: 'oauthAccounts' } },
+        { icon: 'mdi-shield-lock', text: 'Two Step Auth', to: { name: 'twoStepAuth' } },
         { divider: true },
         { heading: 'Management' },
-        { icon: 'lock', text: 'Change Password', to: {name: 'changePassword'} },
-        { icon: 'people', text: 'Manage User', to: {name: 'userManagement'}, cond: this.userData.role },
-        { icon: 'computer', text: 'System Monitor', to: {name: 'systemMonitor'}, cond: this.userData.role > 1 },
-        { icon: 'photo', text: 'Image Managenent', to: {name: 'manageImages'}, cond: this.userData.role },
+        { icon: 'mdi-lock', text: 'Change Password', to: { name: 'changePassword' } },
+        { icon: 'mdi-account-multiple', text: 'Manage User', to: { name: 'userManagement' }, cond: u.role },
+        { icon: 'mdi-monitor', text: 'System Monitor', to: { name: 'systemMonitor' }, cond: u.role > 1 },
+        { icon: 'mdi-image', text: 'Image Management', to: { name: 'manageImages' }, cond: u.role },
         { divider: true },
-        // { icon: 'refresh', text: 'Token Refresh', click: this.refreshToken, cond: userData().rftoken },
         { heading: 'My Session' },
-        { icon: 'refresh', text: 'Token Refresh', to: {name: 'tokenRefresh'}, cond: this.userData.rftoken },
-        { icon: 'verified_user', text: 'Remote Login', to: {name: 'remoteLogin'} },
+        { icon: 'mdi-refresh', text: 'Token Refresh', to: { name: 'tokenRefresh' }, cond: u.rftoken },
+        { icon: 'mdi-account-check', text: 'Remote Login', to: { name: 'remoteLogin' } },
         { divider: true },
-        { icon: 'info', text: 'About', to: {name: 'about'} },
-        { icon: 'exit_to_app', text: 'Log Out', to: {name: 'login', params: {logout: true}} }
-      ].filter(itm => !itm.hasOwnProperty('cond') || itm.cond)
+        { icon: 'mdi-information', text: 'About', to: { name: 'about' } },
+        { icon: 'mdi-logout', text: 'Log Out', to: { name: 'login', params: { logout: true } } }
+      ].filter(itm => !('cond' in itm) || (itm as any).cond)
     }
-  },
-  methods: {
-    showToast (text, color = 'info') {
-      this.toast = this.toast || {}
-      this.toast.show = false
-      this.toast.text = text.toString()
-      this.toast.color = color
-      this.toast.show = true
-    },
-    changeToast (show) {
-      this.toast.show = show
-    },
-    ensureLoggedIn() {
-      if (!this.userData) {
-        // this.showToast('Please login first', 'warning')
-        this.$router.push({
-          name: 'login',
-          params: {
-            logout: true,
-            message: 'Login to manage',
-            alert: {
-              color: 'warning',
-              text: 'Please login first'
-            },
-            redirect: this.$route.fullPath
-          }
-        })
-      }
-    },
-    removeAllDraft () {
-      let storage = window.localStorage
-      Array.from(Array(storage.length).keys()).map(storage.key.bind(storage)).filter(x => x.startsWith('postDraft')).forEach(k => {
-        storage.removeItem(k)
-      })
-      this.showToast('Draft Cleaned!')
-    }
-  },
-  mounted () {
-    this.ensureLoggedIn()
-  },
-  destroyed() {
-    utils.removeSUToken()
-    this.removeListener && this.removeListener()
   },
   watch: {
     userData() {
       this.ensureLoggedIn()
     }
+  },
+  mounted() {
+    this.ensureLoggedIn()
+  },
+  unmounted() {
+    utils.removeSUToken()
+    this.removeListener && this.removeListener()
+  },
+  methods: {
+    showToast(text: string, color: string = 'info') {
+      this.toast.show = false
+      this.toast.text = String(text)
+      this.toast.color = color
+      this.toast.show = true
+    },
+    changeToast(show: boolean) {
+      this.toast.show = show
+    },
+    ensureLoggedIn() {
+      if (!this.userData) {
+        this.$router.push({
+          name: 'login',
+          params: {
+            logout: true,
+            message: 'Login to manage',
+            alert: { color: 'warning', text: 'Please login first' },
+            redirect: this.$route.fullPath
+          }
+        } as any)
+      }
+    },
+    removeAllDraft() {
+      const storage = window.localStorage
+      Array.from(Array(storage.length).keys()).map(k => storage.key(k)).filter((x): x is string => !!x && x.startsWith('postDraft')).forEach(k => {
+        storage.removeItem(k)
+      })
+      this.showToast('Draft Cleaned!')
+    }
   }
-}
+})
 </script>
-
-<style scoped>
-
-</style>

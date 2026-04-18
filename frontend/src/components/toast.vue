@@ -2,40 +2,36 @@
   <v-snackbar
     v-model="showSelf"
     :color="color"
-    top right
+    location="top right"
     :timeout="6000"
   >
     {{ text }}
-    <v-btn
-      text
-      @click="showSelf = false"
-    >
-      Close
-    </v-btn>
+    <template #actions>
+      <v-btn variant="text" @click="showSelf = false">Close</v-btn>
+    </template>
   </v-snackbar>
 </template>
 
-<script>
-export default {
+<script lang="ts">
+import { defineComponent } from 'vue'
+
+export default defineComponent({
   name: 'toast',
-  props: ['show', 'text', 'color'],
-  model: {
-    prop: 'show',
-    event: 'showChange'
+  props: {
+    modelValue: { type: Boolean, default: false },
+    text: { type: String, default: '' },
+    color: { type: String, default: undefined }
   },
+  emits: ['update:modelValue'],
   computed: {
     showSelf: {
-      get: function() {
-        return this.show
+      get(): boolean {
+        return this.modelValue
       },
-      set: function(value) {
-        this.$emit('showChange', value)
+      set(value: boolean) {
+        this.$emit('update:modelValue', value)
       }
     }
   }
-}
+})
 </script>
-
-<style scoped>
-
-</style>

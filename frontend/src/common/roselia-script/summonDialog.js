@@ -1,13 +1,15 @@
+import { createApp, h } from 'vue'
 import Dialog from '../../components/CustomDialog.vue'
-import Vue from 'vue'
 
 export const summonDialog = (props, mount) => {
-    return new Vue({
-        render: h => h(
-            Dialog,
-            {
-                props
-            }
-        )
-    }).$mount(mount)
+  const app = createApp({
+    render: () => h(Dialog, {
+      ...props,
+      cleanUp: () => {
+        try { props.cleanUp && props.cleanUp() } finally { app.unmount() }
+      }
+    })
+  })
+  app.mount(mount)
+  return app
 }

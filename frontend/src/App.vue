@@ -1,120 +1,108 @@
 <template>
   <div id="black-shout">
-    <div v-wechat-title="$route.meta.title"></div>
+    <div v-page-title="($route.meta && $route.meta.title) || ''"></div>
     <theme-listener v-model="preferredLight"></theme-listener>
-    <v-app :dark="isNight">
-      <v-content>
+    <v-app :theme="isNight ? 'dark' : 'light'">
+      <v-main>
         <v-slide-x-transition hide-on-leave>
           <router-view
-            @forceSwitchToLight="switchToLight"
-            @forceSwitchToDark="switchToDark"
-            :currentColorScheme="!isNight"
-            :userData="userData"
-          ></router-view>
+            v-slot="{ Component }"
+            @force-switch-to-light="switchToLight"
+            @force-switch-to-dark="switchToDark"
+            :current-color-scheme="!isNight"
+            :user-data="userData"
+          >
+            <component :is="Component" />
+          </router-view>
         </v-slide-x-transition>
-
-      </v-content>
+      </v-main>
       <go-top-btn></go-top-btn>
       <notification-hub/>
     </v-app>
-    <vue-progress-bar></vue-progress-bar>
   </div>
-
 </template>
 
-<script>
-import Vue from 'vue'
+<script lang="ts">
+import { defineComponent, watch } from 'vue'
+import { useTheme } from 'vuetify'
 import ThemeListener from './plugin/ThemeListener'
-import { selectByLuminance } from './common/helpers';
-import {userInfoManager} from "./common/UserInfoManager";
-import wsBus from './plugins/ws-bus'
+import { selectByLuminance } from './common/helpers'
+import { userInfoManager } from './common/UserInfoManager'
+import { useRoseliaStore } from './store'
 import NotificationHub from './components/NotificationHub'
 import '@/code-highlight.css'
-// import '@/highlight-vs.css'
 
-export default Vue.extend({
+export default defineComponent({
   name: 'App',
   components: {
     'theme-listener': ThemeListener,
     NotificationHub
   },
-  mounted () {
-    //  [App.vue specific] When App.vue is finish loading finish the progress bar
-    this.$Progress.finish()
-    this.$watch('$vuetify.theme.currentTheme', theme => {
-      document.body.style.setProperty('--themed-text-color', selectByLuminance(theme.primary, '#000000', '#ffffff', '#ffffff'))
-    }, {
-      immediate: true,
-      deep: true
-    })
+  setup() {
+    const theme = useTheme()
+    const store = useRoseliaStore()
+    watch(
+      () => theme.current.value.colors.primary,
+      primary => {
+        if (!primary) return
+        document.body.style.setProperty(
+          '--themed-text-color',
+          selectByLuminance(primary, '#000000', '#ffffff', '#ffffff') as string
+        )
+      },
+      { immediate: true }
+    )
+    return { store }
   },
-  created () {
-    // [App.vue specific] When App.vue is first loaded start the progress bar
-    this.$Progress.start()
-    //  hook the progress bar to start before we move router-view
-    this.$router.beforeEach((to, from, next) => {
-      //  does the page we want to go to have a meta.progress object
-      if (to.meta.progress !== undefined) {
-        const meta = to.meta.progress
-        // parse meta tags
-        this.$Progress.parseMeta(meta)
-      }
-      //  start the progress bar
-      this.$Progress.start()
-      //  continue to next page
-      next()
-    })
-    //  hook the progress bar to finish after we've finished moving router-view
-    this.$router.afterEach((to, from) => {
-      //  finish the progress bar
-      this.$Progress.finish()
-    })
-    userInfoManager.addChangeListener(d => {
-      this.userData = d
-      this.$store.commit('setUserData', d)
-      if (d) {
-        this.$store.dispatch('ensureUserMeta')
-      }
-    }, true)
-  },
-  methods: {
-    switchToLight(ev) {
-      this.forceLight = !!ev
-    },
-    switchToDark(ev) {
-      this.forceDark = !!ev
-    }
-  },
-  data(){
+  data() {
     return {
       forceLight: false,
       forceDark: false,
       forceTitle: '',
-      preferredLight: undefined,
+      preferredLight: undefined as boolean | undefined,
       userData: userInfoManager.getPayload()
     }
   },
   computed: {
-    isNight () {
+    isNight(): boolean {
       if (this.forceDark || this.forceLight) {
         return this.forceDark || !this.forceLight
       }
-
       if (typeof this.preferredLight !== 'undefined') {
-        return !this.preferredLight;
+        return !this.preferredLight
       }
-
-      const hour = (new Date()).getHours()
-      const morning = (hour > 6 && hour < 18)
-      return morning
+      const hour = new Date().getHours()
+      const morning = hour > 6 && hour < 18
+      return !morning
     }
   },
-  watch: {
-    isNight: {
-      handler(dark) {
-        this.$vuetify.theme.dark = !!dark
-      },
-      immediate: true
+  mounted() {
+    this.$Progress.finish()
+  },
+  created() {
+    this.$Progress.start()
+    this.$router.beforeEach((to, _from, next) => {
+      if (to.meta && (to.meta as any).progress !== undefined) {
+        this.$Progress.parseMeta((to.meta as any).progress)
+      }
+      this.$Progress.start()
+      next()
+    })
+    this.$router.afterEach(() => {
+      this.$Progress.finish()
+    })
+    userInfoManager.addChangeListener(d => {
+      this.userData = d
+      this.store.setUserData(d)
+      if (d) this.store.ensureUserMeta()
+    }, true)
+  },
+  methods: {
+    switchToLight(ev: boolean) {
+      this.forceLight = !!ev
+    },
+    switchToDark(ev: boolean) {
+      this.forceDark = !!ev
     }
   }
 })
@@ -122,10 +110,9 @@ export default Vue.extend({
 
 <style>
   :root {
-    --theme-color: var(--v-primary-base);
-    --theme-secondary-color: var(--v-secondary-base);
+    --theme-color: rgb(var(--v-theme-primary));
+    --theme-secondary-color: rgb(var(--v-theme-secondary));
     --themed-text-color: #ffffff;
-    /* --theme-color: #0288d1; */
   }
 
   .themed-text {
@@ -174,27 +161,14 @@ export default Vue.extend({
     background: inherit;
   }
 
-  span.heimu a:link {
-    background: black;
-    color: black !important;
-  }
-
-  span.heimu a:visited {
-    background: black;
-    color: black !important;
-  }
-
-  span.heimu a:hover {
-    background: black;
-    color: black !important;
-  }
-
+  span.heimu a:link,
+  span.heimu a:visited,
+  span.heimu a:hover,
   span.heimu a:active {
     background: black;
     color: black !important;
   }
 
-  
   #materialbox-overlay {
     position: fixed;
     top: 0;
@@ -216,139 +190,15 @@ export default Vue.extend({
 
   .flow-text {
     font-weight: 300;
+    font-size: 1.2rem;
   }
 
-  @media only screen and (min-width: 360px) {
-    .flow-text {
-      font-size: 1.2rem;
-    }
-  }
+  @media only screen and (min-width: 480px) { .flow-text { font-size: 1.296rem; } }
+  @media only screen and (min-width: 600px) { .flow-text { font-size: 1.392rem; } }
+  @media only screen and (min-width: 720px) { .flow-text { font-size: 1.488rem; } }
+  @media only screen and (min-width: 840px) { .flow-text { font-size: 1.584rem; } }
+  @media only screen and (min-width: 960px) { .flow-text { font-size: 1.68rem; } }
 
-  @media only screen and (min-width: 390px) {
-    .flow-text {
-      font-size: 1.224rem;
-    }
-  }
-
-  @media only screen and (min-width: 420px) {
-    .flow-text {
-      font-size: 1.248rem;
-    }
-  }
-
-  @media only screen and (min-width: 450px) {
-    .flow-text {
-      font-size: 1.272rem;
-    }
-  }
-
-  @media only screen and (min-width: 480px) {
-    .flow-text {
-      font-size: 1.296rem;
-    }
-  }
-
-  @media only screen and (min-width: 510px) {
-    .flow-text {
-      font-size: 1.32rem;
-    }
-  }
-
-  @media only screen and (min-width: 540px) {
-    .flow-text {
-      font-size: 1.344rem;
-    }
-  }
-
-  @media only screen and (min-width: 570px) {
-    .flow-text {
-      font-size: 1.368rem;
-    }
-  }
-
-  @media only screen and (min-width: 600px) {
-    .flow-text {
-      font-size: 1.392rem;
-    }
-  }
-
-  @media only screen and (min-width: 630px) {
-    .flow-text {
-      font-size: 1.416rem;
-    }
-  }
-
-  @media only screen and (min-width: 660px) {
-    .flow-text {
-      font-size: 1.44rem;
-    }
-  }
-
-  @media only screen and (min-width: 690px) {
-    .flow-text {
-      font-size: 1.464rem;
-    }
-  }
-
-  @media only screen and (min-width: 720px) {
-    .flow-text {
-      font-size: 1.488rem;
-    }
-  }
-
-  @media only screen and (min-width: 750px) {
-    .flow-text {
-      font-size: 1.512rem;
-    }
-  }
-
-  @media only screen and (min-width: 780px) {
-    .flow-text {
-      font-size: 1.536rem;
-    }
-  }
-
-  @media only screen and (min-width: 810px) {
-    .flow-text {
-      font-size: 1.56rem;
-    }
-  }
-
-  @media only screen and (min-width: 840px) {
-    .flow-text {
-      font-size: 1.584rem;
-    }
-  }
-
-  @media only screen and (min-width: 870px) {
-    .flow-text {
-      font-size: 1.608rem;
-    }
-  }
-
-  @media only screen and (min-width: 900px) {
-    .flow-text {
-      font-size: 1.632rem;
-    }
-  }
-
-  @media only screen and (min-width: 930px) {
-    .flow-text {
-      font-size: 1.656rem;
-    }
-  }
-
-  @media only screen and (min-width: 960px) {
-    .flow-text {
-      font-size: 1.68rem;
-    }
-  }
-
-  @media only screen and (max-width: 360px) {
-    .flow-text {
-      font-size: 1.2rem;
-    }
-  }
   img.responsive-img,
   video.responsive-video {
     max-width: 100%;

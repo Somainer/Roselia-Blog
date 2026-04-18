@@ -1,33 +1,36 @@
-import Vue from 'vue'
-// v-model: undefined when not support preferred theme, true if light and false if dark.
-export default Vue.extend({
-  mounted() {
-    this.checkScheme()
+import { defineComponent, h, onBeforeUnmount, onMounted } from 'vue'
+
+export default defineComponent({
+  name: 'ThemeListener',
+  props: {
+    modelValue: { type: Boolean, default: undefined }
   },
-  methods: {
-    setState(s?: boolean) {
-      this.$emit('change', s)
-    },
-    checkScheme() {
+  emits: ['update:modelValue'],
+  setup(_props, { emit }) {
+    const setState = (s?: boolean) => emit('update:modelValue', s)
+    let disposers: Array<() => void> = []
+
+    const checkScheme = () => {
       const prefersDark = matchMedia('(prefers-color-scheme: dark)')
       const prefersLight = matchMedia('(prefers-color-scheme: light)')
-      if(prefersDark.matches || prefersLight.matches) {
-        this.setState(prefersLight.matches)
-        prefersDark.addEventListener('change', m => this.setState(!m.matches))
-        prefersLight.addEventListener('change', m => this.setState(m.matches))
+      if (prefersDark.matches || prefersLight.matches) {
+        setState(prefersLight.matches)
+        const onDark = (m: MediaQueryListEvent) => setState(!m.matches)
+        const onLight = (m: MediaQueryListEvent) => setState(m.matches)
+        prefersDark.addEventListener('change', onDark)
+        prefersLight.addEventListener('change', onLight)
+        disposers.push(() => {
+          prefersDark.removeEventListener('change', onDark)
+          prefersLight.removeEventListener('change', onLight)
+        })
       } else {
-        this.setState(undefined)
+        setState(undefined)
       }
     }
-  },
-  model: {
-    prop: 'scheme',
-    event: 'change'
-  },
-  props: {
-    scheme: Boolean
-  },
-  render(h) {
-    return h()
+
+    onMounted(checkScheme)
+    onBeforeUnmount(() => { disposers.forEach(d => d()); disposers = [] })
+
+    return () => h('div', { style: 'display:none' })
   }
 })

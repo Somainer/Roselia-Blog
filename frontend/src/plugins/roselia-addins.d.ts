@@ -1,8 +1,12 @@
-import Vue from 'vue'
-import { INotification } from '@/common/api/notifications';
+import type { INotification } from '@/common/api/notifications'
+import type { IProgress } from './progress'
 
-declare module 'vue/types/vue' {
-    interface Vue {
-        $notify(toast: INotification): void
-    }
+declare module 'vue' {
+  interface ComponentCustomProperties {
+    $notify(toast: INotification): void
+    $Progress: IProgress
+    config: typeof import('@/common/config')
+  }
 }
+
+export {}

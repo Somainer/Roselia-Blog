@@ -1,65 +1,56 @@
 <template>
-  <v-layout
-    v-scroll="recordScroll"
-    v-resize="recordHeight"
-  >
+  <div v-scroll="recordScroll" v-resize="recordHeight">
     <v-fab-transition>
       <v-btn
-        color="secondary"
-        fab
-        fixed
-        bottom
-        right
-        class="fixed-action-btn"
-        @click="goTop"
-        :style="{
-        bottom: $vuetify.breakpoint.smOnly ? '64px' : ''
-      }"
         v-show="showButton"
-      >
-        <v-icon>keyboard_arrow_up</v-icon>
-      </v-btn>
+        color="secondary"
+        icon="mdi-chevron-up"
+        class="fixed-action-btn"
+        :style="{
+          position: 'fixed',
+          right: '16px',
+          bottom: display.smAndDown.value ? '64px' : '16px',
+          zIndex: 6
+        }"
+        @click="goTop"
+      ></v-btn>
     </v-fab-transition>
-
-  </v-layout>
-
+  </div>
 </template>
 
-<script>
-import directives from 'vuetify/lib/directives'
-export default {
+<script lang="ts">
+import { defineComponent } from 'vue'
+import { useDisplay, useGoTo } from 'vuetify'
+
+export default defineComponent({
   name: 'gotop-button',
-  directives,
-  data: function () {
-    return {
-      height: 0,
-      offsetTop: 0
+  setup() {
+    const display = useDisplay()
+    const goTo = useGoTo()
+    return { display, goTo }
+  },
+  data() {
+    return { height: 0, offsetTop: 0 }
+  },
+  computed: {
+    showButton(): boolean {
+      return this.offsetTop >= this.height
     }
   },
   methods: {
-    recordHeight () {
+    recordHeight() {
       this.height = window.innerHeight
     },
-    recordScroll () {
+    recordScroll() {
       this.offsetTop = window.pageYOffset || document.documentElement.scrollTop
     },
-    goTop () {
-      // this.$router.push({ hash: '' })
-      this.$vuetify.goTo(0)
+    goTop() {
+      this.goTo(0)
     }
   },
-  mounted () {
+  mounted() {
     this.recordHeight()
     this.recordScroll()
-  },
-  computed: {
-    showButton () {
-      return this.offsetTop >= this.height
-    }
   }
-}
+})
 </script>
-
-<style scoped>
-
-</style>
