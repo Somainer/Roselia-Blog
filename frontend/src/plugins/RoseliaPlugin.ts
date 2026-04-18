@@ -1,5 +1,5 @@
 import * as PluginApi from '@/common/api/plugin-storage'
-import Vue, {Component} from 'vue'
+import { createApp, defineComponent, h, type App, type Component } from 'vue'
 
 type SatisfactoryChecker = boolean | string
 
@@ -35,9 +35,15 @@ export abstract class StaticRoseliaPlugin extends BaseRoseliaPlugin {
 }
 
 export abstract class VueRoseliaPlugin extends BaseRoseliaPlugin {
-    abstract getInstance(): Vue
+    private _app?: App
+    abstract getInstance(): Component
     mount(el: Element) {
-        this.getInstance().$mount(el)
+        this._app = createApp(this.getInstance())
+        this._app.mount(el as any)
+    }
+    destroyed() {
+        this._app?.unmount()
+        this._app = undefined
     }
 }
 
@@ -59,9 +65,9 @@ export abstract class RichPostPlugin extends BaseRoseliaPlugin implements IRichP
         return true
     }
     doNothingSync() {}
-    emptyComponent() {
-        return Vue.extend({
-            render: h => h()
+    emptyComponent(): Component {
+        return defineComponent({
+            render: () => h('div')
         })
     }
     beforeCreatePost = this.doNothing;
@@ -78,6 +84,6 @@ export abstract class RichPostPlugin extends BaseRoseliaPlugin implements IRichP
 export function makeBasePlugin<T extends RoseliaPlugin>(plugin: T & ThisType<T & {
     api: typeof PluginApi
 }>): RoseliaPlugin {
-    plugin['api'] = PluginApi
+    (plugin as any)['api'] = PluginApi
     return plugin
 }

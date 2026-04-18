@@ -1,69 +1,44 @@
-// The Vue build version to load with the `import` command
-// (runtime-only or standalone) has been set in webpack.base.conf with an alias.
-import Vue from 'vue'
+import { createApp } from 'vue'
+import { createPinia } from 'pinia'
 import App from './App.vue'
 import router from './router'
 import vuetify from './plugins/vuetify'
-import store from './store'
-// import 'material-design-icons-iconfont/dist/material-design-icons.css'
-// import 'vuetify/dist/vuetify.min.css'
 import meta from './common/config'
 import toast from './components/toast.vue'
 import toolbar from './components/BlogToolbar.vue'
 import footer from './components/BlogFooter.vue'
-import VueProgressBar from 'vue-progressbar'
 import fabTop from './components/GotopButton.vue'
 import '@fortawesome/fontawesome-free/css/all.css'
 import { ObserveVisibility } from 'vue-observe-visibility'
 
+import { ProgressPlugin } from './plugins/progress'
+import PageTitle from './plugins/page-title'
+
 import '@/plugins/token-auto-refresh'
 
-Vue.prototype.config = meta
+const app = createApp(App)
 
-// Vue.use(Vuetify, {
-//   theme: meta.theme,
-//   icons: {
-//     brand: new Proxy({}, {
-//       get (target, key) {
-//         if (Reflect.has(target, key)) {
-//           return Reflect.get(target, key)
-//         }
-//         if (typeof key === 'string') {
-//           return `fab fa-${key}`
-//         }
-//       }
-//     })
-//   }
-// })
+app.config.globalProperties.config = meta
 
-Vue.use(VueProgressBar, {
-  color: meta.theme.secondary,
-  failedColor: meta.theme.error,
-  thickness: '4px'
-})
+app.use(createPinia())
+app.use(router)
+app.use(vuetify)
+app.use(ProgressPlugin)
+app.use(PageTitle)
 
-Vue.directive('observe-visibility', ObserveVisibility)
+app.directive('observe-visibility', ObserveVisibility as any)
 
-Vue.component('toast', toast)
-Vue.component('nav-bar', toolbar)
-Vue.component('blog-footer', footer)
-Vue.component('go-top-btn', fabTop)
+app.component('toast', toast)
+app.component('nav-bar', toolbar)
+app.component('blog-footer', footer)
+app.component('go-top-btn', fabTop)
 
-Vue.directive('focus', {
-  update: function (el, {value}) {
-    if (value) {
-      el.focus()
-    }
+app.directive('focus', {
+  updated(el: HTMLElement, { value }) {
+    if (value) el.focus()
   }
 })
 
-Vue.config.productionTip = false
+app.mount('#black-shout')
 
-/* eslint-disable no-new */
-export default new Vue({
-  router,
-  store,
-  vuetify,
-  // render: h => h(App)
-  render: h => h(App)
-}).$mount('#black-shout')
+export default app

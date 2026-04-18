@@ -4,17 +4,21 @@
     "module": "esnext",
     "strict": true,
     "jsx": "preserve",
+    "jsxImportSource": "vue",
     "importHelpers": true,
-    "moduleResolution": "node",
-    "experimentalDecorators": true,
+    "moduleResolution": "bundler",
     "esModuleInterop": true,
+    "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
     "sourceMap": true,
     "baseUrl": ".",
     "allowJs": true,
     "noImplicitAny": false,
+    "skipLibCheck": true,
+    "useDefineForClassFields": true,
     "types": [
-      "webpack-env"
+      "vite/client",
+      "vite-plugin-pwa/client"
     ],
     "paths": {
       "@/*": [
@@ -32,11 +36,12 @@
     "src/**/*.ts",
     "src/**/*.tsx",
     "src/**/*.vue",
-    "tests/**/*.ts",
-    "tests/**/*.tsx",
-    "typings/**/*.d.ts"
+    "src/**/*.js",
+    "typings/**/*.d.ts",
+    "vite.config.ts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "dist"
   ]
 }

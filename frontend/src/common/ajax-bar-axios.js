@@ -1,18 +1,18 @@
 import axios from 'axios'
-import app from '../main'
+import progress from '../plugins/progress'
 
 const instance = axios.create()
 
 instance.interceptors.request.use(config => {
-  app.$Progress.start()
+  progress.start()
   return config
 })
 
 instance.interceptors.response.use(response => {
-  response.status === 200 ? app.$Progress.finish() : app.$Progress.fail()
+  response.status === 200 ? progress.finish() : progress.fail()
   return response
 }, error => {
-  app.$Progress.fail()
+  progress.fail()
   return Promise.reject(error)
 })
 

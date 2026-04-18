@@ -1,65 +1,53 @@
 <template>
-  <div id="digest-nav" ref="digestNav" class="hide-on-small-only pushpin">
-    <ul class="section table-of-contents">
+  <div id="digest-nav" ref="digestNav" class="hide-on-small-only table-of-contents">
+    <ul class="section">
       <li v-for="{hash, title} in items" :key="hash">
-        <a :href="'#' + hash" :to="{hash: hash, query: $route.query}">{{title}}</a>
+        <a :href="'#' + hash">{{ title }}</a>
       </li>
     </ul>
   </div>
 </template>
-<script>
-import M from 'materialize-css'
-export default {
-  name: 'blog-digest-nav',
-  data: () => ({
-  }),
-  props: {
-    items: Array
-  },
-  methods: {
-    onCreate () {
-      this.$nextTick(_ => this.processDigest())
-    },
-    processDigest () {
-      const elems = document.querySelectorAll('.scrollspy')
-      let content = document.getElementById('content')
-      this.instance = M.ScrollSpy.init(elems)
-      M.Pushpin.init(document.querySelectorAll('.pushpin'), {
-        top: content.offsetTop,
-        offset: 150,
-        bottom: content.offsetHeight + content.offsetTop - this.$refs.digestNav.offsetHeight
-      })
-      // M.AutoInit()
-    },
-    getInstance () {
-      return M.ScrollSpy.getInstance(this.targetElements)
-    }
-  },
-  computed: {
-    targetElements () {
-      return this.items.map(x => x.element)
-    }
-  },
-  mounted () {
-    this.onCreate()
-  },
-  destroyed () {
-    const instance = this.getInstance()
-    instance && instance.destroy()
-  },
-  watch: {
-    items () {
-      this.onCreate()
-    }
-  }
+
+<script lang="ts">
+import { defineComponent, PropType } from 'vue'
+
+interface DigestItem {
+  hash: string
+  title: string
+  element?: Element
 }
+
+export default defineComponent({
+  name: 'blog-digest-nav',
+  props: {
+    items: { type: Array as PropType<DigestItem[]>, default: () => [] }
+  }
+})
 </script>
-<style src="materialize-css/dist/css/materialize.css" scoped></style>
+
 <style scoped>
-  .table-of-contents a:hover {
-    border-left: 1px solid var(--theme-color);
-  }
-  .table-of-contents a.active {
-    border-left: 2px solid var(--theme-color);
-  }
+.table-of-contents {
+  position: sticky;
+  top: 80px;
+  padding: 16px;
+  list-style: none;
+}
+.table-of-contents ul {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+.table-of-contents li a {
+  display: block;
+  padding: 4px 8px;
+  color: inherit;
+  text-decoration: none;
+  border-left: 1px solid transparent;
+}
+.table-of-contents a:hover {
+  border-left: 1px solid var(--theme-color);
+}
+.table-of-contents a.active {
+  border-left: 2px solid var(--theme-color);
+}
 </style>

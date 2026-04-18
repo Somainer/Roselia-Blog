@@ -1,36 +1,28 @@
 <template>
-  <v-footer
-    height="auto"
-    class="oneness"
-  >
-    <v-row
-      justify="center"
-      wrap
-    >
-
-      <v-col
-        class="themed-text text-center lighten-2 py-3"
-        cols="12"
-      >
+  <v-footer class="oneness">
+    <v-row justify="center">
+      <v-col class="themed-text text-center py-3" cols="12">
         &copy;{{year}} — <strong>{{ name }}</strong>
       </v-col>
     </v-row>
   </v-footer>
 </template>
 
-<script>
+<script lang="ts">
+import { defineComponent } from 'vue'
 import meta from '@/common/config'
-export default {
+
+export default defineComponent({
   name: 'blog-footer',
-  data () {
+  data() {
     return {
-      year: (new Date()).getFullYear(),
+      year: new Date().getFullYear(),
       title: meta.title,
       motto: meta.motto,
       name: meta.footerName
     }
   }
-}
+})
 </script>
 
 <style scoped>

@@ -1,156 +1,116 @@
 <template>
-<div>
-  <v-app-bar
-    color="primary"
-    scroll-off-screen
-    v-if="!shouldHide"
-  >
-    <v-app-bar-nav-icon dark v-if="shouldHaveToolbar" @click.native="drawer = !drawer"></v-app-bar-nav-icon>
-    <slot></slot>
-    <v-toolbar-title>
-      <router-link  class="themed-text no-deco" :to="{name:'index'}">{{title}}</router-link>
-    </v-toolbar-title>
-    <v-spacer></v-spacer>
-    <v-toolbar-items v-if="!shouldHaveToolbar">
-      <v-btn dark text @click="dialog = true" v-if="canAskYukina || canChatWithContextualUser">
-        <v-badge color="secondary" :value="notifications.length">
-          <span slot="badge">{{ notifications.length }}</span>
-          <v-icon>question_answer</v-icon>
-        </v-badge>
-      </v-btn>
-      <v-btn dark text to="/">Index</v-btn>
-      <v-btn dark text to="/timeline">Timeline</v-btn>
-      <v-btn dark text v-if="userData" to="/userspace">{{userData.nickname}}</v-btn>
-      <v-btn dark text v-else tag="a" @click.native="setRedirect" :to="{name: 'login'}"
-             @contextmenu="portedLogin($event)">Login
-      </v-btn>
-    </v-toolbar-items>
-  </v-app-bar>
-  <v-navigation-drawer
-    v-model="drawer"
-    fixed
-    clipped
-    app
-    v-if="shouldHaveToolbar && !shouldHide"
-  >
-    <v-toolbar flat>
-    <v-list>
-      <v-list-item>
-        <v-list-item-title class="title">
-          {{title}}
-        </v-list-item-title>
-      </v-list-item>
-    </v-list>
-  </v-toolbar>
-  <v-divider></v-divider>
-
-  <v-list dense class="pt-0">
-    <v-list-item to="/">
-      <v-list-item-action>
-        <v-icon>home</v-icon>
-      </v-list-item-action>
-
-      <v-list-item-content>
-        <v-list-item-title>Index</v-list-item-title>
-      </v-list-item-content>
-    </v-list-item>
-  </v-list>
-  <v-list dense class="pt-0">
-    <v-list-item to="/timeline">
-      <v-list-item-action>
-        <v-icon>list_alt</v-icon>
-      </v-list-item-action>
-
-      <v-list-item-content>
-        <v-list-item-title>Timeline</v-list-item-title>
-      </v-list-item-content>
-    </v-list-item>
-  </v-list>
-  <v-list dense class="pt-0" v-if="userData">
-    <v-list-item to="/userspace">
-      <v-list-item-action>
-        <v-icon>account_circle</v-icon>
-      </v-list-item-action>
-
-      <v-list-item-content>
-        <v-list-item-title>{{userData.nickname}}</v-list-item-title>
-      </v-list-item-content>
-    </v-list-item>
-  </v-list>
-  <v-list dense class="pt-0" v-else>
-    <v-list-item to="/login" @click="setRedirect">
-      <v-list-item-action>
-        <v-icon>person</v-icon>
-      </v-list-item-action>
-
-      <v-list-item-content>
-        <v-list-item-title>Login</v-list-item-title>
-      </v-list-item-content>
-    </v-list-item>
-  </v-list>
-  <v-list dense class="pt-0" v-if="canAskYukina || canChatWithContextualUser">
-    
-    <v-list-item @click="dialog = true">
-      <v-list-item-action>
-        <v-icon>question_answer</v-icon>
-      </v-list-item-action>
-
-      <v-list-item-content>
-        <v-list-item-title v-if="canChatWithContextualUser">Chat with {{ contextualUsername }}</v-list-item-title>
-        <v-list-item-title v-else>Ask Yukina for Help</v-list-item-title>
-      </v-list-item-content>
-    </v-list-item>
-  </v-list>
-  </v-navigation-drawer>
-    <div v-if="canChatWithContextualUser">
-      <chat-box :dialog="dialog" :username="currentChatingWith || contextualUsername" @input="v => {dialog = v}" />
-    </div>
-    <v-dialog
-      v-model="dialog"
-      :width="responseList.length ? 1000 :500"
-      v-else-if="canAskYukina"
+  <div>
+    <v-app-bar
+      v-if="!shouldHide"
+      color="primary"
+      density="default"
     >
+      <v-app-bar-nav-icon v-if="shouldHaveToolbar" @click="drawer = !drawer"></v-app-bar-nav-icon>
+      <slot></slot>
+      <v-toolbar-title>
+        <router-link class="themed-text no-deco" :to="{ name: 'index' }">{{ title }}</router-link>
+      </v-toolbar-title>
+      <v-spacer></v-spacer>
+      <template v-if="!shouldHaveToolbar">
+        <v-btn variant="text" v-if="canAskYukina || canChatWithContextualUser" @click="dialog = true">
+          <v-badge color="secondary" :content="String(notifications.length)" :model-value="notifications.length > 0">
+            <v-icon>mdi-message-question</v-icon>
+          </v-badge>
+        </v-btn>
+        <v-btn variant="text" to="/">Index</v-btn>
+        <v-btn variant="text" to="/timeline">Timeline</v-btn>
+        <v-btn variant="text" v-if="userData" to="/userspace">{{ userData.nickname }}</v-btn>
+        <v-btn
+          v-else
+          variant="text"
+          :to="{ name: 'login' }"
+          @click="setRedirect"
+          @contextmenu="portedLogin($event)"
+        >Login</v-btn>
+      </template>
+    </v-app-bar>
+
+    <v-navigation-drawer
+      v-if="shouldHaveToolbar && !shouldHide"
+      v-model="drawer"
+      temporary
+    >
+      <v-list>
+        <v-list-item :title="title"></v-list-item>
+      </v-list>
+      <v-divider></v-divider>
+      <v-list density="compact">
+        <v-list-item to="/" prepend-icon="mdi-home" title="Index"></v-list-item>
+        <v-list-item to="/timeline" prepend-icon="mdi-timeline" title="Timeline"></v-list-item>
+        <v-list-item
+          v-if="userData"
+          to="/userspace"
+          prepend-icon="mdi-account-circle"
+          :title="userData.nickname"
+        ></v-list-item>
+        <v-list-item
+          v-else
+          to="/login"
+          prepend-icon="mdi-account"
+          title="Login"
+          @click="setRedirect"
+        ></v-list-item>
+        <v-list-item
+          v-if="canAskYukina || canChatWithContextualUser"
+          prepend-icon="mdi-message-question"
+          :title="canChatWithContextualUser ? `Chat with ${contextualUsername}` : 'Ask Yukina for Help'"
+          @click="dialog = true"
+        ></v-list-item>
+      </v-list>
+    </v-navigation-drawer>
+
+    <div v-if="canChatWithContextualUser">
+      <chat-box
+        :model-value="dialog"
+        :username="currentChatingWith || contextualUsername"
+        @update:model-value="v => (dialog = v)"
+      />
+    </div>
+
+    <v-dialog v-else-if="canAskYukina" v-model="dialog" :width="responseList.length ? 1000 : 500">
       <v-card>
-        <v-card-title
-          class="headline"
-          primary-title
-        >
+        <v-card-title class="text-h5">
           What do you want to do?
-          (<v-icon>fa-flask</v-icon>
+          (<v-icon>mdi-flask</v-icon>
           Experimental)
         </v-card-title>
-        <v-container grid-list-md>
-          <v-row wrap>
+        <v-container>
+          <v-row>
             <v-col cols="12">
               <v-alert
+                v-if="notUnderstand"
                 v-model="notUnderstand"
                 type="error"
-                transition="scale-transition"
-                dismissible
+                closable
               >
                 Sorry, I don't understand.
               </v-alert>
-              <recursive-comments ref="comments"
+              <recursive-comments
                 v-if="responseList.length"
-                :comments="responseList" 
-                :canAddComment="false"
-                :canDeleteComment="() => false"
-                :myUsername="userData && userData.username"
+                ref="comments"
+                :comments="responseList"
+                :can-add-comment="false"
+                :can-delete-comment="() => false"
+                :my-username="userData && userData.username"
               ></recursive-comments>
               <v-text-field
                 v-if="!loading"
-                hide-details
-                prepend-icon="question_answer"
-                label="Ask Yukina for Help"
-                single-line
-                autofocus
-                v-model="command"
-                @keyup.enter="runCommand"
                 ref="command"
+                v-model="command"
+                prepend-icon="mdi-message-question"
+                label="Ask Yukina for Help"
+                autofocus
+                hide-details
+                @keyup.enter="runCommand"
               ></v-text-field>
-
               <div v-else>
-                <v-progress-circular indeterminate color="primary"></v-progress-circular> Practice like you perform, perform like you practice.
+                <v-progress-circular indeterminate color="primary"></v-progress-circular>
+                Practice like you perform, perform like you practice.
               </div>
             </v-col>
           </v-row>
@@ -158,182 +118,158 @@
         <v-divider></v-divider>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn
-                  color="primary"
-                  text
-                  @click="dialog = false"
-          >
-            Close
-          </v-btn>
+          <v-btn color="primary" variant="text" @click="dialog = false">Close</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <GlobalEvents v-if="canAskYukina" @keyup.ctrl.89="dialog = !dialog" @keyup.esc="dialog = false"/>
-</div>
+  </div>
 </template>
 
-<script>
-import Vue from 'vue'
-import { mapState, mapMutations } from 'vuex'
+<script lang="ts">
+import { defineComponent, type PropType } from 'vue'
+import { useDisplay } from 'vuetify'
+import { mapState, mapActions } from 'pinia'
 import meta from '../common/config'
 import utils from '../common/utils'
-import {executeCommand, askYukinaForHelp} from '@/custom-command/luis.ts'
-import {mapToCamelCase} from '../common/helpers'
-import GlobalEvents from 'vue-global-events'
+import { executeCommand, askYukinaForHelp } from '@/custom-command/luis'
 import RecursiveComments from './RecursiveComments'
-import { ChatBox } from './chat-box.tsx'
-import { botUserMeta } from '../common/api/user';
+import { ChatBox } from './chat-box'
+import { botUserMeta } from '../common/api/user'
+import { useRoseliaStore } from '../store'
 
-export default {
+export default defineComponent({
   name: 'blog-toolbar',
   components: {
-    GlobalEvents,
     RecursiveComments,
     ChatBox
   },
-  props: ['userData', 'route', 'realTitle', 'noDrawer', 'shouldHide'],
-  data () {
+  props: {
+    userData: { type: Object as PropType<any>, default: null },
+    route: { type: String, default: '' },
+    realTitle: { type: String, default: '' },
+    noDrawer: { type: Boolean, default: false },
+    shouldHide: { type: Boolean, default: false }
+  },
+  setup() {
+    return { display: useDisplay() }
+  },
+  data() {
     return {
       drawer: false,
       dialog: false,
       command: '',
       loading: false,
       notUnderstand: false,
-      responseList: []
+      responseList: [] as any[]
     }
   },
-  methods: {
-    setRedirect () {
-      utils.setRedirect(this.route)
-    },
-    portedLogin (ev) {
-      ev.preventDefault()
-      let w = window.open(this.$router.resolve({
-        name: 'login',
-        query: {
-          ported: true
-        }
-      }).href, 'loginWindow', 'height=400,width=400,top=0,left=0,toolbar=no,menubar=no,scrollbars=no, resizable=no,location=no, status=no')
-      let unwatch = this.$watch('userData', (data) => {
-        if (data) {
-          w.close()
-          unwatch()
-        }
-      })
-      w.addEventListener('close', unwatch)
-    },
-    runCommand() {
-      this.loading = true
-      executeCommand(this.command).then(understand => {
-        // this.notUnderstand = !understand
-        this.loading = false
-        if(understand) this.dialog = false
-        else return Promise.reject('Not understand')
-      }).catch(this.askYukina)
-    },
-    askYukina() {
-      this.responseList = [...this.responseList, {
-        id: Math.round(Math.random() * 233),
-        content: this.command,
-        replies: [],
-        createdAt: new Date,
-        author: (this.userMeta && this.userMeta.username) ? this.userMeta : this.userData,
-        nickname: 'New Staff',
-        color: 'accent'
-      }]
-      this.loading = true
-      askYukinaForHelp(this.command).then(answer => {
-        this.addDialog({
-          content: answer
-        })
-        this.loading = false
-        this.command = ''
-      }).catch(err => {
-        this.loading = false
-        this.notUnderstand = true
-        this.addDialog({
-          color: 'error',
-          content: `Sorry, I don't understand.`
-        })
-      })
-    },
-    addDialog(content) {
-      this.responseList = [...this.responseList, {
-          id: Math.round(Math.random() * 233),
-          content: content.content,
-          replies: [],
-          createdAt: content.time ? new Date(content.time) : new Date,
-          author: botUserMeta,
-          color: content.color
-        }]
-    },
-    ...mapMutations(['clearNotifications', 'setChatingWith'])
-  },
   computed: {
-    title() {
+    title(): string {
       return this.realTitle || meta.title
     },
-    shouldHaveToolbar() {
-      return !this.noDrawer && this.$vuetify.breakpoint.smAndDown
+    shouldHaveToolbar(): boolean {
+      return !this.noDrawer && this.display.smAndDown.value
     },
-    canAskYukina() {
+    canAskYukina(): boolean {
       return meta.enableAskYukina
     },
-    contextualUsername() {
+    contextualUsername(): string {
       if (this.$route.name === 'userTimeline') {
-        return this.$route.params.username;
+        return (this.$route.params as any).username
       }
       return ''
     },
-    canChatWithContextualUser() {
-      return (this.contextualUsername || this.currentChatingWith) && this.userData
+    canChatWithContextualUser(): boolean {
+      return Boolean((this.contextualUsername || this.currentChatingWith) && this.userData)
     },
-    ...mapState(['notifications', 'currentChatingWith']),
-    ...mapState({
-      userMeta: 'currentUser'
-    })
+    ...mapState(useRoseliaStore, ['notifications', 'currentChatingWith']),
+    ...mapState(useRoseliaStore, { userMeta: 'currentUser' })
   },
   watch: {
-    shouldHaveToolbar(val) {
-      if(!val) this.drawer = false
+    shouldHaveToolbar(val: boolean) {
+      if (!val) this.drawer = false
     },
-    currentChatingWith(username) {
+    currentChatingWith(username: string | undefined) {
       this.dialog = !!username
       if (!this.canChatWithContextualUser) {
-        if (username) this.dialog = true;
+        if (username) this.dialog = true
       }
     },
-    dialog(val) {
-      if(val) {
-        this.$nextTick(() => this.$refs.command && this.$refs.command.focus())
+    dialog(val: boolean) {
+      if (val) {
+        this.$nextTick(() => (this.$refs.command as any)?.focus?.())
         if (!this.currentChatingWith && this.canChatWithContextualUser) {
           this.setChatingWith(this.contextualUsername)
         }
-        // if(!this.userMeta.username) {
-        //    utils.fetchJSONWithSuccess(utils.apiFor('user', 'user-meta'), 'GET', {
-        //       username: this.userData.username
-        //     }).then(data => {
-        //       this.userMeta = mapToCamelCase(data)
-        //     })
-        // }
-        this.notifications.forEach(n => {
-          this.addDialog({
-            ...n,
-            content: n.message
-          })
-        })
+        ;(this.notifications as any[]).forEach(n => this.addDialog({ ...n, content: n.message }))
         this.clearNotifications()
       } else {
         this.setChatingWith(undefined)
       }
     },
     userData() {
-      // this.userMeta = {}
       this.responseList = []
     }
+  },
+  methods: {
+    setRedirect() {
+      utils.setRedirect(this.route)
+    },
+    portedLogin(ev: MouseEvent) {
+      ev.preventDefault()
+      const w = window.open(
+        this.$router.resolve({ name: 'login', query: { ported: 'true' } }).href,
+        'loginWindow',
+        'height=400,width=400,top=0,left=0,toolbar=no,menubar=no,scrollbars=no, resizable=no,location=no, status=no'
+      )
+      const unwatch = this.$watch('userData', data => {
+        if (data) {
+          w?.close()
+          unwatch()
+        }
+      })
+      w?.addEventListener('close', unwatch as any)
+    },
+    runCommand() {
+      this.loading = true
+      executeCommand(this.command).then(understand => {
+        this.loading = false
+        if (understand) this.dialog = false
+        else return Promise.reject('Not understand')
+      }).catch(() => this.askYukina())
+    },
+    askYukina() {
+      this.responseList = [...this.responseList, {
+        id: Math.round(Math.random() * 233),
+        content: this.command,
+        replies: [],
+        createdAt: new Date(),
+        author: (this.userMeta && (this.userMeta as any).username) ? this.userMeta : this.userData,
+        nickname: 'New Staff',
+        color: 'accent'
+      }]
+      this.loading = true
+      askYukinaForHelp(this.command).then(answer => {
+        this.addDialog({ content: answer })
+        this.loading = false
+        this.command = ''
+      }).catch(() => {
+        this.loading = false
+        this.notUnderstand = true
+        this.addDialog({ color: 'error', content: `Sorry, I don't understand.` })
+      })
+    },
+    addDialog(content: any) {
+      this.responseList = [...this.responseList, {
+        id: Math.round(Math.random() * 233),
+        content: content.content,
+        replies: [],
+        createdAt: content.time ? new Date(content.time) : new Date(),
+        author: botUserMeta,
+        color: content.color
+      }]
+    },
+    ...mapActions(useRoseliaStore, ['clearNotifications', 'setChatingWith'])
   }
-}
+})
 </script>
-
-<style scoped>
-</style>

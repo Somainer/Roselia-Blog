@@ -1,168 +1,167 @@
 <template>
   <div>
-    <v-btn text @click.native="addUser.form = true">
-      <v-icon>person_add</v-icon>
-    </v-btn>
+    <v-btn variant="text" icon="mdi-account-plus" @click="addUser.form = true"></v-btn>
     <v-data-table
       :items="userList"
       :loading="loading"
       :headers="headers"
       class="elevation-1"
+      item-value="username"
     >
-      <v-progress-linear slot="progress" color="blue" indeterminate></v-progress-linear>
-      <template v-slot:item.role="props">
-        <v-btn icon small :disabled="props.item.role <= 0" @click="shiftRole(props.item, -1)">-</v-btn>
-        {{ props.item.role }}
-        <v-btn icon small :disabled="props.item.role + 1 >= userData.role" @click="shiftRole(props.item, 1)">+</v-btn>
+      <template #[`item.role`]="{ item }">
+        <v-btn icon size="small" :disabled="item.role <= 0" @click="shiftRole(item, -1)">-</v-btn>
+        {{ item.role }}
+        <v-btn icon size="small" :disabled="item.role + 1 >= userData.role" @click="shiftRole(item, 1)">+</v-btn>
       </template>
-      <template v-slot:item.action="props">
-        <v-btn icon color="secondary" @click="setPasswordForm(props.item.username)">
-          <v-icon>edit</v-icon>
+      <template #[`item.action`]="{ item }">
+        <v-btn icon color="secondary" @click="setPasswordForm(item.username)">
+          <v-icon>mdi-pencil</v-icon>
         </v-btn>
-        <v-btn icon color="error" @click="deleteUserForm(props.item.username)">
-          <v-icon>delete</v-icon>
+        <v-btn icon color="error" @click="deleteUserForm(item.username)">
+          <v-icon>mdi-delete</v-icon>
         </v-btn>
       </template>
-      <template v-slot:no-data>
+      <template #no-data>
         <div>I am sorry to announce that you can manage nobody. :(</div>
       </template>
     </v-data-table>
-    <v-layout row justify-center>
-      <v-dialog v-model="addUser.form" persistent max-width="500px">
-        <v-card>
-          <v-card-title>
-            <span class="headline">Add User</span>
-          </v-card-title>
-          <v-card-text>
-            <v-form v-model="addUser.valid">
-              <v-container grid-list-md>
-                <v-layout wrap>
-                  <v-flex xs12>
-                    <v-text-field :rules="addUser.rules" v-model="addUser.username" label="Username" required></v-text-field>
-                  </v-flex>
-                  <v-flex xs12>
-                    <v-text-field :rules="addUser.rules" v-model="addUser.password" label="Password" type="password" required></v-text-field>
-                  </v-flex>
-                  <v-flex xs12 sm6>
-                    <v-select
-                      :items="addUser.items"
-                      label="Permission Level"
-                      required
-                      v-model="addUser.role"
-                    ></v-select>
-                  </v-flex>
-                </v-layout>
-              </v-container>
-            </v-form>
-          </v-card-text>
-          <v-card-actions>
-            <v-spacer></v-spacer>
-            <v-btn color="blue darken-1" text @click.native="addUser.form = false">Close</v-btn>
-            <v-btn color="blue darken-1" text @click="doAddUser"
-                   :disabled="!addUser.valid" :loading="loading">Add</v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
-      <v-dialog v-model="loginForm" persistent max-width="500px">
-        <v-card>
-          <v-card-title>
-            <span class="headline">Enter Password</span>
-          </v-card-title>
-          <v-card-text>
-            <h4>For your safety, please input your password.</h4>
-            <v-container grid-list-md>
-              <v-layout wrap>
-                <v-flex xs12>
-                  <v-text-field v-model="loginPassword" @keyup.enter="getSUToken" label="Password" type="password" required></v-text-field>
-                </v-flex>
-              </v-layout>
-            </v-container>
-          </v-card-text>
-          <v-card-actions>
-            <v-spacer></v-spacer>
-            <v-btn color="primary" text @click="leave">Close</v-btn>
-            <v-btn color="info" text @click="getSUToken">OK</v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
-    </v-layout>
-    <v-dialog v-model="setPassword.form" persistent max-width="500px">
+
+    <v-dialog v-model="addUser.form" persistent max-width="500px">
       <v-card>
-        <v-card-title>
-          <span class="headline">Set Password of {{setPassword.username}}</span>
-        </v-card-title>
+        <v-card-title><span class="text-h5">Add User</span></v-card-title>
         <v-card-text>
-          <v-form @submit.prevent="" v-model="setPassword.valid">
-            <v-container grid-list-md>
-              <v-layout wrap>
-                <v-flex xs12>
-                  <v-text-field
-                    @keyup.enter="doSetPassword"
-                    :rules="addUser.rules" v-model="setPassword.password" label="Password" type="password" required></v-text-field>
-                </v-flex>
-              </v-layout>
+          <v-form v-model="addUser.valid">
+            <v-container>
+              <v-row>
+                <v-col cols="12">
+                  <v-text-field :rules="addUser.rules" v-model="addUser.username" label="Username" required></v-text-field>
+                </v-col>
+                <v-col cols="12">
+                  <v-text-field :rules="addUser.rules" v-model="addUser.password" label="Password" type="password" required></v-text-field>
+                </v-col>
+                <v-col cols="12" sm="6">
+                  <v-select
+                    :items="addUser.items"
+                    label="Permission Level"
+                    required
+                    v-model="addUser.role"
+                    item-title="text"
+                    item-value="value"
+                  ></v-select>
+                </v-col>
+              </v-row>
             </v-container>
           </v-form>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="blue darken-1" text @click.native="setPassword.form = false">Close</v-btn>
-          <v-btn color="blue darken-1" text @click="doSetPassword"
-                 :disabled="!setPassword.valid" :loading="loading">Set</v-btn>
+          <v-btn color="primary" variant="text" @click="addUser.form = false">Close</v-btn>
+          <v-btn color="primary" variant="text" :disabled="!addUser.valid" :loading="loading" @click="doAddUser">Add</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="deleteUser.form" persistent max-width="500px">
+
+    <v-dialog v-model="loginForm" persistent max-width="500px">
       <v-card>
-        <v-card-title>
-          <span class="headline error--text">Delete {{deleteUser.username}}</span>
-        </v-card-title>
+        <v-card-title><span class="text-h5">Enter Password</span></v-card-title>
         <v-card-text>
-          <span>Please make sure by retyping username</span>
-          <v-form @submit.prevent="" v-model="deleteUser.valid">
-            <v-container grid-list-md>
-              <v-layout wrap>
-                <v-flex xs12>
+          <h4>For your safety, please input your password.</h4>
+          <v-container>
+            <v-row>
+              <v-col cols="12">
+                <v-text-field v-model="loginPassword" label="Password" type="password" required @keyup.enter="getSUToken"></v-text-field>
+              </v-col>
+            </v-row>
+          </v-container>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="primary" variant="text" @click="leave">Close</v-btn>
+          <v-btn color="info" variant="text" @click="getSUToken">OK</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <v-dialog v-model="setPassword.form" persistent max-width="500px">
+      <v-card>
+        <v-card-title><span class="text-h5">Set Password of {{ setPassword.username }}</span></v-card-title>
+        <v-card-text>
+          <v-form v-model="setPassword.valid" @submit.prevent="">
+            <v-container>
+              <v-row>
+                <v-col cols="12">
                   <v-text-field
-                    @keyup.enter="doDeleteUser"
-                    :rules="deleteUser.rules" v-model="deleteUser.typedUsername" label="Retype Username" required></v-text-field>
-                </v-flex>
-              </v-layout>
+                    v-model="setPassword.password"
+                    :rules="addUser.rules"
+                    label="Password"
+                    type="password"
+                    required
+                    @keyup.enter="doSetPassword"
+                  ></v-text-field>
+                </v-col>
+              </v-row>
             </v-container>
           </v-form>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="blue darken-1" text @click.native="deleteUser.form = false">Close</v-btn>
-          <v-btn color="error" text @click="doDeleteUser"
-                 :disabled="!deleteUser.valid" :loading="loading">Delete</v-btn>
+          <v-btn color="primary" variant="text" @click="setPassword.form = false">Close</v-btn>
+          <v-btn color="primary" variant="text" :disabled="!setPassword.valid" :loading="loading" @click="doSetPassword">Set</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <v-dialog v-model="deleteUser.form" persistent max-width="500px">
+      <v-card>
+        <v-card-title><span class="text-h5 text-error">Delete {{ deleteUser.username }}</span></v-card-title>
+        <v-card-text>
+          <span>Please make sure by retyping username</span>
+          <v-form v-model="deleteUser.valid" @submit.prevent="">
+            <v-container>
+              <v-row>
+                <v-col cols="12">
+                  <v-text-field
+                    v-model="deleteUser.typedUsername"
+                    :rules="deleteUser.rules"
+                    label="Retype Username"
+                    required
+                    @keyup.enter="doDeleteUser"
+                  ></v-text-field>
+                </v-col>
+              </v-row>
+            </v-container>
+          </v-form>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="primary" variant="text" @click="deleteUser.form = false">Close</v-btn>
+          <v-btn color="error" variant="text" :disabled="!deleteUser.valid" :loading="loading" @click="doDeleteUser">Delete</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
   </div>
-
 </template>
 
-<script>
+<script lang="ts">
+import { defineComponent, type PropType } from 'vue'
 import utils from '../../common/utils'
-export default {
+
+export default defineComponent({
   name: 'user-management',
-  props: ['userData', 'toast'],
-  data: function () {
+  props: {
+    userData: { type: Object as PropType<any>, required: true },
+    toast: { type: Function as PropType<(text: string, color?: string) => void>, required: true }
+  },
+  data() {
+    const self: any = this
     return {
       suToken: '',
       loading: false,
-      userList: [],
+      userList: [] as any[],
       headers: [
-        {
-          text: 'Username',
-          align: 'left',
-          sortable: true,
-          value: 'username'
-        },
-        {text: 'Role Level', value: 'role'},
-        {text: 'Action', value: 'action'}
-
+        { title: 'Username', align: 'start' as const, sortable: true, key: 'username' },
+        { title: 'Role Level', key: 'role' },
+        { title: 'Action', key: 'action' }
       ],
       loginForm: false,
       addUser: {
@@ -170,44 +169,51 @@ export default {
         username: '',
         password: '',
         role: 0,
-        items: Array.from(Array(this.userData.role).keys()).map((_, i) => ({text: `Level ${i}`, value: i})),
+        items: Array.from(Array((this as any).userData?.role || 0).keys()).map((_, i) => ({ text: `Level ${i}`, value: i })),
         rules: [
-          v => !!v || 'Required',
-          v => (v && v.length > 4 && v.length < 20) || 'Length is not valid'
+          (v: string) => !!v || 'Required',
+          (v: string) => (v && v.length > 4 && v.length < 20) || 'Length is not valid'
         ],
         valid: false
       },
-      setPassword: {
-        form: false,
-        valid: false,
-        username: '',
-        password: ''
-      },
+      setPassword: { form: false, valid: false, username: '', password: '' },
       deleteUser: {
         form: false,
         valid: false,
         username: '',
         typedUsername: '',
-        rules: [v => (v && v.toLowerCase() === this.deleteUser.username.toLowerCase()) || 'Username should be same to target user']
+        rules: [(v: string) => (v && v.toLowerCase() === (self.deleteUser?.username || '').toLowerCase()) || 'Username should be same to target user']
       },
       loginPassword: ''
     }
   },
+  watch: {
+    'setPassword.form'() { this.setPassword.password = '' },
+    'deleteUser.form'() { (this.deleteUser as any).password = '' }
+  },
+  mounted() {
+    const token = utils.getSUToken()
+    if (!this.userData.role) {
+      this.toast('You are not supposed to do this.', 'warning')
+      return this.leave()
+    }
+    this.suToken = token
+    if (!token) this.loginForm = true
+    else this.loadUser()
+    if ((this.$route.params as any).firstRun) this.addUser.form = true
+  },
   methods: {
-    leave () {
+    leave() {
       this.$router.go(-1)
     },
-    getSUToken () {
+    getSUToken() {
       this.loading = true
-      utils.fetchJSON(utils.apiFor('user', 'su'), 'POST', {
-        password: this.loginPassword
-      }).then(data => {
+      utils.fetchJSON(utils.apiFor('user', 'su'), 'POST', { password: this.loginPassword }).then((data: any) => {
         this.loading = false
         if (!data.success) {
           this.toast('Wrong Password', 'error')
           this.loginPassword = ''
           return
-          // return this.leave()
         }
         this.loginForm = false
         this.suToken = data.token
@@ -215,75 +221,66 @@ export default {
         this.loadUser()
       })
     },
-    loadUser () {
+    loadUser() {
       this.loading = true
-      utils.fetchJSONWithSuccess(utils.apiFor('user', 'list')).then(data => {
+      utils.fetchJSONWithSuccess(utils.apiFor('user', 'list')).then((data: any) => {
         this.loading = false
         this.userList = data
-      }).catch(reason => {
+      }).catch((reason: any) => {
         this.toast(reason, 'error')
         this.leave()
       })
     },
-    doAddUser () {
+    doAddUser() {
       this.loading = true
       utils.fetchJSONWithSuccess(utils.apiFor('user', 'add'), 'POST', {
         username: this.addUser.username,
         password: this.addUser.password,
         role: this.addUser.role,
         token: this.suToken
-      }, false).then(data => {
+      }, false).then(() => {
         this.addUser.form = false
         this.addUser.username = ''
         this.addUser.password = ''
         this.loadUser()
-      }).catch(reason => {
-        this.toast(reason, 'error')
-      }).finally(_ => {
-        this.loading = false
-      })
+      }).catch((reason: any) => this.toast(reason, 'error'))
+        .finally(() => { this.loading = false })
     },
-    setPasswordForm (name) {
+    setPasswordForm(name: string) {
       this.setPassword.username = name
       this.setPassword.form = true
     },
-    doSetPassword () {
+    doSetPassword() {
       if (!this.setPassword.valid) return
       this.loading = true
       utils.fetchJSONWithSuccess(utils.apiFor('user', 'change'), 'POST', {
         username: this.setPassword.username,
         newPassword: this.setPassword.password,
         token: this.suToken
-      }, false).then(data => {
+      }, false).then(() => {
         this.toast('Why must you change the password?', 'success')
         this.setPassword.form = false
-      }).catch(reason => {
-        this.toast(reason, 'error')
-      }).finally(_ => {
-        this.loading = false
-      })
+      }).catch((reason: any) => this.toast(reason, 'error'))
+        .finally(() => { this.loading = false })
     },
-    deleteUserForm (name) {
+    deleteUserForm(name: string) {
       this.deleteUser.username = name
       this.deleteUser.form = true
     },
-    doDeleteUser () {
+    doDeleteUser() {
       if (!this.deleteUser.valid) return
       this.loading = true
       utils.fetchJSONWithSuccess(utils.apiFor('user', 'remove'), 'POST', {
         username: this.deleteUser.username,
         token: this.suToken
-      }, false).then(data => {
+      }, false).then(() => {
         this.toast('Success!', 'success')
         this.deleteUser.form = false
         this.loadUser()
-      }).catch(reason => {
-        this.toast(reason, 'error')
-      }).finally(_ => {
-        this.loading = false
-      })
+      }).catch((reason: any) => this.toast(reason, 'error'))
+        .finally(() => { this.loading = false })
     },
-    shiftRole(user, shiftCount) {
+    shiftRole(user: any, shiftCount: number) {
       const role = user.role + shiftCount
       this.loading = true
       utils.fetchJSONWithSuccess(utils.apiFor('user', 'change-role'), 'POST', {
@@ -294,39 +291,11 @@ export default {
         user.role = role
         this.loading = false
         this.toast('It feels good to change privileges, right?', 'success')
-      }).catch(err => {
+      }).catch(() => {
         this.loading = false
         this.toast('There must be something wrong', 'error')
       })
     }
-  },
-  mounted () {
-    let token = utils.getSUToken()
-    if (!this.userData.role) {
-      this.toast('You are not supposed to do this.', 'warning')
-      return this.leave()
-    }
-    this.suToken = token
-    if (!token) {
-      this.loginForm = true
-    } else {
-      this.loadUser()
-    }
-    if (this.$route.params.firstRun) {
-      this.addUser.form = true
-    }
-  },
-  watch: {
-    'setPassword.form': function () {
-      this.setPassword.password = ''
-    },
-    'deleteUser.form': function () {
-      this.deleteUser.password = ''
-    }
   }
-}
+})
 </script>
-
-<style scoped>
-
-</style>

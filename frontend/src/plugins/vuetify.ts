@@ -1,40 +1,34 @@
-import Vue from 'vue'
-import Vuetify from 'vuetify/lib'
-//import 'vuetify/src/stylus/app.styl'
-import zhHans from 'vuetify/src/locale/zh-Hans'
+import 'vuetify/styles'
+import '@mdi/font/css/materialdesignicons.css'
+
+import { createVuetify } from 'vuetify'
+import { aliases, mdi } from 'vuetify/iconsets/mdi'
+import { fa } from 'vuetify/iconsets/fa'
+import { zhHans, en } from 'vuetify/locale'
 import meta from '../common/config'
 
-
-Vue.use(Vuetify)
-
-export default new Vuetify({
+export default createVuetify({
   theme: {
+    defaultTheme: 'light',
     themes: {
-      light: meta.theme,
-      dark: meta.theme
-    },
-    options: {
-      customProperties: true
+      light: {
+        dark: false,
+        colors: meta.theme
+      },
+      dark: {
+        dark: true,
+        colors: meta.theme
+      }
     }
   },
-  customProperties: true,
-  lang: {
-    locales: { zhHans },
-    current: 'zh-Hans'
+  locale: {
+    locale: 'zhHans',
+    fallback: 'en',
+    messages: { zhHans, en }
   },
   icons: {
-    values: {
-      brand: new Proxy({} as any, {
-        get (target, key) {
-          if (Reflect.has(target, key)) {
-            return Reflect.get(target, key)
-          }
-          if (typeof key === 'string') {
-            return `fab fa-${key}`
-          }
-        }
-      })
-    },
-    iconfont: 'md'
+    defaultSet: 'mdi',
+    aliases,
+    sets: { mdi, fa }
   }
 })

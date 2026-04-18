@@ -1,146 +1,152 @@
-import Vue from 'vue'
-import { AsyncComponentPromise } from 'vue/types/options'
-import { Component, Model, Prop, Watch } from 'vue-property-decorator'
-import EasyMde from 'vue-easymde'
-import 'easymde/dist/easymde.min.css'
+import { defineAsyncComponent, defineComponent, ref, watch, onMounted, nextTick, type PropType, h } from 'vue'
 import type CodeMirror from 'codemirror'
-import type { RoseliaMonacoEditor } from './roselia-monaco-post-editor'
 import { IRoseliaEditPageActionBus, imageSourceForUrl } from './editor-actions'
 import LoadingComponent from './editor-loading.vue'
 import { handleBeforeChange, handleDrop, handlePaste, IImageUploader, IPasteHandler } from '../handle-paste'
 
 declare global {
-    namespace CodeMirror {
-        interface Editor {
-            on<K extends keyof HTMLElementEventMap>(event: K, handler: (instance: Editor, event: HTMLElementEventMap[K]) => void): void
-        }
+  namespace CodeMirror {
+    interface Editor {
+      on<K extends keyof HTMLElementEventMap>(event: K, handler: (instance: Editor, event: HTMLElementEventMap[K]) => void): void
     }
+  }
 }
 
 export interface ISelectionItem {
-    text?: string | number | object
-    value?: string | number | object
-    disabled?: boolean
-    divider?: boolean
-    header?: string
+  text?: string | number | object
+  value?: string | number | object
+  disabled?: boolean
+  divider?: boolean
+  header?: string
 }
 
-const RoseliaAsyncMonacoEditor: Vue.AsyncComponent = () => ({
-    // Type fits only when component is an async function returns a promise, \
-    // but Vue refuse to work in this occasion,
-    // so we just make an assertion to make TS happy.
-    component: import(/* webpackChunkName: "unions-road" */ './roselia-monaco-post-editor')
-        .then(x => x.RoseliaMonacoEditor) as unknown as AsyncComponentPromise,
-    loading: LoadingComponent
+const availableEditors: ISelectionItem[] = [
+  { text: 'Easy Markdown Editor', value: 'easymde' },
+  { text: 'Monaco Editor', value: 'monaco' }
+]
+const defaultEditor = 'easymde'
+const easyMdeConfig = { spellChecker: false, hideIcons: ['guide'] }
+
+const RoseliaAsyncMonacoEditor = defineAsyncComponent({
+  loader: () => import('./roselia-monaco-post-editor').then(x => x.RoseliaMonacoEditor),
+  loadingComponent: LoadingComponent as any
 })
 
-
-@Component({
-    components: {
-        RoseliaAsyncMonacoEditor: RoseliaAsyncMonacoEditor,
-        EasyMde
-    }
-})
-export class EditorSwitcher extends Vue {
-    @Model('setValue') @Prop() value!: string
-    @Prop() editor!: string
-    @Prop() useMarkdown!: boolean
-    @Prop() dark!: boolean
-    @Prop({ default: false }) pasteHtml!: boolean
-    @Prop({ default: () => {} }) postPageActionBus!: IRoseliaEditPageActionBus
-
-    public static availableEditors: ISelectionItem[] = [
-        { text: 'Easy Markdown Editor', value: 'easymde' },
-        { text: 'Monaco Editor', value: 'monaco' }
-    ]
-    public static defaultEditor = 'easymde';
-    private static easyMdeConfig = {
-        spellChecker: false,
-        hideIcons: ['guide']
-    }
-
-    private imageSourceForUrl(url: string, alt: string = '') {
-        return imageSourceForUrl(this.useMarkdown, url, alt)
-    }
-
-    private get useMonaco() {
-        return this.editor === 'monaco'
-    }
-
-    @Watch('editor') async onEditorChanged() {
-        await this.$nextTick();
-        this.setupEditor()
-    }
-
-    private handleChange(value: string) {
-        this.$emit('setValue', value)
-    }
-
-    private setupMonaco() {
-        const editor = this.$refs.editor as RoseliaMonacoEditor | null
-        editor?.setup(this.postPageActionBus)
-    }
-
-    private setupSimpleMDE() {
-        const editor = (this.$refs.editor as any).easymde.codemirror as CodeMirror.Editor
-
-        const imageFormatHandler = (source: string) => {
-            if (this.useMarkdown) return source;
-            return source.replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1">')
-        }
-        
-        const pasteHandler: IPasteHandler = async (parts, additionalParts, input) => {
-            console.log(this.pasteHtml, 'PM')
-            if (this.pasteHtml) {
-                input(imageFormatHandler((await additionalParts).join('')))
-            } else {
-                input(imageFormatHandler((await parts).join('')))
-            }
-        }
-        const imageUploader: IImageUploader = (image, url) => {
-            this.postPageActionBus.uploadImage?.(image, url).then(meta => {
-                URL.revokeObjectURL(url)
-                this.handleChange(this.value.replace(url, meta.url))
+// Lazy-load vue-easymde if installed; otherwise fall back to a textarea.
+const EasyMde = defineAsyncComponent({
+  loader: async () => {
+    try {
+      const mod: any = await import('vue-easymde')
+      await import('easymde/dist/easymde.min.css')
+      return mod.default || mod
+    } catch {
+      return defineComponent({
+        name: 'easymde-fallback',
+        props: ['modelValue'],
+        emits: ['update:modelValue'],
+        setup(props, { emit }) {
+          return () =>
+            h('textarea', {
+              style: 'width: 100%; min-height: 40vh;',
+              value: props.modelValue,
+              onInput: (e: any) => emit('update:modelValue', e.target.value)
             })
         }
+      })
+    }
+  },
+  loadingComponent: LoadingComponent as any
+})
 
-        editor.on('drop', (editor, event) => {
-            handleDrop(editor, event, pasteHandler, imageUploader)
+export const EditorSwitcher = defineComponent({
+  name: 'editor-switcher',
+  components: { RoseliaAsyncMonacoEditor, EasyMde },
+  props: {
+    modelValue: { type: String, default: '' },
+    editor: { type: String, default: defaultEditor },
+    useMarkdown: { type: Boolean, default: true },
+    dark: { type: Boolean, default: false },
+    pasteHtml: { type: Boolean, default: false },
+    postPageActionBus: { type: Object as PropType<IRoseliaEditPageActionBus>, default: () => ({}) }
+  },
+  emits: ['update:modelValue'],
+  setup(props, { emit }) {
+    const editorRef = ref<any>(null)
+    const useMonaco = () => props.editor === 'monaco'
+
+    const handleChange = (value: string) => emit('update:modelValue', value)
+
+    const imageSourceForUrlLocal = (url: string, alt: string = '') =>
+      imageSourceForUrl(props.useMarkdown, url, alt)
+
+    const setupMonaco = () => {
+      const editor = editorRef.value
+      editor?.setup?.(props.postPageActionBus)
+    }
+
+    const setupSimpleMDE = () => {
+      const inner: any = editorRef.value
+      if (!inner) return
+      const editor: CodeMirror.Editor = inner.easymde?.codemirror
+      if (!editor) return
+
+      const imageFormatHandler = (source: string) => {
+        if (props.useMarkdown) return source
+        return source.replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1">')
+      }
+
+      const pasteHandler: IPasteHandler = async (parts, additionalParts, input) => {
+        if (props.pasteHtml) input(imageFormatHandler((await additionalParts).join('')))
+        else input(imageFormatHandler((await parts).join('')))
+      }
+      const imageUploader: IImageUploader = (image, url) => {
+        props.postPageActionBus.uploadImage?.(image, url).then(meta => {
+          URL.revokeObjectURL(url)
+          handleChange(props.modelValue.replace(url, meta.url))
         })
-        editor.on('paste', (editor: CodeMirror.Editor, event: ClipboardEvent) => {
-            handlePaste(editor, event, pasteHandler, imageUploader)
+      }
+
+      editor.on('drop', (e: any, event: any) => handleDrop(e, event, pasteHandler, imageUploader))
+      editor.on('paste', (e: any, event: any) => handlePaste(e, event, pasteHandler, imageUploader))
+      editor.on('beforeChange', handleBeforeChange as any)
+    }
+
+    const setupEditor = () => {
+      if (useMonaco()) setupMonaco()
+      else setupSimpleMDE()
+    }
+
+    watch(() => props.editor, async () => {
+      await nextTick()
+      setupEditor()
+    })
+
+    onMounted(() => setupEditor())
+
+    return () => {
+      if (useMonaco()) {
+        return h(RoseliaAsyncMonacoEditor as any, {
+          ref: editorRef,
+          'model-value': props.modelValue,
+          'onUpdate:modelValue': (v: string) => handleChange(v),
+          useMarkdown: props.useMarkdown,
+          dark: props.dark,
+          onLoaded: () => setupMonaco()
         })
-        editor.on('beforeChange', handleBeforeChange)
+      }
+      return h(EasyMde as any, {
+        ref: editorRef,
+        value: props.modelValue,
+        'onUpdate:modelValue': (v: string) => handleChange(v),
+        onInput: (v: string) => handleChange(v),
+        modelValue: props.modelValue,
+        configs: easyMdeConfig
+      })
     }
+  }
+})
 
-    private setupEditor() {
-        if (this.useMonaco) this.setupMonaco()
-        else this.setupSimpleMDE()
-    }
+;(EditorSwitcher as any).availableEditors = availableEditors
+;(EditorSwitcher as any).defaultEditor = defaultEditor
 
-    public render() {
-        if (this.useMonaco)
-            return (
-                <roselia-async-monaco-editor
-                    value={this.value}
-                    onInput={v => this.handleChange(v)}
-                    useMarkdown={this.useMarkdown}
-                    dark={this.dark}
-                    ref="editor"
-                    onLoaded={() => this.setupMonaco()}
-                />
-            )
-        return (
-            <easy-mde
-                value={this.value}
-                onInput={v => this.handleChange(v)}
-                ref="editor"
-                configs={EditorSwitcher.easyMdeConfig}
-            />
-        )
-    }
-
-    public mounted() {
-        this.setupEditor()
-    }
-}
+export default EditorSwitcher

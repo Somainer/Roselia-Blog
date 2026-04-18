@@ -2,7 +2,7 @@
   <div>
     <div v-if="!visible" v-observe-visibility="setVisible">
       <v-row align="center" justify="center">
-        <v-btn @click="setVisible">{{ this.text }}</v-btn>
+        <v-btn @click="setVisible">{{ text }}</v-btn>
       </v-row>
     </div>
     <div v-else>
@@ -10,19 +10,22 @@
     </div>
   </div>
 </template>
-<script>
-export default {
-  props: ['text'],
+
+<script lang="ts">
+import { defineComponent } from 'vue'
+
+export default defineComponent({
   name: 'lazy-component',
+  props: {
+    text: { type: String, default: '' }
+  },
   data() {
-    return {
-      visible: false
-    }
+    return { visible: false }
   },
   methods: {
     setVisible() {
       this.visible = true
     }
   }
-}
+})
 </script>

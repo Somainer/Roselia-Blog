@@ -1,17 +1,15 @@
 <template>
-  <v-card-action>
-    <h2 class="flex text--secondary">Two Step Auth</h2>
+  <div>
+    <h2 class="text--secondary">Two Step Auth</h2>
     <div v-if="enabled">
       <h3>You have enabled two step auth!</h3>
       <div v-if="totpCode">
-        <v-alert type="warning" :value="true">
-          Please make sure to keep this because it will display only once.
-        </v-alert>
+        <v-alert type="warning">Please make sure to keep this because it will display only once.</v-alert>
         <h4>Account: {{ userData.username }}</h4>
         <h4>Code: {{ totpCode }}</h4>
         <p>
-          <v-btn small rounded :href="totpUri" color="primary">Bind Now</v-btn>
-          <v-btn small rounded @click="downloadAuthFile" color="primary">Save</v-btn>
+          <v-btn size="small" rounded :href="totpUri" color="primary">Bind Now</v-btn>
+          <v-btn size="small" rounded color="primary" @click="downloadAuthFile">Save</v-btn>
         </p>
         <vue-qrcode :value="totpUri"></vue-qrcode>
       </div>
@@ -26,29 +24,42 @@
     </v-card-actions>
     <v-dialog v-model="dialog" persistent max-width="500">
       <v-card>
-        <v-card-title class="headline">You need to confirm by typing code.</v-card-title>
+        <v-card-title class="text-h5">You need to confirm by typing code.</v-card-title>
         <v-container>
-
-          <v-form v-model="valid" ref="form" @submit.prevent="">
-            <v-text-field v-model="authCode" name="loginCode" label="Auth Code" type="number"
-                          autofocus :rules="rules" @keyup.enter="removeTwoStepAuth"></v-text-field>
+          <v-form ref="form" v-model="valid" @submit.prevent="">
+            <v-text-field
+              v-model="authCode"
+              name="loginCode"
+              label="Auth Code"
+              type="number"
+              autofocus
+              :rules="rules"
+              @keyup.enter="removeTwoStepAuth"
+            ></v-text-field>
           </v-form>
         </v-container>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="error" flat @click.native="dialog = false">Nope</v-btn>
-          <v-btn color="info" flat @click="removeTwoStepAuth">OK</v-btn>
+          <v-btn color="error" variant="text" @click="dialog = false">Nope</v-btn>
+          <v-btn color="info" variant="text" @click="removeTwoStepAuth">OK</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
-  </v-card-action>
+  </div>
 </template>
-<script>
+
+<script lang="ts">
+import { defineComponent, type PropType } from 'vue'
 import utils from '../../common/utils'
 import VueQrcode from '@chenfengyuan/vue-qrcode'
-export default {
-  components: {VueQrcode},
-  props: ['userData', 'toast'],
+
+export default defineComponent({
+  name: 'two-step-auth',
+  components: { VueQrcode: VueQrcode as any },
+  props: {
+    userData: { type: Object as PropType<any>, required: true },
+    toast: { type: Function as PropType<(text: string, color?: string) => void>, required: true }
+  },
   data() {
     return {
       enabled: false,
@@ -56,33 +67,38 @@ export default {
       totpCode: '',
       totpUri: '',
       authCode: '',
-      nextCode: ''
+      nextCode: '',
+      valid: false,
+      rules: [(v: string) => !!v || 'Required']
     }
+  },
+  mounted() {
+    this.checkTwoStepAuth()
   },
   methods: {
     enableTwoStepAuth() {
-      utils.fetchJSONWithSuccess(utils.apiFor('user', 'two-step-auth', 'bind'), 'POST', {}).then(result => {
+      utils.fetchJSONWithSuccess(utils.apiFor('user', 'two-step-auth', 'bind'), 'POST', {}).then((result: any) => {
         this.totpUri = result.url
         this.totpCode = result.code
         this.nextCode = result.nextCode
         this.enabled = true
-      }).catch(err => {
-        this.toast('Oops, try again.', 'error')
-      })
+      }).catch(() => this.toast('Oops, try again.', 'error'))
     },
     checkTwoStepAuth() {
-      utils.fetchJSONWithSuccess(utils.apiFor('user', 'user-meta'), 'GET', {username: this.userData.username}).then(user => {
+      utils.fetchJSONWithSuccess(utils.apiFor('user', 'user-meta'), 'GET', {
+        username: this.userData.username
+      }).then((user: any) => {
         this.enabled = user.totp
-      }).catch(err => {
-        this.toast('Oops!', 'error')
-      })
+      }).catch(() => this.toast('Oops!', 'error'))
     },
     removeTwoStepAuth() {
-      utils.fetchJSONWithSuccess(utils.apiFor('user', 'two-step-auth', 'remove'), 'POST', {code: this.nextCode || this.authCode}).then(result => {
+      utils.fetchJSONWithSuccess(utils.apiFor('user', 'two-step-auth', 'remove'), 'POST', {
+        code: this.nextCode || this.authCode
+      }).then(() => {
         this.toast('Great! You are unsafe now!', 'success')
         this.enabled = false
         this.dialog = false
-      }).catch(err => {
+      }).catch(() => {
         if (this.nextCode) {
           this.nextCode = ''
           this.dialog = true
@@ -109,10 +125,6 @@ export default {
       link.click()
       setTimeout(() => URL.revokeObjectURL(url), 4e4)
     }
-  },
-  mounted() {
-    this.checkTwoStepAuth()
   }
-}
+})
 </script>
-

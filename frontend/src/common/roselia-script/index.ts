@@ -16,7 +16,6 @@ import {
 import { RoseliaScriptState, RoseliaScriptEffect } from './states'
 import { INotification } from '@/common/api/notifications'
 import {summonDialog} from './summonDialog'
-import Vue from 'vue';
 import { mapEntries } from '../helpers';
 import { RoseliaVNode, vNodeHasProps, createElement } from './vnode'
 import { h, hyperScript } from './creater-syntax-sugars'
@@ -357,7 +356,33 @@ export class RoseliaScript {
   // If true, render string, else mount.
   inRenderMode: boolean = false
 
-  constructor (app: Vue) {
+  private _listeners: Map<string, Set<(...args: any[]) => void>> = new Map()
+
+  on(event: string, handler: (...args: any[]) => void) {
+    if (!this._listeners.has(event)) this._listeners.set(event, new Set())
+    this._listeners.get(event)!.add(handler)
+  }
+
+  off(event: string, handler?: (...args: any[]) => void) {
+    if (!handler) { this._listeners.delete(event); return }
+    this._listeners.get(event)?.delete(handler)
+  }
+
+  once(event: string, handler: (...args: any[]) => void) {
+    const wrapped = (...args: any[]) => {
+      this.off(event, wrapped)
+      handler(...args)
+    }
+    this.on(event, wrapped)
+  }
+
+  emit(event: string, ...args: any[]) {
+    const handlers = this._listeners.get(event)
+    if (!handlers) return
+    Array.from(handlers).forEach(fn => fn(...args))
+  }
+
+  constructor (app: any) {
     this.app = app
     const initialize = () => {
       this.customFunctions = { app: null }
@@ -380,7 +405,15 @@ export class RoseliaScript {
     this.mounted = false
 
     initialize()
-    this.app.$on('postUnload', () => {
+    // Forward component lifecycle events emitted by BlogPost via $emit to the renderer's internal bus.
+    const originalEmit = (this.app && typeof this.app.$emit === 'function') ? this.app.$emit.bind(this.app) : null
+    if (originalEmit) {
+      this.app.$emit = (event: string, ...args: any[]) => {
+        originalEmit(event, ...args)
+        this.emit(event, ...args)
+      }
+    }
+    this.on('postUnload', () => {
       initialize()
     })
     this.askAccess = new Map
@@ -401,7 +434,7 @@ export class RoseliaScript {
   }
 
   music(meta: MusicMetaObject | MusicMetaObject[], autoplay = false, onPlayerReady?: (ob?: object) => void) {
-    ensureAPlayer(() => this.app.$emit('aPlayerLoaded'))
+    ensureAPlayer(() => this.emit('aPlayerLoaded'))
     let id = this.randomID()
     let player: any
     const addPlayer = (el?: HTMLDivElement) => {
@@ -426,14 +459,14 @@ export class RoseliaScript {
     }
     this.then(() => {
       if (!window.APlayer) {
-        this.app.$once('aPlayerLoaded', () => {
+        this.once('aPlayerLoaded', () => {
           this.then(addPlayer)
         })
       } else {
         this.then(addPlayer)
       }
 
-      this.app.$once('postUnload', () => {
+      this.once('postUnload', () => {
         player.destroy()
       })
     })
@@ -444,7 +477,7 @@ export class RoseliaScript {
         ref: (el) => {
           if (window.APlayer) { addPlayer(el) }
           else {
-            this.app.$once('aPlayerLoaded', () => {
+            this.once('aPlayerLoaded', () => {
               addPlayer(el)
             })
           }
@@ -466,11 +499,11 @@ export class RoseliaScript {
   }
 
   onceLoad (fn: () => void) {
-    this.app.$once('postLoaded', fn)
+    this.once('postLoaded', fn)
   }
 
   onceUnload (fn: () => void) {
-    this.app.$once('postUnload', fn)
+    this.once('postUnload', fn)
   }
 
   extendAttributes(element: RSElementSelector, attributes: object) {
@@ -733,7 +766,9 @@ export class RoseliaScript {
     const onClick = (ev: MouseEvent) => {
       ev.preventDefault()
       try {
-        this.app.$vuetify.goTo(_.isNumber(preview.goTo) ? preview.goTo : this.getElement(<RSElementSelector>preview.goTo), {offset: -200})
+        const target = _.isNumber(preview.goTo) ? preview.goTo : this.getElement(<RSElementSelector>preview.goTo)
+        if (typeof this.app.goTo === 'function') this.app.goTo(target, { offset: -200 })
+        else if (target && (target as any).scrollIntoView) (target as HTMLElement).scrollIntoView({ behavior: 'smooth' })
       } catch (reason) {
         if(_.isString(preview.goTo)) location.href = preview.goTo
         else this.app.$router.push(preview.goTo)
@@ -856,22 +891,30 @@ export class RoseliaScript {
     return null
   }
 
+  private getVuetifyTheme() {
+    const theme = this.app?.theme
+    return theme
+  }
+
   private forceChangeTheme(theme: Partial<typeof config.theme>, token: Symbol) {
     if (token === innerCallToken) {
-      this.app.$vuetify.theme.setTheme(this.app.$vuetify.theme.dark ? 'dark' : 'light', theme)
-      Object.assign(this.app.$vuetify.theme.currentTheme, theme)
+      const vTheme = this.getVuetifyTheme()
+      if (!vTheme) return
+      const current = vTheme.current?.value
+      if (current?.colors) Object.assign(current.colors, theme)
+      const themes = (vTheme as any).themes?.value
+      const name = current?.dark ? 'dark' : 'light'
+      if (themes?.[name]?.colors) Object.assign(themes[name].colors, theme)
     }
   }
 
   currentTheme () {
-    return {
-      ...this.app.$vuetify.theme.currentTheme
-    }
+    const vTheme = this.getVuetifyTheme()
+    return { ...(vTheme?.current?.value?.colors || {}) }
   }
 
   currentThemePalette () {
-    const theme = this.app.$vuetify.theme.parsedTheme;
-    return deepFrozen(theme);
+    return deepFrozen(this.currentTheme())
   }
 
   changeTheme(theme: Partial<typeof config.theme>) {
@@ -939,7 +982,10 @@ export class RoseliaScript {
   }
 
   sendNotification(notification: INotification) {
-    this.app.$store.commit('addNotification', notification)
+    // Lazy-import the pinia store to avoid a circular import at module load.
+    import('../../store').then(({ useRoseliaStore }) => {
+      useRoseliaStore().addNotification(notification)
+    })
   }
 
   Math = Math

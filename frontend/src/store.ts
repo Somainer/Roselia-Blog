@@ -1,19 +1,13 @@
-import Vue from 'vue'
-import Vuex from 'vuex'
-import { INotification } from './common/api/notifications'
+import { defineStore } from 'pinia'
+import type { INotification } from './common/api/notifications'
 import { omit } from '@/common/fake-lodash'
 import type { IRoseliaUserMeta } from './common/post-information'
 import type { IInComechatMessage } from './common/api/chat'
 import { getUserMeta } from './common/api/user'
 import type { IRoseliaUserData } from './common/UserInfoManager'
 
-Vue.use(Vuex)
-
 export interface IRoseliaStoreState {
-  commentDraft: {
-    [id: number]: object
-  }
-
+  commentDraft: Record<number, object>
   notifications: INotification[]
   chatHistory: Record<string, IInComechatMessage[]>
   currentUser?: IRoseliaUserMeta
@@ -21,73 +15,62 @@ export interface IRoseliaStoreState {
   currentChatingWith?: string
 }
 
-export default new Vuex.Store<IRoseliaStoreState>({
-  state: {
+export const useRoseliaStore = defineStore('roselia', {
+  state: (): IRoseliaStoreState => ({
     commentDraft: {},
     notifications: [],
     chatHistory: {},
     userData: undefined,
     currentUser: undefined,
     currentChatingWith: undefined
-  },
-  mutations: {
-    setCommentDraft(state, comment: {commentId: number, comment: object}) {
-      state.commentDraft = {
-        ...state.commentDraft,
-        [comment.commentId]: comment.comment
-      }
-    },
-    removeCommentDraft(state, commentId: number) {
-      state.commentDraft = omit(state.commentDraft, [commentId])
-      // state.commentDraft = {
-      //   ...state.commentDraft,
-      //   [commentId]: undefined
-      // }
-    },
-    addNotification(state, notification: INotification) {
-      state.notifications = [{ ...notification, show: true }, ...state.notifications]
-    },
-    popFirstNotification(state) {
-      const [, ...notifications] = state.notifications
-      state.notifications = notifications
-    },
-    clearNotifications(state) {
-      state.notifications = []
-    },
-    addChatHistory(state, { username, chat }: {
-      username: string
-      chat: IInComechatMessage
-    }) {
-      username = username.toLowerCase()
-      state.chatHistory = { ...state.chatHistory, [username]: (state.chatHistory[username] || []).concat(chat) }
-    },
-    setUserMeta(state, meta: IRoseliaUserMeta) {
-      state.currentUser = meta;
-    },
-    setUserData(state, data: IRoseliaUserData) {
-      state.userData = data;
-    },
-    setChatingWith(state, username: string | undefined) {
-      state.currentChatingWith = username;
-    }
+  }),
+  getters: {
+    firstNotification: (state) => state.notifications[0],
+    chatHistoryOf: (state) => (ofUsername: string) =>
+      state.chatHistory[ofUsername.toLowerCase()] || []
   },
   actions: {
-    async ensureUserMeta(store) {
-      if (store.state.currentUser) return store.state.currentUser
-      if (!store.state.userData) return undefined
-      const { username } = store.state.userData
-      const userMeta = await getUserMeta({ username })
-      store.commit('setUserMeta', userMeta)
-      return userMeta
-    }
-  },
-  getters: {
-    firstNotification(state) {
-      const [first] = state.notifications
-      return first
+    setCommentDraft(payload: { commentId: number; comment: object }) {
+      this.commentDraft = { ...this.commentDraft, [payload.commentId]: payload.comment }
     },
-    chatHistoryOf: (state) => (ofUsername: string) => {
-      return state.chatHistory[ofUsername.toLowerCase()] || []
+    removeCommentDraft(commentId: number) {
+      this.commentDraft = omit(this.commentDraft, [commentId])
+    },
+    addNotification(notification: INotification) {
+      this.notifications = [{ ...notification, show: true }, ...this.notifications]
+    },
+    popFirstNotification() {
+      const [, ...rest] = this.notifications
+      this.notifications = rest
+    },
+    clearNotifications() {
+      this.notifications = []
+    },
+    addChatHistory(payload: { username: string; chat: IInComechatMessage }) {
+      const username = payload.username.toLowerCase()
+      this.chatHistory = {
+        ...this.chatHistory,
+        [username]: (this.chatHistory[username] || []).concat(payload.chat)
+      }
+    },
+    setUserMeta(meta: IRoseliaUserMeta | undefined) {
+      this.currentUser = meta
+    },
+    setUserData(data: IRoseliaUserData | undefined) {
+      this.userData = data
+    },
+    setChatingWith(username: string | undefined) {
+      this.currentChatingWith = username
+    },
+    async ensureUserMeta() {
+      if (this.currentUser) return this.currentUser
+      if (!this.userData) return undefined
+      const { username } = this.userData
+      const userMeta = await getUserMeta({ username })
+      this.setUserMeta(userMeta)
+      return userMeta
     }
   }
 })
+
+export type RoseliaStore = ReturnType<typeof useRoseliaStore>
